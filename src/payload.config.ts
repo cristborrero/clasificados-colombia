@@ -10,6 +10,9 @@ import { serverEnv } from './env'
 import { Authors } from './payload/collections/Authors'
 import { Categories } from './payload/collections/Categories'
 import { Topics } from './payload/collections/Topics'
+import { Articles } from './payload/collections/Articles'
+import { Media } from './payload/collections/Media'
+import { Redirects } from './payload/collections/Redirects'
 import { Users } from './payload/collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -30,7 +33,7 @@ export default buildConfig({
    * Order shapes the admin sidebar within each group. Newsroom reference data
    * before the content that points at it (PRD Nº7 §123).
    */
-  collections: [Users, Authors, Categories, Topics],
+  collections: [Users, Authors, Categories, Topics, Media, Articles, Redirects],
 
   globals: [],
 

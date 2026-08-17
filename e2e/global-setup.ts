@@ -11,13 +11,13 @@ import { execFileSync } from 'node:child_process'
  * database when a destructive assertion (a delete that is *supposed* to be
  * refused, but was not) leaves it short of a user.
  */
+const SEEDS = ['src/payload/scripts/seed-users.ts', 'src/payload/scripts/seed-editorial.ts']
+
 export default function globalSetup(): void {
-  execFileSync(
-    process.execPath,
-    ['node_modules/payload/bin.js', 'run', 'src/payload/scripts/seed-users.ts'],
-    {
+  for (const seed of SEEDS) {
+    execFileSync(process.execPath, ['node_modules/payload/bin.js', 'run', seed], {
       stdio: 'inherit',
       env: process.env,
-    },
-  )
+    })
+  }
 }

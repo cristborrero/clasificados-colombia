@@ -20,8 +20,17 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  // Required for the Docker multistage image in F19.
-  output: 'standalone',
+  /*
+   * Standalone output is what the Docker multistage image in F19 needs, but it
+   * is not compatible with `next start` — Next prints a warning and expects
+   * `node .next/standalone/server.js` instead.
+   *
+   * Leaving it always on meant the local production server and the E2E suite
+   * ran against a configuration Next considers unsupported. Gated on an
+   * explicit build flag so the container build opts in and everything else
+   * keeps a working `pnpm start`.
+   */
+  ...(process.env.BUILD_STANDALONE === 'true' ? { output: 'standalone' } : {}),
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },

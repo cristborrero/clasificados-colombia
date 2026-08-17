@@ -188,6 +188,16 @@ export const editorialStaffOnly: Access = ({ req }) =>
  */
 export const adminFieldOnly: FieldAccess = ({ req }) => isAdmin(getUser(req))
 
+/** Field-level counterpart of `editorialStaffOnly`. */
+export const editorialStaffFieldOnly: FieldAccess = ({ req }) =>
+  hasRole(getUser(req), [
+    'administrator',
+    'editor_in_chief',
+    'investigative_editor',
+    'editor',
+    'photo_editor',
+  ])
+
 /**
  * Fields written by the system and by nothing else.
  *

@@ -1,5 +1,15 @@
 import { expect, test, type APIRequestContext } from '@playwright/test'
 
+import {
+  ACCOUNTS,
+  anonymous,
+  authHeader as auth,
+  DEV_PASSWORD,
+  identity,
+  login,
+  type Session,
+} from './support/api'
+
 /**
  * Access matrix — Users slice.
  *
@@ -19,38 +29,16 @@ import { expect, test, type APIRequestContext } from '@playwright/test'
  * which browser engine is asking.
  */
 
-const PASSWORD = 'clasificados-dev-password'
-
-const ACCOUNTS = {
-  admin: 'admin@clasificadoscolombia.test',
-  editorInChief: 'editor.jefe@clasificadoscolombia.test',
-  reporter: 'reportero@clasificadoscolombia.test',
-  disabled: 'deshabilitado@clasificadoscolombia.test',
-} as const
-
-type Session = { token: string; id: number | string }
-
-async function login(request: APIRequestContext, email: string): Promise<Session> {
-  const response = await request.post('/api/users/login', {
-    data: { email, password: PASSWORD },
-  })
-
-  expect(response.status(), `login should succeed for ${email}`).toBe(200)
-
-  const body = (await response.json()) as { token: string; user: { id: number | string } }
-
-  return { token: body.token, id: body.user.id }
-}
-
-const auth = (session: Session) => ({ Authorization: `JWT ${session.token}` })
-
 async function findUserId(request: APIRequestContext, admin: Session, email: string) {
-  const response = await request.get(
-    `/api/users?where[email][equals]=${encodeURIComponent(email)}`,
-    {
-      headers: auth(admin),
-    },
-  )
+  /*
+   * `params` rather than a template string: Payload's query syntax uses square
+   * brackets, and an unencoded `where[email][equals]=` silently matches nothing
+   * instead of failing. Playwright encodes these correctly.
+   */
+  const response = await request.get('/api/users', {
+    headers: auth(admin),
+    params: { 'where[email][equals]': email },
+  })
 
   const body = (await response.json()) as { docs: Array<{ id: number | string }> }
 
@@ -64,18 +52,28 @@ test.describe.configure({ mode: 'serial' })
 test.describe('access matrix · users', () => {
   test.skip(({ browserName }) => browserName !== 'chromium', 'HTTP-level, browser-independent')
 
-  test('anonymous cannot list users', async ({ request }) => {
-    const response = await request.get('/api/users')
+  /*
+   * These two use a context that has never logged in. Reusing the shared
+   * `request` would let a login from an earlier test leak its session cookie
+   * in, and the assertion would keep passing for the wrong reason — or stop
+   * meaning anything the day someone reorders this file.
+   */
+  test('anonymous cannot list users', async ({ baseURL }) => {
+    const anon = await anonymous(baseURL)
+    const response = await anon.get('/api/users')
 
     expect(response.status()).toBe(403)
+    await anon.dispose()
   })
 
-  test('anonymous cannot create a user', async ({ request }) => {
-    const response = await request.post('/api/users', {
+  test('anonymous cannot create a user', async ({ baseURL }) => {
+    const anon = await anonymous(baseURL)
+    const response = await anon.post('/api/users', {
       data: { email: 'intruso@example.test', password: 'whatever-123456', name: 'Intruso' },
     })
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
+    await anon.dispose()
   })
 
   test('a disabled account cannot authenticate, and is indistinguishable from a wrong password', async ({
@@ -83,7 +81,7 @@ test.describe('access matrix · users', () => {
   }) => {
     // PRD Nº5 §82 for the refusal; §86 and §130 for the indistinguishability.
     const disabled = await request.post('/api/users/login', {
-      data: { email: ACCOUNTS.disabled, password: PASSWORD },
+      data: { email: ACCOUNTS.disabled, password: DEV_PASSWORD },
     })
 
     const wrongPassword = await request.post('/api/users/login', {
@@ -111,14 +109,16 @@ test.describe('access matrix · users', () => {
     expect(body.docs[0]?.id).toBe(reporter.id)
   })
 
-  test('a reporter cannot read another account directly', async ({ request }) => {
-    const admin = await login(request, ACCOUNTS.admin)
-    const adminId = await findUserId(request, admin, ACCOUNTS.admin)
-    const reporter = await login(request, ACCOUNTS.reporter)
+  test('a reporter cannot read another account directly', async ({ baseURL }) => {
+    const admin = await identity(baseURL, ACCOUNTS.admin)
+    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const adminId = await findUserId(admin.ctx, admin, ACCOUNTS.admin)
 
-    const response = await request.get(`/api/users/${adminId}`, { headers: auth(reporter) })
+    const response = await reporter.ctx.get(`/api/users/${adminId}`)
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
+
+    await Promise.all([admin.dispose(), reporter.dispose()])
   })
 
   test('a reporter cannot create accounts', async ({ request }) => {
@@ -132,46 +132,45 @@ test.describe('access matrix · users', () => {
     expect(response.status()).toBe(403)
   })
 
-  test('a reporter cannot delete the administrator', async ({ request }) => {
+  test('a reporter cannot delete the administrator', async ({ baseURL }) => {
     // The regression this whole phase exists for. This previously returned 200
     // and removed the account.
-    const admin = await login(request, ACCOUNTS.admin)
-    const adminId = await findUserId(request, admin, ACCOUNTS.admin)
-    const reporter = await login(request, ACCOUNTS.reporter)
+    //
+    // Separate contexts per identity: a shared one would let the reporter's
+    // cookie speak for the administrator on the survival check below.
+    const admin = await identity(baseURL, ACCOUNTS.admin)
+    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const adminId = await findUserId(admin.ctx, admin, ACCOUNTS.admin)
 
-    const response = await request.delete(`/api/users/${adminId}`, { headers: auth(reporter) })
+    const response = await reporter.ctx.delete(`/api/users/${adminId}`)
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
     // Assert survival, not just the status code: a refusal that still deletes
     // is worse than an honest failure.
-    const stillThere = await request.get(`/api/users/${adminId}`, { headers: auth(admin) })
+    const stillThere = await admin.ctx.get(`/api/users/${adminId}`)
     expect(stillThere.status()).toBe(200)
+
+    await Promise.all([admin.dispose(), reporter.dispose()])
   })
 
-  test('a reporter cannot rename the administrator', async ({ request }) => {
-    const admin = await login(request, ACCOUNTS.admin)
-    const adminId = await findUserId(request, admin, ACCOUNTS.admin)
-    const before = (await (
-      await request.get(`/api/users/${adminId}`, { headers: auth(admin) })
-    ).json()) as {
-      name: string
-    }
+  test('a reporter cannot rename the administrator', async ({ baseURL }) => {
+    const admin = await identity(baseURL, ACCOUNTS.admin)
+    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const adminId = await findUserId(admin.ctx, admin, ACCOUNTS.admin)
 
-    const reporter = await login(request, ACCOUNTS.reporter)
-    const response = await request.patch(`/api/users/${adminId}`, {
-      headers: auth(reporter),
+    const before = (await (await admin.ctx.get(`/api/users/${adminId}`)).json()) as { name: string }
+
+    const response = await reporter.ctx.patch(`/api/users/${adminId}`, {
       data: { name: 'RENOMBRADO POR UN REPORTERO' },
     })
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
-    const after = (await (
-      await request.get(`/api/users/${adminId}`, { headers: auth(admin) })
-    ).json()) as {
-      name: string
-    }
+    const after = (await (await admin.ctx.get(`/api/users/${adminId}`)).json()) as { name: string }
     expect(after.name).toBe(before.name)
+
+    await Promise.all([admin.dispose(), reporter.dispose()])
   })
 
   test('a reporter cannot promote itself to administrator', async ({ request }) => {

@@ -71,6 +71,9 @@ export interface Config {
     authors: Author;
     categories: Category;
     topics: Topic;
+    media: Media;
+    articles: Article;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +85,9 @@ export interface Config {
     authors: AuthorsSelect<false> | AuthorsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     topics: TopicsSelect<false> | TopicsSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -386,6 +392,275 @@ export interface Topic {
   createdAt: string;
 }
 /**
+ * Imágenes editoriales públicas. La evidencia NO va aquí — tiene su propio almacenamiento con control de acceso.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media".
+ */
+export interface Media {
+  id: number;
+  /**
+   * Describe lo relevante de la imagen. No escribir «foto», «imagen» ni el nombre del medio (PRD Nº10 §6).
+   */
+  alt?: string | null;
+  /**
+   * Solo para imágenes sin contenido informativo. El frontend emite alt="" (PRD Nº10 §8).
+   */
+  decorative?: boolean | null;
+  /**
+   * Aporta contexto. No repetir el texto alternativo (PRD Nº10 §9).
+   */
+  caption?: string | null;
+  /**
+   * Ejemplo: «Foto: Juan Pérez / Clasificados Colombia» o «Cortesía: Fiscalía».
+   */
+  credit?: string | null;
+  photographer?: string | null;
+  /**
+   * De dónde proviene: propio, agencia, cortesía, entidad pública.
+   */
+  source?: string | null;
+  mediaType?:
+    | ('photo' | 'illustration' | 'graphic' | 'logo' | 'screenshot' | 'document_preview' | 'video_poster' | 'other')
+    | null;
+  /**
+   * PRD Nº10 §119: una imagen con licencia desconocida no debe publicarse. No asumir que algo disponible en internet se puede usar.
+   */
+  license?:
+    ('owned' | 'licensed' | 'creative_commons' | 'public_domain' | 'courtesy' | 'editorial_use' | 'unknown') | null;
+  /**
+   * No confundir con el fotógrafo (PRD Nº10 §15).
+   */
+  copyrightHolder?: string | null;
+  /**
+   * Para licencias con duración limitada. Genera alerta al acercarse.
+   */
+  rightsExpiration?: string | null;
+  /**
+   * PRD Nº10 §43: nunca presentar una imagen generada como fotografía documental real.
+   */
+  syntheticMedia?: ('none' | 'ai_generated' | 'ai_modified' | 'composite' | 'illustration') | null;
+  /**
+   * Restricciones internas. Nunca se envían al frontend público (PRD Nº10 §16, §47).
+   */
+  usageNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    article?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    hero?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * Noticias, análisis, perfiles y crónicas. Las investigaciones tienen su propia colección.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles".
+ */
+export interface Article {
+  id: number;
+  /**
+   * El titular visible. PRD SEO §27 exige que coincida con el headline del structured data.
+   */
+  title: string;
+  /**
+   * Parte final de la URL. Se genera desde el título y se congela al publicar; cambiarlo después crea un redirect automático.
+   */
+  slug: string;
+  /**
+   * Se activa en la primera publicación. Protege una URL ya difundida.
+   */
+  slugLocked?: boolean | null;
+  /**
+   * Resume y aporta contexto. Se usa como meta description cuando no hay override.
+   */
+  dek?: string | null;
+  /**
+   * Qué clase de pieza es. Distinto de la sección.
+   */
+  contentType: 'news' | 'reportage' | 'analysis' | 'explainer' | 'interview' | 'profile' | 'chronicle';
+  /**
+   * Una sola sección principal (PRD Nº7 §28).
+   */
+  category: number | Category;
+  topics?: (number | Topic)[] | null;
+  /**
+   * Toda pieza publicada lleva firma responsable (PRD SEO §31).
+   */
+  authors: (number | Author)[];
+  /**
+   * PRD SEO §44: debe representar la historia. No usar el logo ni una placa de texto si existe fotografía editorial.
+   */
+  hero?: {
+    image?: (number | null) | Media;
+    /**
+     * Opcional. Si se deja vacío se usa el pie de la imagen.
+     */
+    captionOverride?: string | null;
+  };
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Alimentan la navegación contextual. PRD SEO §55 prioriza la selección manual sobre lo automático.
+   */
+  relations?: {
+    relatedArticles?: (number | Article)[] | null;
+  };
+  /**
+   * Estado de la pieza dentro del proceso de redacción. La visibilidad pública se deriva de aquí, no se controla por separado.
+   */
+  workflow: {
+    /**
+     * Publicar exige rol autorizado, verificación completa y revisión legal resuelta.
+     */
+    editorialStatus:
+      'draft' | 'editing' | 'fact_check' | 'legal_review' | 'approved' | 'scheduled' | 'published' | 'archived';
+    factCheckStatus?: ('not_required' | 'not_started' | 'in_progress' | 'verified' | 'issues_found') | null;
+    legalStatus?: ('not_required' | 'pending' | 'approved' | 'changes_required') | null;
+    /**
+     * Notas internas. Nunca se envían al frontend público (PRD Nº8 §170).
+     */
+    reviewNotes?: string | null;
+  };
+  publication?: {
+    /**
+     * Fecha visible al lector. Debe coincidir con el structured data.
+     */
+    publishedAt?: string | null;
+    /**
+     * Se registra una sola vez, en la primera publicación. No se modifica.
+     */
+    firstPublishedAt?: string | null;
+    /**
+     * Solo cuando el contenido cambia de forma sustantiva. No se toca por correcciones de forma (PRD SEO §29).
+     */
+    modifiedAt?: string | null;
+    /**
+     * Debe ser una fecha futura.
+     */
+    scheduledAt?: string | null;
+  };
+  /**
+   * Todo es opcional. Si se deja vacío, el sistema deriva los valores del titular, la bajada y la imagen principal.
+   */
+  seo?: {
+    /**
+     * Solo si el titular editorial no funciona bien en resultados de búsqueda. No debe cambiar el significado (PRD SEO §27).
+     */
+    metaTitle?: string | null;
+    /**
+     * Debe describir, no ser clickbait. Si se deja vacío, se usa la bajada.
+     */
+    metaDescription?: string | null;
+    /**
+     * Solo para casos excepcionales. Nunca incluir parámetros de campaña como utm_source (PRD SEO §9).
+     */
+    canonical?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    /**
+     * Excluye esta pieza de los buscadores. Usar con criterio: una nota publicada normalmente debe indexarse.
+     */
+    noIndex?: boolean | null;
+    noFollow?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Redirecciones permanentes. Se evalúan antes de devolver un 404.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  /**
+   * Ruta anterior, con barra inicial. Ejemplo: /articulo/titulo-viejo
+   */
+  from: string;
+  /**
+   * Ruta destino. Debe existir, o se encadena un redirect hacia un 404.
+   */
+  to: string;
+  /**
+   * Para cambios editoriales permanentes usar 301 o 308 (PRD SEO §16). Los temporales no transfieren autoridad.
+   */
+  statusCode: '301' | '308' | '302' | '307';
+  /**
+   * Por qué existe. Sin esto, nadie sabrá si se puede retirar.
+   */
+  reason?: string | null;
+  active?: boolean | null;
+  /**
+   * Marca las que generó el sistema al cambiar un slug publicado.
+   */
+  automatic?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -424,6 +699,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'topics';
         value: number | Topic;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'articles';
+        value: number | Article;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -585,6 +872,159 @@ export interface TopicsSelect<T extends boolean = true> {
         noIndex?: T;
         noFollow?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  decorative?: T;
+  caption?: T;
+  credit?: T;
+  photographer?: T;
+  source?: T;
+  mediaType?: T;
+  license?: T;
+  copyrightHolder?: T;
+  rightsExpiration?: T;
+  syntheticMedia?: T;
+  usageNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        article?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        hero?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "articles_select".
+ */
+export interface ArticlesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  slugLocked?: T;
+  dek?: T;
+  contentType?: T;
+  category?: T;
+  topics?: T;
+  authors?: T;
+  hero?:
+    | T
+    | {
+        image?: T;
+        captionOverride?: T;
+      };
+  body?: T;
+  relations?:
+    | T
+    | {
+        relatedArticles?: T;
+      };
+  workflow?:
+    | T
+    | {
+        editorialStatus?: T;
+        factCheckStatus?: T;
+        legalStatus?: T;
+        reviewNotes?: T;
+      };
+  publication?:
+    | T
+    | {
+        publishedAt?: T;
+        firstPublishedAt?: T;
+        modifiedAt?: T;
+        scheduledAt?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonical?: T;
+        ogTitle?: T;
+        ogDescription?: T;
+        noIndex?: T;
+        noFollow?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?: T;
+  statusCode?: T;
+  reason?: T;
+  active?: T;
+  automatic?: T;
   updatedAt?: T;
   createdAt?: T;
 }

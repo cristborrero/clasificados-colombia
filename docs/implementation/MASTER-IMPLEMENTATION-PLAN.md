@@ -659,7 +659,12 @@ No existe base de datos previa, ni contenido, ni usuarios, ni URLs publicadas. *
 
 1. Producción usa **migraciones explícitas**. Prohibido el schema drift automático.
 2. Todas las migraciones viven en Git, en `src/payload/migrations/`.
-3. Nomenclatura: `AAAAMMDD_NNN_descripcion` (ej. `20260817_001_initial_editorial_schema`).
+3. Nomenclatura: `AAAAMMDD_HHMMSS_descripcion` (ej. `20260817_145533_initial_editorial_schema`).
+   Corregido en F0: el PRD Nº7 §135 sugiere una secuencia `NNN`, pero el generador de Payload
+   nombra por timestamp y es él quien crea los archivos. Ordena igual y evita renombrados manuales.
+4. `payload migrate:create` requiere `--force-accept-warning` en contextos sin TTY (CI, agentes).
+   Sin la bandera aborta en silencio y **no genera archivo**, que es un modo de fallo especialmente
+   traicionero: el comando parece exitoso.
 4. Cada cambio persistente del modelo debe responder explícitamente _"¿requiere migration?"_ antes del deploy.
 5. Orden obligatorio: `local → CI → staging → production`. Nunca probar por primera vez en producción.
 6. Registrar por migración: nombre, inicio, fin, fallo, duración, release SHA.

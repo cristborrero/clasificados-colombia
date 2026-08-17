@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens land in F1, derived from:
+ *   - PRD Master §4-§7 (palette, chromatic proportion, typographic scale)
+ *   - PRD Nº8 §5-§21 (token names, semantic roles, spacing, borders)
+ *   - docs/design-system/DESIGN-REFERENCE.md (grid 12 / gutter 24 / margin 120 /
+ *     baseline 8, extracted from the approved reference sheet)
+ *
+ * The four brand values below are declared now only so F0 renders on-brand
+ * instead of on default white. The complete token set — including the semantic
+ * roles (surface, muted, border, accent, danger, breaking, focus) and the
+ * `ALERTA` amber that the reference sheet shows but no PRD tokenises — is F1.
+ */
+@theme {
+  --color-ink: #0a0a0a;
+  --color-paper: #f7f6f2;
+  --color-white: #ffffff;
+  --color-investigation-red: #d71920;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}

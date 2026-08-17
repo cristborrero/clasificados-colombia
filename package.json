@@ -1,0 +1,72 @@
+{
+  "name": "clasificados-colombia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma editorial digital de Clasificados Colombia — Next.js + Payload CMS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22.11.0 <23"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "devsafe": "rm -rf .next && next dev",
+    "build": "payload generate:importmap && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "payload": "payload",
+    "generate:types": "payload generate:types",
+    "generate:importmap": "payload generate:importmap",
+    "migrate": "payload migrate",
+    "migrate:create": "payload migrate:create",
+    "migrate:status": "payload migrate:status",
+    "migrate:fresh": "payload migrate:fresh",
+    "search:reindex": "payload run src/search/reindex.ts",
+    "media:regenerate": "payload run src/payload/jobs/media-regenerate.ts",
+    "services:up": "docker compose -f docker-compose.dev.yml up -d",
+    "services:down": "docker compose -f docker-compose.dev.yml down",
+    "services:reset": "docker compose -f docker-compose.dev.yml down -v"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "3.88.0",
+    "@payloadcms/next": "3.88.0",
+    "@payloadcms/richtext-lexical": "3.88.0",
+    "@payloadcms/ui": "3.88.0",
+    "graphql": "^16.11.0",
+    "next": "16.3.1",
+    "payload": "3.88.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "sharp": "0.34.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.3.1",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "@swc/core",
+      "unrs-resolver"
+    ]
+  }
+}

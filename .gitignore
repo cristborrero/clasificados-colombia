@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Production build
+build/
+dist/
+
+# Payload
+# Anchored to the repo root on purpose: a bare `media/` would also swallow
+# src/components/media/.
+/media/
+.payload/
+
+# Environment — never commit secrets
+.env
+.env.*
+!.env.example
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# Local service data (Docker named volumes are external, this guards stray binds)
+.docker-data/
+
+# Local agent tooling state.
+# .atl/skill-registry.md embeds absolute paths from the developer's home
+# directory, so it is machine-specific and does not belong in the repo.
+.atl/
+
+# Editor / OS
+.DS_Store
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Misc
+*.tsbuildinfo
+.turbo/

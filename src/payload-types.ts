@@ -116,15 +116,54 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Cuentas internas del sistema editorial. Cada persona debe tener su propia cuenta; nunca se comparten (PRD Nº4 §96).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   /**
-   * Full name as it should appear in the admin panel.
+   * Nombre de la persona tal como aparecerá en el panel.
    */
   name: string;
+  /**
+   * Determina qué puede hacer esta persona. Solo un administrador puede modificarlo.
+   */
+  role:
+    | 'administrator'
+    | 'editor_in_chief'
+    | 'investigative_editor'
+    | 'editor'
+    | 'reporter'
+    | 'fact_checker'
+    | 'legal_reviewer'
+    | 'photo_editor'
+    | 'contributor';
+  /**
+   * Deshabilitado impide el inicio de sesión. Al salir del equipo, deshabilitar de inmediato (PRD Nº4 §96).
+   */
+  status: 'active' | 'suspended' | 'disabled';
+  /**
+   * Área o mesa de trabajo. Informativo; no otorga permisos.
+   */
+  department?: string | null;
+  /**
+   * Indicador de estado. La implementación de MFA es posterior (ver gap G-20); este campo no activa nada por sí solo.
+   */
+  mfaEnabled?: boolean | null;
+  /**
+   * Lo escribe el sistema al iniciar sesión.
+   */
+  lastLoginAt?: string | null;
+  /**
+   * Lo escribe el sistema al cambiar la contraseña.
+   */
+  passwordChangedAt?: string | null;
+  /**
+   * Notas internas de administración. No registrar aquí secretos, contraseñas ni códigos de recuperación (PRD Nº5 §5).
+   */
+  securityNotes?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -219,6 +258,13 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  role?: T;
+  status?: T;
+  department?: T;
+  mfaEnabled?: T;
+  lastLoginAt?: T;
+  passwordChangedAt?: T;
+  securityNotes?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

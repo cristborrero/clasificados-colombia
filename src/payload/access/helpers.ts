@@ -141,6 +141,41 @@ export const adminOrSelf: Access = ({ req }) => {
   return { id: { equals: user!.id } } satisfies Where
 }
 
+/**
+ * Public reference data: anonymous readers see only what is active.
+ *
+ * Authors, categories and topics are public by nature — the frontend needs them
+ * to render bylines and section pages. But PRD Nº7 §118 asks to retire them
+ * with `active = false` rather than deleting, so an inactive record must stop
+ * being publicly visible without breaking the published content that still
+ * points at it.
+ *
+ * Returns a filter rather than a boolean so the inactive rows are never loaded.
+ */
+export const publicActiveOrEditorial: Access = ({ req }) => {
+  const user = getUser(req)
+
+  if (isActive(user)) return true
+
+  return { active: { equals: true } } satisfies Where
+}
+
+/**
+ * Write access for editorial reference data.
+ *
+ * Broader than administrator: a newsroom that needs a ticket to add a topic
+ * will stop adding topics. Excludes contributor, who by PRD Nº5 §8 only drafts
+ * their own pieces.
+ */
+export const editorialStaffOnly: Access = ({ req }) =>
+  hasRole(getUser(req), [
+    'administrator',
+    'editor_in_chief',
+    'investigative_editor',
+    'editor',
+    'photo_editor',
+  ])
+
 /* ── Field-level access ────────────────────────────────────────────────────*/
 
 /**

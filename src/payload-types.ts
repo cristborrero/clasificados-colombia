@@ -68,6 +68,9 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    authors: Author;
+    categories: Category;
+    topics: Topic;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -76,6 +79,9 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    authors: AuthorsSelect<false> | AuthorsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    topics: TopicsSelect<false> | TopicsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -184,6 +190,202 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Firmas públicas. Al retirar a alguien del equipo, desactivar — nunca borrar, o se pierden las firmas publicadas.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors".
+ */
+export interface Author {
+  id: number;
+  /**
+   * Como debe aparecer en la firma.
+   */
+  name: string;
+  /**
+   * Parte final de la URL. Se genera desde el título y se congela al publicar; cambiarlo después crea un redirect automático.
+   */
+  slug: string;
+  /**
+   * Se activa en la primera publicación. Protege una URL ya difundida.
+   */
+  slugLocked?: boolean | null;
+  /**
+   * Ejemplo: «Periodista de investigación». Aparece bajo la firma.
+   */
+  jobTitle?: string | null;
+  /**
+   * Una o dos líneas, para la ficha al pie del artículo.
+   */
+  shortBio?: string | null;
+  /**
+   * Para la página de autor. PRD SEO §32 pide trayectoria real, no un párrafo vago.
+   */
+  bio?: string | null;
+  expertise?:
+    | {
+        area: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Opcional y público. No usar el correo interno de la cuenta del CMS.
+   */
+  emailPublic?: string | null;
+  /**
+   * Solo perfiles oficiales verificables: PRD SEO §33 los emite como `sameAs` en structured data.
+   */
+  socialLinks?:
+    | {
+        platform: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Desactivar al salir del equipo. Las firmas publicadas se conservan.
+   */
+  active?: boolean | null;
+  /**
+   * Todo es opcional. Si se deja vacío, el sistema deriva los valores del titular, la bajada y la imagen principal.
+   */
+  seo?: {
+    /**
+     * Solo si el titular editorial no funciona bien en resultados de búsqueda. No debe cambiar el significado (PRD SEO §27).
+     */
+    metaTitle?: string | null;
+    /**
+     * Debe describir, no ser clickbait. Si se deja vacío, se usa la bajada.
+     */
+    metaDescription?: string | null;
+    /**
+     * Solo para casos excepcionales. Nunca incluir parámetros de campaña como utm_source (PRD SEO §9).
+     */
+    canonical?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    /**
+     * Excluye esta pieza de los buscadores. Usar con criterio: una nota publicada normalmente debe indexarse.
+     */
+    noIndex?: boolean | null;
+    noFollow?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Secciones editoriales. Retirar con «Activa = falso», no borrando.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  /**
+   * Parte final de la URL. Se genera desde el título y se congela al publicar; cambiarlo después crea un redirect automático.
+   */
+  slug: string;
+  /**
+   * Se activa en la primera publicación. Protege una URL ya difundida.
+   */
+  slugLocked?: boolean | null;
+  /**
+   * Se muestra en la página de sección. PRD SEO §57 pide páginas editoriales reales, no listados.
+   */
+  description?: string | null;
+  /**
+   * Si se deja vacío se usa el nombre. Útil cuando el nombre es largo.
+   */
+  navigationLabel?: string | null;
+  /**
+   * Define el orden en la navegación. Menor aparece primero.
+   */
+  order?: number | null;
+  /**
+   * Al desactivar, deja de ser visible públicamente sin romper lo publicado.
+   */
+  active?: boolean | null;
+  /**
+   * Todo es opcional. Si se deja vacío, el sistema deriva los valores del titular, la bajada y la imagen principal.
+   */
+  seo?: {
+    /**
+     * Solo si el titular editorial no funciona bien en resultados de búsqueda. No debe cambiar el significado (PRD SEO §27).
+     */
+    metaTitle?: string | null;
+    /**
+     * Debe describir, no ser clickbait. Si se deja vacío, se usa la bajada.
+     */
+    metaDescription?: string | null;
+    /**
+     * Solo para casos excepcionales. Nunca incluir parámetros de campaña como utm_source (PRD SEO §9).
+     */
+    canonical?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    /**
+     * Excluye esta pieza de los buscadores. Usar con criterio: una nota publicada normalmente debe indexarse.
+     */
+    noIndex?: boolean | null;
+    noFollow?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Temas transversales. Alimentan las páginas de tema (/tema/[slug]).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "topics".
+ */
+export interface Topic {
+  id: number;
+  name: string;
+  /**
+   * Parte final de la URL. Se genera desde el título y se congela al publicar; cambiarlo después crea un redirect automático.
+   */
+  slug: string;
+  /**
+   * Se activa en la primera publicación. Protege una URL ya difundida.
+   */
+  slugLocked?: boolean | null;
+  /**
+   * Contexto del tema. Encabeza la página del hub.
+   */
+  description?: string | null;
+  /**
+   * Para navegación contextual. No incluir este mismo tema.
+   */
+  relatedTopics?: (number | Topic)[] | null;
+  active?: boolean | null;
+  /**
+   * Todo es opcional. Si se deja vacío, el sistema deriva los valores del titular, la bajada y la imagen principal.
+   */
+  seo?: {
+    /**
+     * Solo si el titular editorial no funciona bien en resultados de búsqueda. No debe cambiar el significado (PRD SEO §27).
+     */
+    metaTitle?: string | null;
+    /**
+     * Debe describir, no ser clickbait. Si se deja vacío, se usa la bajada.
+     */
+    metaDescription?: string | null;
+    /**
+     * Solo para casos excepcionales. Nunca incluir parámetros de campaña como utm_source (PRD SEO §9).
+     */
+    canonical?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    /**
+     * Excluye esta pieza de los buscadores. Usar con criterio: una nota publicada normalmente debe indexarse.
+     */
+    noIndex?: boolean | null;
+    noFollow?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -206,10 +408,23 @@ export interface PayloadKv {
  */
 export interface PayloadLockedDocument {
   id: number;
-  document?: {
-    relationTo: 'users';
-    value: number | User;
-  } | null;
+  document?:
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'authors';
+        value: number | Author;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'topics';
+        value: number | Topic;
+      } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
@@ -281,6 +496,97 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "authors_select".
+ */
+export interface AuthorsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  slugLocked?: T;
+  jobTitle?: T;
+  shortBio?: T;
+  bio?: T;
+  expertise?:
+    | T
+    | {
+        area?: T;
+        id?: T;
+      };
+  emailPublic?: T;
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  active?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonical?: T;
+        ogTitle?: T;
+        ogDescription?: T;
+        noIndex?: T;
+        noFollow?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  slugLocked?: T;
+  description?: T;
+  navigationLabel?: T;
+  order?: T;
+  active?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonical?: T;
+        ogTitle?: T;
+        ogDescription?: T;
+        noIndex?: T;
+        noFollow?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "topics_select".
+ */
+export interface TopicsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  slugLocked?: T;
+  description?: T;
+  relatedTopics?: T;
+  active?: T;
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonical?: T;
+        ogTitle?: T;
+        ogDescription?: T;
+        noIndex?: T;
+        noFollow?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

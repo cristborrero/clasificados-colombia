@@ -7,6 +7,9 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { serverEnv } from './env'
+import { Authors } from './payload/collections/Authors'
+import { Categories } from './payload/collections/Categories'
+import { Topics } from './payload/collections/Topics'
 import { Users } from './payload/collections/Users'
 
 const filename = fileURLToPath(import.meta.url)
@@ -23,7 +26,11 @@ export default buildConfig({
     },
   },
 
-  collections: [Users],
+  /*
+   * Order shapes the admin sidebar within each group. Newsroom reference data
+   * before the content that points at it (PRD Nº7 §123).
+   */
+  collections: [Users, Authors, Categories, Topics],
 
   globals: [],
 

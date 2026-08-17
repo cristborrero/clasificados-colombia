@@ -1,21 +1,25 @@
 import type { Metadata } from 'next'
 import React from 'react'
 
+import { fontVariables } from '@/styles/fonts'
+
 import '@/styles/globals.css'
 
 /*
- * Fonts (Playfair Display + Source Sans 3 via next/font) and the real metadata
- * layer land in F1 and F16 respectively. PRD Master §6 requires next/font so
- * that there is no blocking external request at runtime.
+ * The full metadata layer — canonical URLs, Open Graph, JSON-LD — is F16.
+ * What is here is the minimum a page needs to be a valid document.
  */
 export const metadata: Metadata = {
-  title: 'Clasificados Colombia',
+  title: {
+    default: 'Clasificados Colombia',
+    template: '%s · Clasificados Colombia',
+  },
   description: 'Investigamos. Informamos. No callamos.',
 }
 
 export default function FrontendLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-CO">
+    <html lang="es-CO" className={fontVariables}>
       <body>{children}</body>
     </html>
   )

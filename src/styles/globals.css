@@ -1,29 +1,210 @@
 @import 'tailwindcss';
 
-/*
- * Design tokens land in F1, derived from:
- *   - PRD Master §4-§7 (palette, chromatic proportion, typographic scale)
- *   - PRD Nº8 §5-§21 (token names, semantic roles, spacing, borders)
- *   - docs/design-system/DESIGN-REFERENCE.md (grid 12 / gutter 24 / margin 120 /
- *     baseline 8, extracted from the approved reference sheet)
- *
- * The four brand values below are declared now only so F0 renders on-brand
- * instead of on default white. The complete token set — including the semantic
- * roles (surface, muted, border, accent, danger, breaking, focus) and the
- * `ALERTA` amber that the reference sheet shows but no PRD tokenises — is F1.
- */
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — Clasificados Colombia
+
+   Sources, in precedence order:
+     PRD Master §4-§7, §38-§43     palette, type scale, grid, spacing, borders
+     PRD Nº8 §5-§21                token names, semantic roles, measures
+     docs/design-system/DESIGN-REFERENCE.md   grid 12/24/120/8, states, ALERTA
+
+   Every contrast pair asserted here is verified by src/styles/contrast.test.ts
+   against the real values in this file, so the numbers cannot drift.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @theme {
+  /* ── Brand palette (PRD Master §4) ────────────────────────────────────────
+     Authoritative over the delivered logo files, which used #000a0a / #f2f2f2.
+     Decision 2026-08-17: the PRD wins. See public/brand/README.md. */
   --color-ink: #0a0a0a;
   --color-paper: #f7f6f2;
   --color-white: #ffffff;
-  --color-investigation-red: #d71920;
+  --color-red: #d71920;
+
+  /* Red interaction states (DESIGN-REFERENCE §3.1).
+     White text on each: 5.19 / 6.98 / 9.40 — all AA. */
+  --color-red-hover: #b2141a;
+  --color-red-active: #8e1015;
+
+  /* ── ALERTA (delta D-01) ──────────────────────────────────────────────────
+     The reference sheet shows an amber breaking-bar severity that no PRD
+     tokenises. Confirmed for inclusion 2026-08-17.
+     Ink on --color-alert = 7.37:1. Ink on --color-alert-surface = 17.38:1.
+     Never carries meaning alone — the bar also prints the word "ALERTA"
+     (PRD Nº8 §108 / colour is never the sole channel). */
+  --color-alert: #d98e04;
+  --color-alert-surface: #fbefd8;
+
+  /* ── Grey ramp (PRD Nº8 §5) ───────────────────────────────────────────────
+     Supersedes PRD Master §4's four greys under the precedence rule; the two
+     lightest steps match exactly, the darker ones shift slightly. See D-16. */
+  --color-gray-900: #222222;
+  --color-gray-700: #555555;
+  --color-gray-500: #7a7a7a;
+  --color-gray-300: #d5d5d5;
+  --color-gray-200: #e5e5e5;
+  --color-gray-100: #f0f0f0;
+
+  /* ── Semantic roles (PRD Nº8 §6) ──────────────────────────────────────────
+     Components reference these, never the raw palette. Swapping a brand value
+     should not mean editing eighty components.
+
+     Light and dark surfaces get separate text tokens on purpose. #7a7a7a
+     reaches only 3.97:1 on Paper (fails AA) but 4.61:1 on Ink (passes), so a
+     single "muted" token would be wrong on one of the two surfaces. */
+  --color-surface: var(--color-paper);
+  --color-surface-raised: var(--color-white);
+  --color-surface-sunken: var(--color-gray-100);
+  --color-surface-inverse: var(--color-ink);
+
+  --color-text: var(--color-ink);
+  --color-text-muted: var(--color-gray-700); /* 6.89:1 on Paper */
+  --color-text-subtle: var(--color-gray-700); /* metadata; see note above */
+  --color-text-inverse: var(--color-paper); /* 18.31:1 on Ink */
+  --color-text-inverse-muted: var(--color-gray-300); /* 13.49:1 on Ink */
+
+  --color-border: var(--color-gray-300);
+  --color-border-subtle: var(--color-gray-200);
+  --color-border-strong: var(--color-ink);
+  --color-border-inverse: var(--color-gray-700);
+
+  --color-accent: var(--color-red);
+  --color-danger: var(--color-red);
+  --color-breaking: var(--color-red);
+  --color-focus: var(--color-red); /* 4.80 on Paper, 3.82 on Ink — both ≥3:1 */
+
+  /* Visited links (delta D-02). A spent red rather than a grey, so the link
+     still reads as a link. 8.58:1 on Paper. */
+  --color-link-visited: #7a2e32;
+
+  /* Disabled controls. The obvious gray-300/gray-500 pairing only reaches
+     2.92:1; this one reaches 5.92:1. */
+  --color-disabled-surface: var(--color-gray-200);
+  --color-disabled-text: var(--color-gray-700);
+
+  /* ── Typography (PRD Master §6, PRD Nº8 §8-§9) ────────────────────────────
+     Families are injected by next/font in the root layout, which self-hosts
+     them at build time — PRD Master §6 forbids blocking external requests. */
+  --font-editorial: var(--font-playfair), 'Playfair Display', Georgia, serif;
+  --font-sans: var(--font-source-sans), 'Source Sans 3', system-ui, sans-serif;
+
+  /* Fluid scale (PRD Master §7, PRD Nº8 §11). Each step interpolates between
+     its mobile floor and its desktop ceiling; both ends are PRD values. */
+  --text-display: clamp(2.75rem, 1.5rem + 5.5vw, 6rem); /* 44 → 96 */
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: clamp(2.25rem, 1.3rem + 4.2vw, 4.5rem); /* 36 → 72 */
+  --text-h1--line-height: 1.06;
+  --text-h1--letter-spacing: -0.018em;
+
+  --text-h2: clamp(1.75rem, 1.15rem + 2.6vw, 3.25rem); /* 28 → 52 */
+  --text-h2--line-height: 1.12;
+  --text-h2--letter-spacing: -0.014em;
+
+  --text-h3: clamp(1.375rem, 1.05rem + 1.4vw, 2.25rem); /* 22 → 36 */
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.01em;
+
+  --text-lead: clamp(1.125rem, 1.02rem + 0.45vw, 1.5rem); /* 18 → 24 */
+  --text-lead--line-height: 1.45;
+
+  --text-body-lg: clamp(1.0625rem, 1rem + 0.3vw, 1.3125rem); /* 17 → 21 */
+  --text-body-lg--line-height: 1.65;
+
+  /* PRD Nº8 §12: 17–20px at 1.6–1.75 line-height. This is the reading size —
+     the single most important number in the whole product. */
+  --text-body: clamp(1.0625rem, 1.03rem + 0.16vw, 1.1875rem); /* 17 → 19 */
+  --text-body--line-height: 1.7;
+
+  --text-metadata: clamp(0.8125rem, 0.8rem + 0.05vw, 0.875rem); /* 13 → 14 */
+  --text-metadata--line-height: 1.4;
+
+  --text-label: clamp(0.6875rem, 0.66rem + 0.09vw, 0.8125rem); /* 11 → 13 */
+  --text-label--line-height: 1.3;
+  --text-label--letter-spacing: 0.12em;
+
+  /* ── Spacing (PRD Master §39, PRD Nº8 §17) ────────────────────────────────
+     Base 4. Every step of the PRD scale — 4 8 12 16 24 32 40 48 64 80 96 128
+     160 — is reachable as a multiple, so arbitrary values like 37px never
+     need to exist. */
+  --spacing: 0.25rem;
+
+  /* 8px baseline for vertical rhythm (DESIGN-REFERENCE §1). */
+  --baseline: 0.5rem;
+
+  /* ── Layout (DESIGN-REFERENCE §1, PRD Nº8 §14-§16) ────────────────────────*/
+  --container-wide: 1440px;
+  --container-editorial: 1200px;
+  --container-article: 900px;
+  --container-reading: 720px;
+
+  /* 24px gutter, fixed across breakpoints. */
+  --gutter: 1.5rem;
+
+  /* 120px page margin at desktop, but a 120px margin on a 360px phone would
+     leave 120px of content. Fluid from 20px to 120px. */
+  --page-margin: clamp(1.25rem, -0.5rem + 7vw, 7.5rem);
+
+  /* ── Borders and radius (PRD Master §41, PRD Nº8 §18-§19) ─────────────────
+     The identity is built from lines, not rounded cards. */
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-control: 6px;
+
+  /* ── Shadows (PRD Master §42, PRD Nº8 §20) ────────────────────────────────
+     "Prácticamente inexistentes." One shadow, reserved for genuine depth such
+     as a dialog above the page. Hierarchy comes from space and contrast. */
+  --shadow-overlay: 0 8px 32px rgb(10 10 10 / 0.16);
+
+  /* ── Motion (PRD Master §37, PRD Nº8 §136) ────────────────────────────────
+     120–250ms, functional only. */
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 250ms;
+  --ease-editorial: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE LAYER
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-body {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* PRD Nº8 §103: focus is always visible, and `outline: none` without a
+     replacement is never acceptable. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+
+  /* PRD Master §37 / PRD Nº8 §107. Motion is an enhancement, never a
+     dependency — and some people get physically ill from it. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }

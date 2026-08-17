@@ -44,26 +44,29 @@ source** so the next export does not reintroduce it.
 
 ---
 
-## Open question — palette mismatch
+## Palette mismatch — RESOLVED: the PRD wins
 
-The delivered SVGs do not use the palette approved in PRD Master §4:
+The delivered SVGs did not use the palette approved in PRD Master §4. Decision
+taken 2026-08-17: **PRD Master §4 is authoritative**, and these served copies
+were recoloured to match.
 
-| Role              | PRD Master §4 | Delivered SVG | Match |
-| ----------------- | ------------- | ------------- | ----- |
-| Investigation Red | `#D71920`     | `#d71920`     | ✅    |
-| Ink               | `#0A0A0A`     | `#000a0a`     | ❌    |
-| Paper             | `#F7F6F2`     | `#f2f2f2`     | ❌    |
+| Role              | PRD Master §4 (applied) | As delivered | Action               |
+| ----------------- | ----------------------- | ------------ | -------------------- |
+| Investigation Red | `#D71920`               | `#d71920`    | case normalised only |
+| Ink               | `#0A0A0A`               | `#000a0a`    | recoloured           |
+| Paper             | `#F7F6F2`               | `#f2f2f2`    | recoloured           |
 
-`#000a0a` versus `#0A0A0A` looks like transposed digits, but it is a real
+`#000a0a` versus `#0A0A0A` looked like transposed digits, but it was a real
 difference — a slight cyan cast rather than neutral black.
 
-`#f2f2f2` versus `#F7F6F2` matters more: PRD Master §4 explicitly asks to
+`#f2f2f2` versus `#F7F6F2` mattered more: PRD Master §4 explicitly asks to
 "evitar blanco digital excesivamente frío", and `#f2f2f2` is exactly that — a
-cold neutral grey, where Paper is warm.
+cold neutral grey, where Paper is warm. Keeping it would have put the logo in
+open contradiction with its own stated palette intent.
 
-Until this is settled, the files keep the designer's values so that the assets
-stay self-consistent. F1 must not tokenise two competing definitions of Ink and
-Paper.
+The originals in `docs/assets/img/` are untouched and still carry the delivered
+values. **The upstream source files should be recoloured too**, alongside the
+wordmark fix above — otherwise the next export reintroduces both problems.
 
 ---
 

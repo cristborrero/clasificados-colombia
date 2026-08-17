@@ -147,7 +147,21 @@ Seis fichas con icono outline: `INVESTIGACIÓN` (lupa) · `POLÍTICA` (edificio)
 
 ---
 
-## 9. DELTAS CONTRA LOS PRDs — requieren confirmación
+## 9. DELTAS CONTRA LOS PRDs
+
+> **Resueltos el 2026-08-17** (decisión del cliente):
+>
+> - **D-01 · ámbar `ALERTA` → SE INCLUYE.** Criterio dado: _«si está, se hace»_ — lo que la
+>   lámina muestra se construye. Tokenizado como `--color-alert` en F1.
+> - **D-06 · fotografía en blanco y negro → NO es dirección de arte.** Son imágenes de relleno
+>   de la lámina. No se aplica monocromo sistemático; el pipeline de media (F15) queda sin
+>   restricción cromática y rige el PRD Nº10 §71-§72 (documental, natural, sobrio).
+>   Para contenido demo se usan imágenes de relleno equivalentes.
+> - **D-12 / D-13 · paleta de los logos → MANDA EL PRD.** Ink `#0A0A0A` y Paper `#F7F6F2`.
+>   Los assets servidos en `public/brand/` fueron recoloreados; los originales del diseñador
+>   quedan intactos.
+>
+> Siguen abiertos: D-04, D-05, D-07, D-14.
 
 | #        | Delta                                                                                                                                                                                                                                                                                                                                                                             | Impacto                                                                                          | Propuesta                                                                                                                                                                                                                       |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -178,6 +192,53 @@ Entregados en `docs/assets/img/`: `favicon.svg`, `logo-clasificados-colombia-mai
 | **D-15** | **Falta `apple-touch-icon` PNG.** Safari en iOS ignora los favicon SVG.                                                                                                                                                                               | F16         | Generable desde `logomark.svg` en F16; no bloquea.                                                                                        |
 
 Detalle técnico completo en `public/brand/README.md`.
+
+---
+
+## 9-ter. Manual de marca (recibido 2026-08-17)
+
+Añadidas 12 láminas más en `docs/img/`: sistema cromático, sistema tipográfico, sistema de logo,
+instrucción del logo, sistema gráfico e iconografía, estilo fotográfico, aplicaciones clave.
+
+> **Regla de precedencia confirmada por el cliente: los PRDs siguen mandando.**
+> El manual es referencia de apoyo. Donde el manual implicaría un cambio abrupto sobre lo ya
+> especificado en los PRDs, **no se aplica** — se registra aquí y se decide aparte.
+
+### Lo que CONFIRMA (sin cambios necesarios)
+
+- Negro Editorial `#0A0A0A`, Rojo Investigación `#D71920`, Papel `#F7F6F2` — idénticos al PRD Master §4.
+- Playfair Display (editorial) + Source Sans 3 (interfaz/lectura) — idéntico al PRD Master §6.
+- Espaciado en múltiplos de 4 px, con pasos 8/12/16/24/32/48/64 — idéntico al PRD Master §39.
+- Ancho de columna 65–75 caracteres — idéntico al PRD Nº8 §13.
+- Proporción cromática ≈60% negro / 25% papel / 8% gris / 5% rojo / 2% neutros — refina el PRD Master §5 (60/25/10/5).
+
+### Lo que DIVERGE — no aplicado, pendiente de decisión
+
+| #        | Divergencia                                                                                                                                                                                                                                                                                                                                  | Estado                                                                                                                                                                                                                                           |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **D-16** | **Rampa de grises.** Implementado el PRD Nº8 §5 (`#222222 #555555 #7A7A7A #D5D5D5 #E5E5E5 #F0F0F0`). El manual define `#1A1A1A #333333 #6B6B6B #9A9A9A #E5E5E5 #F0F0F0` — que coincide con el PRD Master §4. Es en el fondo un conflicto PRD-vs-PRD que el manual desempata a favor del Master. Por precedencia (doc más reciente) gana Nº8. | **NO aplicado.** Se mantiene Nº8. Nota real: el `#7A7A7A` de Nº8 da 3.97:1 sobre Papel y **no pasa AA**, mientras el `#6B6B6B` del Master/manual da 4.93:1 y sí. Por eso los tokens de texto muted/metadata apuntan a `#555555`, no a `#7A7A7A`. |
+| **D-17** | **Especificaciones tipográficas en pt.** El manual da tamaños de imprenta (Playfair Black 64–72 pt, tracking −20 a −40, etc.). La escala implementada viene del PRD Master §7, en px y declarada como referencia de pantalla.                                                                                                                | **NO aplicado.** Rige el PRD Master §7. Los valores en pt son de soporte impreso y no traducen 1:1 a la web.                                                                                                                                     |
+
+### Errores detectados en la tabla de contraste del manual
+
+El manual publica una tabla «COMBINACIONES DE CONTRASTE» con valores que no se sostienen al
+calcularlos. Verificado con `src/styles/contrast.ts`:
+
+| Combinación                    | Declara   | Real      | Veredicto                              |
+| ------------------------------ | --------- | --------- | -------------------------------------- |
+| Negro Editorial sobre Papel    | 21.0      | **18.31** | pasa igual, pero el número está mal    |
+| Blanco sobre Negro Editorial   | 21.0      | **19.80** | pasa igual, número mal                 |
+| Gris Información sobre Papel   | 4.5       | **4.93**  | pasa                                   |
+| Rojo sobre Papel               | 4.6 / AAA | **4.80**  | pasa AA; **no es AAA** (AAA exige 7:1) |
+| **Rojo sobre Negro Editorial** | 4.7 / AAA | **3.82**  | **NO pasa AA para texto normal**       |
+
+El último es el que importa: el manual presenta rojo sobre negro como combinación aprobada para
+texto, y no lo es. Solo es válida para texto grande (≥24 px, o ≥19 px en negrita) y para elementos
+no textuales, donde el umbral es 3:1.
+
+Esto ya está blindado en código: `src/styles/contrast.test.ts` afirma explícitamente que
+`--color-accent` sobre `--color-surface-inverse` está entre 3:1 y 4.5:1, de modo que si alguien
+sube ese par a texto de cuerpo, el test lo detiene.
 
 ---
 

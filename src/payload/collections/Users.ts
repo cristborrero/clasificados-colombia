@@ -1,8 +1,15 @@
 import { AuthenticationError, type CollectionConfig } from 'payload'
 
 import {
+  adminFieldOnly,
+  adminOnly,
+  adminOrSelf,
+  getUser,
+  isActive,
+  systemFieldOnly,
+} from '@/payload/access/helpers'
+import {
   canAuthenticate,
-  isAdministrator,
   roleOptions,
   userStatusOptions,
   type Role,
@@ -16,22 +23,70 @@ import {
  * CMS login, and not every internal account should appear as an author.
  * `Authors` arrives in F4.
  *
- * SCOPE: F2 builds the model, authentication and the account-status gate. The
- * complete access-control matrix across every collection — and the Role ×
- * Resource × Operation × Status test suite — is F3.
+ * Access control is complete for this collection as of F3. The rows of the
+ * Role × Resource × Operation × Status matrix that concern `Articles` and
+ * `Evidence` arrive with those collections (F4, F5, F6), because a matrix
+ * cannot assert against resources that do not exist yet.
  *
- * What is NOT deferred is privilege escalation. Shipping a writable `role`
- * field with no field-level guard would mean any authenticated account could
- * promote itself to administrator through the REST API, so the guards on
- * `role` and `status` are here rather than in F3 (PRD Nº5 §17-§18).
+ * Verified through the REST API rather than the admin UI, per PRD Nº5 §96 and
+ * §111 — see `e2e/access-matrix.spec.ts`.
  */
-
-type MaybeUser = { role?: Role; id?: string | number } | null | undefined
-
-const isAdminUser = (user: MaybeUser): boolean => isAdministrator(user?.role)
 
 export const Users: CollectionConfig = {
   slug: 'users',
+
+  /**
+   * DENY BY DEFAULT (PRD Nº5 §2, PRD Nº7 §11).
+   *
+   * Every operation is declared. Payload's defaults let any authenticated user
+   * read, update and delete — which meant a reporter could delete the
+   * administrator through the REST API. Relying on defaults for a collection
+   * that holds accounts and roles is not an oversight to fix later; it is the
+   * whole vulnerability.
+   */
+  access: {
+    /** PRD Nº7 §9: only an administrator creates accounts. */
+    create: adminOnly,
+
+    /**
+     * PRD Nº7 §9: administrator reads all, everyone else reads their own
+     * document. Returns a filter rather than a boolean (PRD Nº7 §106) so that
+     * other people's records are never loaded — a list endpoint that fetches
+     * everything and then hides it still leaks how many accounts exist.
+     *
+     * The PRD also anticipates editorial roles needing limited public
+     * information about colleagues "cuando el workflow lo requiera". That
+     * carve-out arrives with the assignment fields in F4; inventing its shape
+     * now would mean guessing.
+     */
+    read: adminOrSelf,
+
+    /**
+     * Administrator updates anyone; everyone else only themselves — and only
+     * the non-security fields, which the field-level rules below enforce.
+     */
+    update: adminOrSelf,
+
+    /**
+     * PRD Nº7 §9 and PRD Nº5 §15: avoid hard deletes, prefer
+     * `status = disabled`. Restricted to administrators, and even then it is
+     * the wrong tool — disabling preserves the audit trail that deletion
+     * destroys.
+     */
+    delete: adminOnly,
+
+    /**
+     * Who may open the admin panel at all.
+     *
+     * Checks `isActive`, not merely authentication: a token issued before an
+     * account was suspended must stop working (PRD Nº5 §82-§83). `beforeLogin`
+     * blocks new sessions; this blocks surviving ones.
+     */
+    admin: ({ req }) => isActive(getUser(req)),
+
+    /** PRD Nº5 §75: API keys are subject to the same rules, never above them. */
+    unlock: adminOnly,
+  },
 
   auth: {
     /*
@@ -160,7 +215,7 @@ export const Users: CollectionConfig = {
          * PRD Nº5 §17 forbids assigning a role above your own. The UI hiding
          * the field is not the control — this is (PRD Nº5 §4).
          */
-        update: ({ req }) => isAdminUser(req.user as MaybeUser),
+        update: adminFieldOnly,
       },
     },
 
@@ -177,7 +232,7 @@ export const Users: CollectionConfig = {
           'Deshabilitado impide el inicio de sesión. Al salir del equipo, deshabilitar de inmediato (PRD Nº4 §96).',
       },
       access: {
-        update: ({ req }) => isAdminUser(req.user as MaybeUser),
+        update: adminFieldOnly,
       },
     },
 
@@ -200,7 +255,7 @@ export const Users: CollectionConfig = {
           'Indicador de estado. La implementación de MFA es posterior (ver gap G-20); este campo no activa nada por sí solo.',
       },
       access: {
-        update: ({ req }) => isAdminUser(req.user as MaybeUser),
+        update: adminFieldOnly,
       },
     },
 
@@ -218,7 +273,7 @@ export const Users: CollectionConfig = {
         description: 'Lo escribe el sistema al iniciar sesión.',
       },
       access: {
-        update: () => false,
+        update: systemFieldOnly,
       },
     },
 
@@ -231,7 +286,7 @@ export const Users: CollectionConfig = {
         description: 'Lo escribe el sistema al cambiar la contraseña.',
       },
       access: {
-        update: () => false,
+        update: systemFieldOnly,
       },
     },
 
@@ -244,8 +299,8 @@ export const Users: CollectionConfig = {
           'Notas internas de administración. No registrar aquí secretos, contraseñas ni códigos de recuperación (PRD Nº5 §5).',
       },
       access: {
-        read: ({ req }) => isAdminUser(req.user as MaybeUser),
-        update: ({ req }) => isAdminUser(req.user as MaybeUser),
+        read: adminFieldOnly,
+        update: adminFieldOnly,
       },
     },
 

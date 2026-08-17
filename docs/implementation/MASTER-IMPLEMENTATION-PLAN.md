@@ -665,9 +665,9 @@ No existe base de datos previa, ni contenido, ni usuarios, ni URLs publicadas. *
 4. `payload migrate:create` requiere `--force-accept-warning` en contextos sin TTY (CI, agentes).
    Sin la bandera aborta en silencio y **no genera archivo**, que es un modo de fallo especialmente
    traicionero: el comando parece exitoso.
-4. Cada cambio persistente del modelo debe responder explícitamente _"¿requiere migration?"_ antes del deploy.
-5. Orden obligatorio: `local → CI → staging → production`. Nunca probar por primera vez en producción.
-6. Registrar por migración: nombre, inicio, fin, fallo, duración, release SHA.
+5. Cada cambio persistente del modelo debe responder explícitamente _"¿requiere migration?"_ antes del deploy.
+6. Orden obligatorio: `local → CI → staging → production`. Nunca probar por primera vez en producción.
+7. Registrar por migración: nombre, inicio, fin, fallo, duración, release SHA.
 
 ## 8.3 Patrón seguro obligatorio
 

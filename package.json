@@ -41,6 +41,7 @@
     "@payloadcms/db-postgres": "3.88.0",
     "@payloadcms/next": "3.88.0",
     "@payloadcms/richtext-lexical": "3.88.0",
+    "@payloadcms/translations": "3.88.0",
     "@payloadcms/ui": "3.88.0",
     "@radix-ui/react-dialog": "^1.1.23",
     "graphql": "^16.11.0",

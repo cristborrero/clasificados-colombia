@@ -2,6 +2,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { en } from '@payloadcms/translations/languages/en'
+import { es } from '@payloadcms/translations/languages/es'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
@@ -41,6 +43,23 @@ export default buildConfig({
     meta: {
       titleSuffix: '· Clasificados Colombia',
     },
+  },
+
+  /**
+   * Admin panel language (PRD Nº7 §124).
+   *
+   * Spanish by default, because the people using this panel every day are a
+   * Colombian newsroom. English stays available so the interface is not a
+   * barrier for anyone who prefers it — each account picks its own language
+   * from their profile, and the choice is remembered.
+   *
+   * This only translates Payload's own interface. The field labels and
+   * descriptions in this codebase were already written in Spanish, which is why
+   * the result reads as one language rather than as a half-translated panel.
+   */
+  i18n: {
+    supportedLanguages: { es, en },
+    fallbackLanguage: 'es',
   },
 
   /*

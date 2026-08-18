@@ -75,6 +75,7 @@ export interface Config {
     organizations: Organization;
     media: Media;
     articles: Article;
+    investigations: Investigation;
     opinions: Opinion;
     'data-stories': DataStory;
     'video-stories': VideoStory;
@@ -95,6 +96,7 @@ export interface Config {
     organizations: OrganizationsSelect<false> | OrganizationsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     articles: ArticlesSelect<false> | ArticlesSelect<true>;
+    investigations: InvestigationsSelect<false> | InvestigationsSelect<true>;
     opinions: OpinionsSelect<false> | OpinionsSelect<true>;
     'data-stories': DataStoriesSelect<false> | DataStoriesSelect<true>;
     'video-stories': VideoStoriesSelect<false> | VideoStoriesSelect<true>;
@@ -790,6 +792,181 @@ export interface Source {
   createdAt: string;
 }
 /**
+ * Investigaciones. No se publican sin verificación completa, revisión legal aprobada y metodología documentada.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "investigations".
+ */
+export interface Investigation {
+  id: number;
+  title: string;
+  /**
+   * Parte final de la URL. Se genera desde el título y se congela al publicar; cambiarlo después crea un redirect automático.
+   */
+  slug: string;
+  /**
+   * Se activa en la primera publicación. Protege una URL ya difundida.
+   */
+  slugLocked?: boolean | null;
+  dek?: string | null;
+  hero?: {
+    image?: (number | null) | Media;
+    captionOverride?: string | null;
+  };
+  authors: (number | Author)[];
+  /**
+   * Quién editó la investigación, cuando corresponda acreditarlo.
+   */
+  editors?: (number | Author)[] | null;
+  /**
+   * Qué encontramos, en pocas líneas.
+   */
+  summary?: string | null;
+  /**
+   * Lo que la investigación demostró. Cada hallazgo debe poder rastrearse a una fuente.
+   */
+  keyFindings?:
+    | {
+        headline: string;
+        description?: string | null;
+        sources?: (number | Source)[] | null;
+        importance?: ('primary' | 'normal' | 'context') | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * PRD SEO §60: si un capítulo no es sustancial, usar anclas internas en vez de crear una URL delgada.
+   */
+  chapters?:
+    | {
+        title: string;
+        /**
+         * Parte final de la URL. Se genera desde el título y se congela al publicar; cambiarlo después crea un redirect automático.
+         */
+        slug: string;
+        intro?: string | null;
+        body?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        sources?: (number | Source)[] | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Modelada como array y no como colección aparte (resolución del conflicto C-05). Si en algún momento hace falta reutilizar eventos entre investigaciones, se promueve a colección.
+   */
+  timeline?:
+    | {
+        date: string;
+        title: string;
+        description?: string | null;
+        sources?: (number | Source)[] | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ATENCIÓN: si esta lista no está vacía, la revisión legal debe estar APROBADA para publicar. Mencionar a alguien no implica imputación; el contexto va en el texto.
+   */
+  people?: (number | Person)[] | null;
+  organizations?: (number | Organization)[] | null;
+  sources?: (number | Source)[] | null;
+  /**
+   * Cómo se investigó: verificación de documentos, manejo de datos, entrevistas, solicitudes oficiales. Obligatoria para publicar.
+   */
+  methodology?: string | null;
+  /**
+   * PRD SEO §75: mostrar qué cambió. Una investigación viva se actualiza; el lector debe poder ver la historia del cambio.
+   */
+  updates?:
+    | {
+        date: string;
+        summary: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Lo registra el sistema. Determina quién puede editar el borrador.
+   */
+  createdBy?: (number | null) | User;
+  /**
+   * Quién acompaña esta pieza. Da acceso de edición además del autor.
+   */
+  assignedEditor?: (number | null) | User;
+  /**
+   * Estado de la pieza dentro del proceso de redacción. La visibilidad pública se deriva de aquí, no se controla por separado.
+   */
+  workflow: {
+    /**
+     * Publicar exige rol autorizado, verificación completa y revisión legal resuelta.
+     */
+    editorialStatus:
+      'draft' | 'editing' | 'fact_check' | 'legal_review' | 'approved' | 'scheduled' | 'published' | 'archived';
+    factCheckStatus?: ('not_required' | 'not_started' | 'in_progress' | 'verified' | 'issues_found') | null;
+    legalStatus?: ('not_required' | 'pending' | 'approved' | 'changes_required') | null;
+    /**
+     * Notas internas. Nunca se envían al frontend público (PRD Nº8 §170).
+     */
+    reviewNotes?: string | null;
+  };
+  publication?: {
+    /**
+     * Fecha visible al lector. Debe coincidir con el structured data.
+     */
+    publishedAt?: string | null;
+    /**
+     * Se registra una sola vez, en la primera publicación. No se modifica.
+     */
+    firstPublishedAt?: string | null;
+    /**
+     * Solo cuando el contenido cambia de forma sustantiva. No se toca por correcciones de forma (PRD SEO §29).
+     */
+    modifiedAt?: string | null;
+    /**
+     * Debe ser una fecha futura.
+     */
+    scheduledAt?: string | null;
+  };
+  /**
+   * Todo es opcional. Si se deja vacío, el sistema deriva los valores del titular, la bajada y la imagen principal.
+   */
+  seo?: {
+    /**
+     * Solo si el titular editorial no funciona bien en resultados de búsqueda. No debe cambiar el significado (PRD SEO §27).
+     */
+    metaTitle?: string | null;
+    /**
+     * Debe describir, no ser clickbait. Si se deja vacío, se usa la bajada.
+     */
+    metaDescription?: string | null;
+    /**
+     * Solo para casos excepcionales. Nunca incluir parámetros de campaña como utm_source (PRD SEO §9).
+     */
+    canonical?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    /**
+     * Excluye esta pieza de los buscadores. Usar con criterio: una nota publicada normalmente debe indexarse.
+     */
+    noIndex?: boolean | null;
+    noFollow?: boolean | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * Columnas y análisis de opinión. Siempre marcadas como opinión ante el lector.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1226,6 +1403,10 @@ export interface PayloadLockedDocument {
         value: number | Article;
       } | null)
     | ({
+        relationTo: 'investigations';
+        value: number | Investigation;
+      } | null)
+    | ({
         relationTo: 'opinions';
         value: number | Opinion;
       } | null)
@@ -1567,6 +1748,96 @@ export interface ArticlesSelect<T extends boolean = true> {
         people?: T;
         organizations?: T;
         sources?: T;
+      };
+  createdBy?: T;
+  assignedEditor?: T;
+  workflow?:
+    | T
+    | {
+        editorialStatus?: T;
+        factCheckStatus?: T;
+        legalStatus?: T;
+        reviewNotes?: T;
+      };
+  publication?:
+    | T
+    | {
+        publishedAt?: T;
+        firstPublishedAt?: T;
+        modifiedAt?: T;
+        scheduledAt?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+        canonical?: T;
+        ogTitle?: T;
+        ogDescription?: T;
+        noIndex?: T;
+        noFollow?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "investigations_select".
+ */
+export interface InvestigationsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  slugLocked?: T;
+  dek?: T;
+  hero?:
+    | T
+    | {
+        image?: T;
+        captionOverride?: T;
+      };
+  authors?: T;
+  editors?: T;
+  summary?: T;
+  keyFindings?:
+    | T
+    | {
+        headline?: T;
+        description?: T;
+        sources?: T;
+        importance?: T;
+        id?: T;
+      };
+  chapters?:
+    | T
+    | {
+        title?: T;
+        slug?: T;
+        intro?: T;
+        body?: T;
+        sources?: T;
+        id?: T;
+      };
+  timeline?:
+    | T
+    | {
+        date?: T;
+        title?: T;
+        description?: T;
+        sources?: T;
+        id?: T;
+      };
+  people?: T;
+  organizations?: T;
+  sources?: T;
+  methodology?: T;
+  updates?:
+    | T
+    | {
+        date?: T;
+        summary?: T;
+        id?: T;
       };
   createdBy?: T;
   assignedEditor?: T;

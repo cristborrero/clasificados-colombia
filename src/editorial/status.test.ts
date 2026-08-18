@@ -227,6 +227,37 @@ describe('publish preconditions', () => {
     expect(canBePublished({ hasAuthors: false })).toBe(false)
   })
 
+  describe('naming people raises the legal bar (PRD Arquitectura §12)', () => {
+    it('refuses "not required" once a piece names people', () => {
+      // The whole point: `not_required` is a legitimate answer for a weather
+      // story and an unacceptable one for a corruption investigation that names
+      // someone. Without this rule, marking review as not required would skip
+      // the review that matters most.
+      expect(canBePublished({ namesPeople: true, legalStatus: 'not_required' })).toBe(false)
+      expect(canBePublished({ namesPeople: true, legalStatus: 'pending' })).toBe(false)
+      expect(canBePublished({ namesPeople: true, legalStatus: 'changes_required' })).toBe(false)
+    })
+
+    it('accepts explicit legal approval', () => {
+      expect(canBePublished({ namesPeople: true, legalStatus: 'approved' })).toBe(true)
+    })
+
+    it('refuses a piece that names people with no legal status at all', () => {
+      expect(canBePublished({ namesPeople: true })).toBe(false)
+    })
+
+    it('leaves pieces that name nobody under the ordinary rule', () => {
+      expect(canBePublished({ namesPeople: false, legalStatus: 'not_required' })).toBe(true)
+    })
+
+    it('says why, so an editor is not left guessing', () => {
+      const [blocker] = getPublishBlockers({ namesPeople: true, legalStatus: 'not_required' })
+
+      expect(blocker?.field).toBe('workflow.legalStatus')
+      expect(blocker?.message).toContain('menciona personas')
+    })
+  })
+
   it('reports every blocker at once rather than one per attempt', () => {
     const blockers = getPublishBlockers({
       factCheckStatus: 'in_progress',

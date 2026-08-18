@@ -1,4 +1,4 @@
-import { expect, test, type APIRequestContext } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 import {
   ACCOUNTS,
@@ -7,7 +7,6 @@ import {
   DEV_PASSWORD,
   identity,
   login,
-  type Session,
 } from './support/api'
 
 /**
@@ -28,24 +27,6 @@ import {
  * Runs on chromium only — this is HTTP behaviour, and the server cannot tell
  * which browser engine is asking.
  */
-
-async function findUserId(request: APIRequestContext, admin: Session, email: string) {
-  /*
-   * `params` rather than a template string: Payload's query syntax uses square
-   * brackets, and an unencoded `where[email][equals]=` silently matches nothing
-   * instead of failing. Playwright encodes these correctly.
-   */
-  const response = await request.get('/api/users', {
-    headers: auth(admin),
-    params: { 'where[email][equals]': email },
-  })
-
-  const body = (await response.json()) as { docs: Array<{ id: number | string }> }
-
-  expect(body.docs.length, `admin should be able to find ${email}`).toBe(1)
-
-  return body.docs[0]!.id
-}
 
 test.describe.configure({ mode: 'serial' })
 
@@ -112,9 +93,8 @@ test.describe('access matrix · users', () => {
   test('a reporter cannot read another account directly', async ({ baseURL }) => {
     const admin = await identity(baseURL, ACCOUNTS.admin)
     const reporter = await identity(baseURL, ACCOUNTS.reporter)
-    const adminId = await findUserId(admin.ctx, admin, ACCOUNTS.admin)
 
-    const response = await reporter.ctx.get(`/api/users/${adminId}`)
+    const response = await reporter.ctx.get(`/api/users/${admin.id}`)
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
@@ -140,37 +120,50 @@ test.describe('access matrix · users', () => {
     // cookie speak for the administrator on the survival check below.
     const admin = await identity(baseURL, ACCOUNTS.admin)
     const reporter = await identity(baseURL, ACCOUNTS.reporter)
-    const adminId = await findUserId(admin.ctx, admin, ACCOUNTS.admin)
 
-    const response = await reporter.ctx.delete(`/api/users/${adminId}`)
+    const response = await reporter.ctx.delete(`/api/users/${admin.id}`)
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
-    // Assert survival, not just the status code: a refusal that still deletes
-    // is worse than an honest failure.
-    const stillThere = await admin.ctx.get(`/api/users/${adminId}`)
+    /*
+     * Assert survival, not just the status code: a refusal that still deletes
+     * is worse than an honest failure.
+     *
+     * Verified through a freshly authenticated context rather than the one
+     * opened at the top of the test. Payload 3 tracks a session list per user,
+     * and with specs running in parallel the same account accumulates logins —
+     * an older token can stop being accepted, which produced a 403 here that
+     * looked exactly like a deleted record.
+     */
+    const verifier = await identity(baseURL, ACCOUNTS.admin)
+    const stillThere = await verifier.ctx.get(`/api/users/${admin.id}`)
     expect(stillThere.status()).toBe(200)
 
-    await Promise.all([admin.dispose(), reporter.dispose()])
+    await Promise.all([admin.dispose(), reporter.dispose(), verifier.dispose()])
   })
 
   test('a reporter cannot rename the administrator', async ({ baseURL }) => {
     const admin = await identity(baseURL, ACCOUNTS.admin)
     const reporter = await identity(baseURL, ACCOUNTS.reporter)
-    const adminId = await findUserId(admin.ctx, admin, ACCOUNTS.admin)
 
-    const before = (await (await admin.ctx.get(`/api/users/${adminId}`)).json()) as { name: string }
+    const before = (await (await admin.ctx.get(`/api/users/${admin.id}`)).json()) as {
+      name: string
+    }
 
-    const response = await reporter.ctx.patch(`/api/users/${adminId}`, {
+    const response = await reporter.ctx.patch(`/api/users/${admin.id}`, {
       data: { name: 'RENOMBRADO POR UN REPORTERO' },
     })
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
-    const after = (await (await admin.ctx.get(`/api/users/${adminId}`)).json()) as { name: string }
+    // Fresh session for the same reason as the delete test above.
+    const verifier = await identity(baseURL, ACCOUNTS.admin)
+    const after = (await (await verifier.ctx.get(`/api/users/${admin.id}`)).json()) as {
+      name: string
+    }
     expect(after.name).toBe(before.name)
 
-    await Promise.all([admin.dispose(), reporter.dispose()])
+    await Promise.all([admin.dispose(), reporter.dispose(), verifier.dispose()])
   })
 
   test('a reporter cannot promote itself to administrator', async ({ request }) => {

@@ -2,48 +2,50 @@ import { execFileSync } from 'node:child_process'
 
 import { request as playwrightRequest, type FullConfig } from '@playwright/test'
 
-const SEEDS = ['src/payload/scripts/seed-users.ts', 'src/payload/scripts/seed-editorial.ts']
-
 /**
  * Seeds fixtures and warms the Payload REST route before any test runs.
  *
- * The seeds are idempotent, so re-running costs nothing — and they repair the
- * database when a destructive assertion (a delete that is *supposed* to be
- * refused, but was not) leaves it short of a user.
+ * Seeding runs as a single child process. Importing Payload directly into this
+ * file does not work: Playwright's module loader conflicts with the CJS/ESM
+ * interop of one of Payload's dependencies and fails with "Unexpected module
+ * status 3" before any of our code executes.
  *
- * They run through `node node_modules/payload/bin.js` rather than the pnpm
- * script: the package-manager wrapper swallows this command's output and, in
- * some shells, the execution itself.
+ * One process, not one per seed file. The previous version spawned two, and one
+ * of them silently failed to run — the suite then carried on against a database
+ * with no categories and no authors, and five tests reported "seed must exist"
+ * as though the fixtures were wrong rather than missing.
  *
- * The warmup exists because Payload initialises lazily on its first REST
- * request — database pool, schema, collection config. On this repository's
- * external drive that first call has exceeded 20 seconds, which surfaced as
- * three unrelated tests "failing" on timeouts while the application was
- * perfectly healthy. Paying that cost once here, with a generous budget, keeps
- * per-test timeouts meaningful: a test that times out now indicates a real
- * problem rather than a cold process.
+ * The seed verifies its own work and exits non-zero if anything is missing, so
+ * a failure here aborts the run with one clear sentence instead of five tests
+ * reporting "seed must exist". That check lives in the seed rather than here
+ * because Playwright runs this file *before* starting its `webServer`, so any
+ * HTTP assertion at this point would be answered by whatever server happened to
+ * already be listening.
  */
+
+const SEED_SCRIPT = 'src/payload/scripts/seed-users.ts'
+
 export default async function globalSetup(config: FullConfig): Promise<void> {
-  for (const seed of SEEDS) {
-    execFileSync(process.execPath, ['node_modules/payload/bin.js', 'run', seed], {
-      stdio: 'inherit',
-      env: process.env,
-    })
-  }
+  execFileSync(process.execPath, ['node_modules/payload/bin.js', 'run', SEED_SCRIPT], {
+    stdio: 'inherit',
+    env: process.env,
+  })
 
   const baseURL = config.projects[0]?.use?.baseURL
-
   if (!baseURL) return
 
   const ctx = await playwrightRequest.newContext({ baseURL, timeout: 180_000 })
 
   try {
-    // Any authenticated-or-not hit on the Payload router does the work; a 403
-    // is a perfectly good sign that the stack is up and answering.
+    /*
+     * Doubles as the warmup. Payload initialises lazily on its first REST
+     * request — pool, schema, collection config — and on this repository's
+     * external drive that has exceeded 20 seconds, which surfaced as unrelated
+     * tests timing out while the application was healthy.
+     */
     await ctx.get('/api/users')
   } catch {
-    // Never block the suite. If the route is genuinely broken the tests will
-    // say so, with a better message than this would.
+    // Never block the suite: the tests report a broken route better than this.
   } finally {
     await ctx.dispose()
   }

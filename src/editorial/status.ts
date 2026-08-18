@@ -215,6 +215,13 @@ export type PublishRequirements = {
   requiresMethodology?: boolean
   hasMethodology?: boolean
   hasAuthors?: boolean
+  /**
+   * Whether the piece names people (PRD Arquitectura §12).
+   *
+   * Naming someone in an investigation raises the legal stakes enough that
+   * `not_required` stops being an acceptable answer for legal review.
+   */
+  namesPeople?: boolean
 }
 
 export type PublishBlocker = {
@@ -232,8 +239,14 @@ export type PublishBlocker = {
 export function getPublishBlockers(requirements: PublishRequirements): PublishBlocker[] {
   const blockers: PublishBlocker[] = []
 
-  const { factCheckStatus, legalStatus, requiresMethodology, hasMethodology, hasAuthors } =
-    requirements
+  const {
+    factCheckStatus,
+    legalStatus,
+    requiresMethodology,
+    hasMethodology,
+    hasAuthors,
+    namesPeople,
+  } = requirements
 
   if (factCheckStatus && factCheckStatus !== 'verified' && factCheckStatus !== 'not_required') {
     blockers.push({
@@ -246,6 +259,24 @@ export function getPublishBlockers(requirements: PublishRequirements): PublishBl
     blockers.push({
       field: 'workflow.legalStatus',
       message: 'La revisión legal debe estar aprobada antes de publicar.',
+    })
+  }
+
+  /*
+   * PRD Arquitectura §12: an investigation whose `people[]` is not empty cannot
+   * reach `published` without `legalStatus = approved`.
+   *
+   * Checked separately from the rule above because that one accepts
+   * `not_required` as a legitimate answer — appropriate for a weather story,
+   * not for a piece that names a person in a corruption investigation. Without
+   * this, marking legal review as "not required" would be enough to bypass it.
+   */
+  if (namesPeople && legalStatus !== 'approved') {
+    blockers.push({
+      field: 'workflow.legalStatus',
+      message:
+        'Esta pieza menciona personas: la revisión legal debe estar aprobada explícitamente, ' +
+        'no basta con marcarla como no requerida.',
     })
   }
 

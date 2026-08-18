@@ -12,6 +12,7 @@ import { Categories } from './payload/collections/Categories'
 import { DataStories } from './payload/collections/DataStories'
 import { Topics } from './payload/collections/Topics'
 import { Articles } from './payload/collections/Articles'
+import { Investigations } from './payload/collections/Investigations'
 import { Media } from './payload/collections/Media'
 import { Opinions } from './payload/collections/Opinions'
 import { Organizations } from './payload/collections/Organizations'
@@ -48,6 +49,7 @@ export default buildConfig({
     Organizations,
     Media,
     Articles,
+    Investigations,
     Opinions,
     DataStories,
     VideoStories,

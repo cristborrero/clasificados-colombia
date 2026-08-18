@@ -38,11 +38,18 @@ type EditorialDoc = {
   workflow?: WorkflowShape
   authors?: unknown
   methodology?: unknown
+  people?: unknown
+  relations?: { people?: unknown }
 }
 
 export type StatusContractOptions = {
   /** Investigations must carry a documented method (PRD Nº7 §54). */
   requiresMethodology?: boolean
+  /**
+   * Enforce PRD Arquitectura §12: if the piece names people, legal review must
+   * be explicitly approved rather than marked as not required.
+   */
+  enforceLegalReviewWhenNamingPeople?: boolean
 }
 
 /**
@@ -120,6 +127,14 @@ export function createStatusContractHook(
       requiresMethodology: options.requiresMethodology ?? false,
       hasMethodology: Boolean(resolve(incoming.methodology, stored?.methodology)),
       hasAuthors: hasAtLeastOne(resolve(incoming.authors, stored?.authors)),
+      namesPeople:
+        (options.enforceLegalReviewWhenNamingPeople ?? false) &&
+        hasAtLeastOne(
+          resolve(
+            incoming.people ?? incoming.relations?.people,
+            stored?.people ?? stored?.relations?.people,
+          ),
+        ),
     })
 
     if (blockers.length > 0) {

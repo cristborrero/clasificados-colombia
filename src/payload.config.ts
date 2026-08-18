@@ -2,7 +2,6 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import { en } from '@payloadcms/translations/languages/en'
 import { es } from '@payloadcms/translations/languages/es'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
@@ -48,17 +47,33 @@ export default buildConfig({
   /**
    * Admin panel language (PRD Nº7 §124).
    *
-   * Spanish by default, because the people using this panel every day are a
-   * Colombian newsroom. English stays available so the interface is not a
-   * barrier for anyone who prefers it — each account picks its own language
-   * from their profile, and the choice is remembered.
+   * Spanish only, and that is deliberate rather than lazy.
    *
-   * This only translates Payload's own interface. The field labels and
-   * descriptions in this codebase were already written in Spanish, which is why
-   * the result reads as one language rather than as a half-translated panel.
+   * The first attempt listed `{ es, en }` with `fallbackLanguage: 'es'`, on the
+   * assumption that Spanish would be the default and each account could pick
+   * English from its profile. Both halves were wrong, and testing against the
+   * running panel is what showed it:
+   *
+   *   · `fallbackLanguage` is a *fallback* — the language used when nothing
+   *     else resolves — not a default. With English listed as supported, a
+   *     browser sending `Accept-Language: en` got an English panel.
+   *   · Payload 3.88 does not honour a stored `locale` preference for the admin
+   *     interface. Writing `payload-preferences/locale = es` succeeds, reads
+   *     back correctly, and changes nothing: the header still wins.
+   *
+   * So the only reliable way to give a Colombian newsroom a Spanish panel is to
+   * not offer anything else. An unsupported `Accept-Language` falls through to
+   * `es`, which is now the only option.
+   *
+   * If English is ever genuinely needed, add it back here and expect the
+   * browser to decide — not the user.
+   *
+   * This translates Payload's own interface. The field labels and descriptions
+   * in this codebase were already written in Spanish, which is why the result
+   * reads as one language rather than as a half-translated panel.
    */
   i18n: {
-    supportedLanguages: { es, en },
+    supportedLanguages: { es },
     fallbackLanguage: 'es',
   },
 

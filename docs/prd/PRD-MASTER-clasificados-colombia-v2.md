@@ -2,7 +2,34 @@
 
 ## Plataforma Editorial Digital · Rebranding 2026
 
-> **Nota de versión:** este documento es una actualización del PRD Master original. Se mantiene idéntico en todo lo relativo a marca, identidad visual, UX, componentes, SEO, accesibilidad y experiencia de lectura. Los únicos cambios están en las secciones 8, 23, 27 y 52, donde se reemplaza Sanity CMS por **Payload CMS self-hosted** como motor editorial, según lo definido en el PRD de Arquitectura CMS v2.
+> **Este documento es la única fuente de verdad de la plataforma.**
+>
+> Los PRD complementarios que siguen vigentes son de detalle, no de arquitectura:
+>
+> | PRD | Alcance |
+> | --- | --- |
+> | `PRD — FRONTEND EDITORIAL DEFINITIVO.md` | Componentes, plantillas y experiencia de lectura |
+> | `PRD — SEO, GOOGLE NEWS, DISCOVER Y AUTORIDAD EDITORIAL.md` | Metadatos, structured data, sitemaps |
+> | `PRD — SEARCH & DISCOVERY.md` | Meilisearch: índices, ranking, UI de búsqueda |
+> | `PRD — MEDIA PIPELINE & DIGITAL ASSET MANAGEMENT.md` | Imágenes, derivados, derechos |
+>
+> Ante cualquier contradicción, **manda este documento**.
+>
+> ---
+>
+> **Historial de versiones**
+>
+> - **2026-08-18 · Simplificación arquitectónica.** Se reducen los nueve roles a
+>   tres (`admin`, `editor`, `author`), se retira el Evidence Vault con
+>   clasificación multinivel en favor de colecciones estándar de Payload sobre
+>   S3/MinIO, el servicio aislado de denuncias pasa a ser la colección `tips`
+>   dentro de Payload, y la infraestructura se unifica en un solo stack. Cinco
+>   PRD quedan archivados en `docs/archive/prd-complex-v1/` con la explicación
+>   de qué los reemplaza. Cambian las secciones 8, 20, 22, 23, 26, 51 y 52.
+>   **No cambia nada de marca, identidad visual, tipografía, UX/UI, SEO,
+>   accesibilidad ni experiencia de lectura.**
+> - **Versión anterior.** Reemplazo de Sanity CMS por Payload CMS self-hosted
+>   como motor editorial (secciones 8, 23, 27 y 52).
 
 ### 1. Rol del agente
 
@@ -291,14 +318,15 @@ Construir con:
 * Postgres (base de datos de Payload y del contenido editorial)
 * Payload Local API para data fetching en Server Components (sin round-trip HTTP a un CMS externo)
 * Meilisearch (self-hosted) para búsqueda editorial
-* MinIO (S3-compatible, self-hosted) para documentos de evidencia clasificados
+* MinIO (S3-compatible, self-hosted) para media y documentos publicados
 * Server Components por defecto
 * Server Actions cuando correspondan
 * Route Handlers únicamente cuando sean necesarios
 * Zod para validaciones
 * Lucide para iconos funcionales
 
-Infraestructura: Contabo (VPS) + Coolify (self-hosted PaaS).
+Infraestructura: Contabo (VPS) + Coolify (self-hosted PaaS), **un solo stack**:
+app (Next.js + Payload en un proceso) + Postgres + Meilisearch + S3/MinIO.
 
 Gestor de paquetes:
 
@@ -641,29 +669,46 @@ Debe sentirse como un **dossier periodístico digital**.
 
 # 20. DOCUMENTOS COMO PRIMERA CLASE DE CONTENIDO
 
-Crear componente:
+*(Simplificado 2026-08-18)*
+
+Los documentos que respaldan una investigación se publican junto a ella, no
+escondidos al final. La evidencia forma parte de la narrativa.
+
+Componente:
 
 `EvidenceDocument`
 
-Mostrar:
+Muestra:
 
 * nombre;
 * institución;
 * fecha;
 * tipo;
 * páginas;
-* archivo;
 * contexto;
-* descargar;
-* abrir.
+* enlace para ver o descargar.
 
-También:
+## Modelo de almacenamiento
 
-`DocumentViewer`
+Colección estándar de Payload conectada a S3/MinIO. **Sin clasificación
+multinivel, sin grants por necesidad de conocer, sin URLs prefirmadas de vida
+corta.**
 
-No ocultar documentos probatorios al final del artículo.
+La regla operativa es más simple y más fácil de sostener:
 
-La evidencia forma parte de la narrativa.
+```txt
+si un documento se publica → es público
+si no puede ser público → no se sube al CMS
+```
+
+Un documento sensible que todavía no puede publicarse vive fuera de la
+plataforma hasta que pueda publicarse. Esa es una decisión editorial, no una
+característica del software.
+
+> El diseño anterior —Evidence Vault con tres niveles de clasificación, grants
+> por investigación y URLs de 60 segundos— está archivado en
+> `docs/archive/prd-complex-v1/`. Si el medio llega a manejar material sensible
+> real, ahí está el diseño y sus razones.
 
 ---
 
@@ -688,11 +733,11 @@ información reservada → información revelada.
 
 # 22. DENUNCIA CIUDADANA
 
+*(Simplificado 2026-08-18)*
+
 Crear `/denunciar`.
 
-Debe inspirar seguridad.
-
-Explicar claramente:
+Debe inspirar seguridad. Explicar claramente:
 
 * qué información enviar;
 * qué ocurre después;
@@ -713,40 +758,112 @@ Archivos
 ¿Desea permanecer anónimo?
 ```
 
-No almacenar secretos ni fuentes sensibles sin definir previamente una arquitectura de seguridad apropiada.
+## Arquitectura
+
+Colección interna de Payload: `tips`.
+
+```txt
+formulario público
+↓
+Turnstile + rate limiting
+↓
+colección `tips` (Payload)
+↓
+lectura solo para admin y editor
+```
+
+Reglas de acceso:
+
+| Operación | Quién |
+| --- | --- |
+| `create` | público, a través del endpoint con protección anti-abuso |
+| `read` | `admin`, `editor` |
+| `update` | `admin`, `editor` (solo el estado de gestión) |
+| `delete` | `admin` |
+
+`author` **no** lee denuncias.
+
+## Lo que sigue siendo obligatorio
+
+* **Una denuncia nunca genera contenido automáticamente.** Ni artículo, ni
+  investigación, ni barra de última hora. El paso de denuncia a publicación
+  siempre pasa por una decisión humana.
+* **El anonimato se respeta en el modelo, no solo en la interfaz.** Si quien
+  denuncia marca la casilla, los campos de contacto no se guardan — no se
+  guardan ocultos, no se guardan.
+* **Rate limiting y captcha en el endpoint público**, no solo en el formulario:
+  un formulario protegido con un endpoint abierto no está protegido.
+
+> El diseño anterior —app, base de datos y almacenamiento de cuarentena
+> separados, sin claves foráneas hacia Payload, con worker de escaneo— está
+> archivado en `docs/archive/prd-complex-v1/`.
 
 ---
 
 # 23. CMS — PAYLOAD (self-hosted)
 
-*(Actualizado — reemplaza la sección original "CMS — SANITY")*
+*(Actualizado 2026-08-18 — este PRD Master es la única fuente de verdad del CMS)*
 
-El detalle completo de collections, globals, roles, workflow editorial y estrategia de seguridad de documentos vive en el **PRD de Arquitectura CMS v2 (Payload)**. Este PRD Master solo referencia el inventario de alto nivel:
+Payload CMS v3 corre como plugin nativo de Next.js: mismo repositorio, mismo
+proceso, mismo deploy. No hay un CMS externo al que hacer round-trip.
+
+## Roles
+
+Tres roles. No nueve.
+
+| Rol | Puede |
+| --- | --- |
+| `admin` | Control total: contenido, usuarios, configuración global. |
+| `editor` | Revisa, aprueba, programa y publica contenido. Lee denuncias. |
+| `author` | Crea y edita **únicamente sus propios borradores**. No publica. |
+
+Las reglas que se derivan de esto:
+
+* Solo `editor` y `admin` publican. Un `author` que intente publicar por la API
+  recibe un rechazo del backend, no solo un botón oculto.
+* Un `author` edita lo suyo mientras esté en borrador. Una pieza publicada es
+  un registro público, no un documento personal.
+* Administrar usuarios es de `admin`. Ser editor en jefe del medio no es lo
+  mismo que repartir credenciales.
+
+## Colecciones
 
 ```txt
 articles
 investigations
+opinions
+dataStories
+videoStories
 authors
 categories
 topics
-sources
-evidenceDocuments
-organizations
 people
-timelineEvents
-videoStories
-dataStories
-opinions
-breakingNews
+organizations
+sources
+media
+evidenceDocuments
 corrections
+redirects
+tips
 users
-
-homepage        (global)
-navigation       (global)
-siteSettings     (global)
 ```
 
-Ver el PRD de Arquitectura CMS v2 para campos, workflow (`Draft → Editing → Fact Check → Legal Review → Approved → Scheduled → Published → Archived`), roles y control de acceso.
+## Globals
+
+```txt
+homepage
+navigation
+siteSettings
+breakingNews
+```
+
+## Seguridad de acceso
+
+**Deny by default.** Toda colección declara su bloque `access` de forma
+explícita; ninguna hereda los valores permisivos por defecto de Payload.
+
+La UI puede ocultar, el backend debe negar. Ninguna regla de acceso se duplica
+como `admin.condition`.
 
 ---
 
@@ -797,20 +914,42 @@ updates[]
 
 # 26. WORKFLOW DE REDACCIÓN
 
-Estados:
+*(Simplificado 2026-08-18)*
+
+Tres estados. Sin bloqueos burocráticos intermedios.
 
 ```txt
-Draft
-Review
-Fact Check
-Legal Review
-Scheduled
-Published
-Updated
-Archived
+draft → review → published
 ```
 
-Cuando sea posible, modelarlos mediante metadata editorial.
+| Estado | Significa |
+| --- | --- |
+| `draft` | Se está escribiendo. Solo su autor y el equipo editorial lo ven. |
+| `review` | Listo para que un editor lo lea. Sigue sin ser público. |
+| `published` | Público. |
+
+Más `archived`, que retira una pieza sin borrarla.
+
+## La invariante que se mantiene
+
+La visibilidad pública **se deriva** del estado editorial; no se controla por
+separado. Una pieza en `draft` o `review` es imposible que sea pública, y eso lo
+garantiza el backend, no la disciplina del equipo.
+
+Esto es ADR-001 y sigue vigente: `_status` (nativo de Payload) dice si algo es
+visible; `editorialStatus` dice dónde está en el proceso. Nunca pueden
+contradecirse.
+
+## Verificación y revisión legal
+
+Dejan de ser **estados del flujo** y pasan a ser **campos de la pieza**:
+`factCheckStatus` y `legalStatus`.
+
+La diferencia importa: como estados obligaban a todo el mundo a pasar por
+casillas que la mayoría de las notas no necesita. Como campos, siguen siendo
+condiciones de publicación donde hacen falta —una investigación que menciona
+personas no se publica sin revisión legal aprobada— sin frenar una nota de
+agenda.
 
 ---
 
@@ -1281,76 +1420,122 @@ No incorporar scripts de terceros indiscriminadamente.
 
 # 51. SEGURIDAD
 
+*(Simplificado 2026-08-18)*
+
 Aplicar:
 
 * CSP;
 * secure headers;
 * sanitización;
 * validación server-side;
-* rate limiting donde corresponda;
-* protección de forms;
+* rate limiting en endpoints públicos (búsqueda, denuncias);
+* protección anti-abuso en formularios públicos (Turnstile);
 * secretos únicamente server-side.
 
-Nunca exponer:
+Nunca exponer al cliente:
 
 ```txt
 DATABASE_URL
-API_KEYS
-PRIVATE_KEYS
-MINIO_SECRET_KEY
+PAYLOAD_SECRET
+MEILI_MASTER_KEY
+S3_SECRET_KEY
 ```
 
-al cliente.
+## Control de acceso
+
+Deny by default, en el backend. Tres roles (§23). La regla que decide todo:
+
+> La interfaz puede ocultar. El backend debe negar.
+
+Un botón oculto no es control de acceso. Toda regla se prueba contra la API,
+no contra la pantalla.
+
+## Lo que ya no está
+
+Se retiran, por sobreingeniería para un medio digital:
+
+* clasificación de documentos en tres niveles;
+* grants de acceso por necesidad de conocer;
+* URLs prefirmadas de vida corta;
+* auditoría append-only de cada lectura;
+* equipos de investigación como entidad de permisos.
+
+Queda registro de las operaciones que importan —quién publicó, quién despublicó,
+quién cambió un rol— porque eso es barato y responde la pregunta que de verdad
+se hace después de un incidente. Lo demás era un threat model de agencia de
+inteligencia aplicado a una redacción.
+
+> Diseño anterior archivado en `docs/archive/prd-complex-v1/`.
 
 ---
 
 # 52. ARQUITECTURA DEL PROYECTO
 
-*(Actualizado)*
+*(Actualizado 2026-08-18)*
 
-Propuesta:
+## Despliegue: un solo stack
+
+```txt
+Coolify / docker-compose
+├── app          Next.js + Payload CMS  (un proceso)
+├── postgres     una base de datos
+└── meilisearch  un índice derivado
+```
+
+Más S3/MinIO para media. Nada más.
+
+Sin redes Docker aisladas por dominio, sin servicio de denuncias separado, sin
+base de datos secundaria. Un medio digital que despliega tres contenedores puede
+razonar sobre su propia infraestructura; uno que despliega nueve, no.
+
+Sigue vigente lo que no es opcional:
+
+* Postgres y Meilisearch **no se publican a internet**;
+* migraciones explícitas, nunca push automático en producción;
+* backups de Postgres y de media. Meilisearch es reconstruible con
+  `pnpm search:reindex`, y por eso queda fuera del backup.
+
+## Estructura del repositorio
 
 ```txt
 src/
 ├── app/
-├── collections/
-│   ├── articles/
-│   ├── investigations/
-│   ├── authors/
-│   ├── categories/
-│   ├── topics/
-│   ├── sources/
-│   ├── evidenceDocuments/
-│   ├── organizations/
-│   ├── people/
-│   ├── timelineEvents/
-│   ├── breakingNews/
-│   ├── corrections/
-│   └── users/
-├── globals/
-│   ├── homepage/
-│   ├── navigation/
-│   └── siteSettings/
-├── access/
-├── hooks/
+│   ├── (frontend)/       páginas públicas
+│   ├── (payload)/        admin de Payload
+│   └── api/              route handlers
+├── payload/
+│   ├── collections/
+│   ├── globals/
+│   ├── fields/           campos reutilizables
+│   ├── hooks/
+│   ├── access/           helpers de control de acceso
+│   ├── migrations/
+│   └── scripts/          seed
 ├── components/
-│   ├── article/
-│   ├── breaking/
-│   ├── cards/
-│   ├── data/
-│   ├── documents/
-│   ├── editorial/
-│   ├── forms/
-│   ├── investigation/
+│   ├── articles/
+│   ├── brand/
+│   ├── editorial/        tipografía y bloques de texto enriquecido
+│   ├── evidence/
+│   ├── feedback/         estados de carga, error y vacío
+│   ├── investigations/
 │   ├── layout/
 │   ├── media/
+│   ├── navigation/
+│   ├── search/
 │   └── ui/
-├── lib/
-│   └── queries/
-├── styles/
-├── types/
-└── utils/
+├── data/                 capa de acceso a datos — nadie más consulta Payload
+├── lib/                  lógica pura y adaptadores
+├── search/               índice Meilisearch
+├── editorial/            reglas de estado editorial
+└── styles/
 ```
+
+## La regla que sostiene la estructura
+
+**Ningún componente de presentación consulta Payload.** Las páginas piden datos
+a `src/data/`; los componentes reciben props. Eso es lo que permite probar una
+tarjeta con un objeto literal en vez de con una base de datos, y lo que mantiene
+la frontera pública en un solo lugar.
 
 ---
 

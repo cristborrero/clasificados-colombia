@@ -42,27 +42,20 @@ export const Articles: CollectionConfig = {
       return { _status: { equals: 'published' } }
     },
 
-    // PRD Nº7 §47 — contributors and reporters create their own drafts.
+    // Any active member of the newsroom creates their own drafts.
     create: ({ req }) =>
-      hasRole(getUser(req), [
-        'administrator',
-        'editor_in_chief',
-        'investigative_editor',
-        'editor',
-        'reporter',
-        'contributor',
-      ]),
+      hasRole(getUser(req), ['admin', 'editor', 'author']),
 
     /*
-     * PRD Nº7 §48: role + ownership + assignment + status, not role alone.
-     * Senior editorial roles edit anything; a reporter or contributor edits
+     * Role + ownership + status, not role alone.
+     * Admin and editor edit anything; an author edits
      * only their own or assigned drafts, and stops being able to once the
      * piece is published (PRD Nº5 §13).
      */
     update: canUpdateEditorialContent,
 
     // PRD Nº5 §15: published content is archived, not deleted.
-    delete: ({ req }) => hasRole(getUser(req), ['administrator', 'editor_in_chief']),
+    delete: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
   },
 
   admin: {

@@ -16,57 +16,45 @@ Estás construyendo un **medio periodístico digital de producción**, con CMS e
 
 # 1. FUENTE DE VERDAD
 
-Antes de escribir código, localiza y lee completamente los documentos del proyecto.
-
-La fuente de verdad debe seguir este orden:
+Antes de escribir código, lee los documentos vigentes.
 
 ```txt
-01. PRD-MASTER-clasificados-colombia-v2.md
-
-02. PRD-arquitectura-cms-payload-clasificados-colombia.md
-
-03. PRD-SEO-Google-News-Discover.md
-
-04. PRD-Infraestructura-DevOps-Seguridad-Deploy.md
-
-05. PRD-Seguridad-RBAC-Evidence-Vault-Threat-Model.md
-
-06. PRD-Servicio-Seguro-Denuncias.md
-
-07. PRD-Modelo-Datos-Payload.md
-
-08. PRD-Frontend-Editorial-Definitivo.md
-
-09. PRD-Search-Discovery-Meilisearch.md
-
-10. PRD-Media-Pipeline-DAM.md
+01. docs/prd/PRD-MASTER-clasificados-colombia-v2.md     ← única fuente de verdad
+02. docs/prd/PRD — FRONTEND EDITORIAL DEFINITIVO.md
+03. docs/prd/PRD — SEO, GOOGLE NEWS, DISCOVER Y AUTORIDAD EDITORIAL.md
+04. docs/prd/PRD — SEARCH & DISCOVERY.md
+05. docs/prd/PRD — MEDIA PIPELINE & DIGITAL ASSET MANAGEMENT.md
 ```
 
-Los nombres reales pueden variar ligeramente.
+El PRD Master define arquitectura, roles, seguridad, modelo de datos y
+despliegue. Los otros cuatro son documentos de **detalle**: componentes, SEO,
+búsqueda y media.
 
-Localízalos por número/contenido.
+## Documentos archivados
+
+`docs/archive/prd-complex-v1/` contiene cinco PRD que **ya no son fuente de
+verdad**: describían nueve roles, un Evidence Vault con clasificación
+multinivel, y un servicio de denuncias con base de datos aislada. Se conservan
+porque explican decisiones que siguen vigentes y porque documentan el punto de
+partida, no porque haya que seguirlos.
+
+Ver `docs/archive/prd-complex-v1/README.md` para qué reemplaza a qué.
 
 ---
 
 # 2. PRECEDENCIA
 
-Si dos documentos parecen contradecirse:
-
 ```txt
-documento más reciente
+PRD Master
 >
-documento anterior
+PRD de detalle (frontend, SEO, search, media)
+>
+docs/archive/  ← nunca manda
 ```
 
-Pero existe además esta regla:
-
-```txt
-PRD Master v2
-+
-PRD Arquitectura CMS Payload
-```
-
-reemplazan completamente las antiguas decisiones basadas en Sanity.
+Si un PRD de detalle contradice al Master en algo de arquitectura, roles,
+seguridad o despliegue, **manda el Master**. Si lo contradice en algo de
+componentes, metadatos o ranking, manda el PRD de detalle: para eso existe.
 
 ---
 
@@ -399,23 +387,23 @@ users
 access helpers
 collection access
 field access
-workflow guards
 ```
 
-Antes de construir Evidence.
-
-Roles:
+Roles — **tres**:
 
 ```txt
-administrator
-editor_in_chief
-investigative_editor
-editor
-reporter
-fact_checker
-legal_reviewer
-photo_editor
-contributor
+admin      control total: contenido, usuarios, configuración
+editor     revisa, aprueba, programa y publica. Lee denuncias
+author     crea y edita únicamente sus propios borradores
+```
+
+Reglas que se derivan:
+
+```txt
+solo admin y editor publican
+author edita lo suyo, y solo mientras sea borrador
+solo admin administra usuarios
+author no lee denuncias
 ```
 
 ---
@@ -428,9 +416,10 @@ Aplicar:
 DENY BY DEFAULT
 ```
 
-La seguridad debe vivir en backend.
+La seguridad vive en el backend.
 
-Nunca confiar solo en ocultar botones del Admin.
+Nunca confiar solo en ocultar botones del Admin: la interfaz puede ocultar, el
+backend debe negar.
 
 ---
 
@@ -438,22 +427,24 @@ Nunca confiar solo en ocultar botones del Admin.
 
 Antes de continuar:
 
-crear tests.
+crear tests. Contra la API, no contra la pantalla.
 
-Ejemplos obligatorios:
+Obligatorios:
 
 ```txt
-Reporter cannot publish
+Author no puede publicar
 
-Reporter cannot modify role
+Author no puede cambiar su propio rol
 
-Anonymous cannot read draft
+Author no puede editar el borrador de otro author
 
-Editor cannot read unrelated restricted evidence
+Anónimo no puede leer un borrador
 
-Contributor cannot edit another contributor's draft
+Anónimo no puede leer denuncias
 
-Disabled user cannot authenticate
+Author no puede leer denuncias
+
+Usuario deshabilitado no puede autenticarse
 ```
 
 ---
@@ -588,128 +579,88 @@ workflow approved
 
 ---
 
-# 23. FASE 6 — EVIDENCE METADATA
+# 23. FASE 6 — DOCUMENTOS PUBLICADOS
 
 Crear:
 
 ```txt
-Evidence
-
-EvidenceAccessGrants
-
-InvestigationTeams
-
-AuditEvents
+EvidenceDocuments
 ```
 
-Payload almacena metadata.
+Colección estándar de Payload sobre S3/MinIO. Metadatos del documento —tipo,
+institución, fecha, páginas, contexto— más el archivo.
 
-Payload NO almacena el archivo físico de evidencia.
-
----
-
-# 24. MINIO
-
-Implementar integración separada.
-
-Buckets:
+La regla que reemplaza toda la clasificación multinivel anterior:
 
 ```txt
-evidence-public
-
-evidence-internal
-
-evidence-restricted
+si un documento se publica → es público
+si no puede ser público → no se sube al CMS
 ```
 
-Nunca usar root credentials desde aplicación.
+Un documento sensible que todavía no puede publicarse vive fuera de la
+plataforma. Eso es una decisión editorial, no una característica del software.
 
 ---
 
-# 25. EVIDENCE ACCESS
+# 24. STORAGE
 
-Flujo obligatorio:
+S3/MinIO a través del adaptador estándar de Payload.
 
 ```txt
-Request
-↓
-Authentication
-↓
-Authorization
-↓
-Classification
-↓
-Grant / team check
-↓
-Audit event
-↓
-Temporary presigned URL
+un bucket para media
+un bucket para documentos publicados
 ```
 
-Nunca devolver `objectKey` directamente al cliente público.
+Nunca usar credenciales root desde la aplicación.
 
 ---
 
-# 26. RESTRICTED
+# 25. ACCESO A DOCUMENTOS
 
-Restricted requiere:
+Los documentos publicados se sirven como cualquier otro archivo público.
+
+Lo único que se mantiene del diseño anterior, porque sigue siendo correcto:
 
 ```txt
-role permitted
-+
-need-to-know
+nunca devolver el objectKey ni la ruta de almacenamiento al cliente
 ```
 
-No basta con ser Editor.
+Saber dónde vive un archivo es la mitad del trabajo de alcanzarlo. El frontend
+recibe una URL, no una ubicación.
 
 ---
 
-# 27. PUBLIC EVIDENCE
+# 26. PROYECCIÓN PÚBLICA
 
-Para publicar evidencia:
+Nunca enviar el documento completo de Payload al navegador.
 
-crear proyección pública explícita.
-
-Nunca exponer el documento Payload completo.
+Crear proyecciones explícitas (`toPublicArticle()`, `toPublicDocument()`…). Un
+campo que no está en la proyección no llega al cliente — no porque se limpie,
+sino porque nunca se seleccionó.
 
 ---
 
-# 28. FASE 7 — AUDIT
+# 27. FASE 7 — REGISTRO DE OPERACIONES
 
-Implementar eventos append-only.
-
-Debe registrar como mínimo:
+Registrar las operaciones que responden la pregunta que de verdad se hace
+después de un incidente:
 
 ```txt
-login failure
-
-user role change
-
-publish
-
-unpublish
-
-classification change
-
-restricted evidence access
-
-access grant
-
-access revoke
+publicación
+despublicación
+archivado
+cambio de rol
+fallo de autenticación
 ```
+
+Barato de mantener y suficiente. No se audita cada lectura.
 
 ---
 
-# 29. AUDIT SECURITY
-
-`AuditEvents`:
-
-```txt
-update = deny
-delete = deny
-```
-
-excepto proceso excepcional de mantenimiento claramente documentado.
+> **§28 y §29 se retiraron** en la simplificación del 2026-08-18 (auditoría
+> append-only de cada acceso a evidencia). La numeración del resto del documento
+> **no se corrió a propósito**: hay comentarios en el código que referencian
+> estas secciones por número, y renumerar los invalidaría todos en silencio.
 
 ---
 
@@ -1260,19 +1211,18 @@ networks
 
 ---
 
-# 58. NETWORKS
-
-Separar:
+# 58. UN SOLO STACK
 
 ```txt
-public
-
-editorial-internal
-
-evidence-internal
-
-denuncias-internal
+app          Next.js + Payload CMS  (un proceso)
+postgres     una base de datos
+meilisearch  un índice derivado
 ```
+
+Más S3/MinIO para media y documentos.
+
+Sin redes Docker aisladas por dominio, sin servicio de denuncias separado, sin
+base de datos secundaria. Tres contenedores sobre los que se puede razonar.
 
 ---
 
@@ -1380,51 +1330,53 @@ Meilisearch es reconstruible.
 
 # 66. FASE 25 — DENUNCIAS
 
-IMPORTANTE:
-
-No construir esto dentro de Payload.
-
-Debe estar aislado según PRD Nº 6.
-
-Si actualmente vive en el mismo monorepo:
-
-mantener separación lógica/deploy/DB estricta.
-
----
-
-# 67. DENUNCIAS
-
-Arquitectura:
+Colección `tips` **dentro de Payload**. No es un servicio aparte.
 
 ```txt
-denuncias-app
-
-denuncias-db
-
-quarantine storage
-
-scanner worker
+formulario público en /denunciar
+↓
+Turnstile + rate limiting en el endpoint
+↓
+colección `tips`
+↓
+lectura solo para admin y editor
 ```
 
 ---
 
-# 68. NO FOREIGN KEY
+# 67. ACCESO A DENUNCIAS
 
-No conectar directamente con Payload.
+```txt
+create   público, a través del endpoint protegido
+read     admin, editor
+update   admin, editor  (solo el estado de gestión)
+delete   admin
+```
+
+`author` no lee denuncias. Anónimo tampoco. Ambas cosas se prueban contra la
+API.
 
 ---
 
-# 69. TRANSFER
+# 68. PROTECCIÓN DEL ENDPOINT
 
-Solo:
+Turnstile y rate limiting van **en el endpoint**, no solo en el formulario.
 
-```txt
-human approval
-↓
-controlled export
-↓
-new Payload investigation
-```
+Un formulario protegido con un endpoint abierto no está protegido: el atacante
+no usa el formulario.
+
+---
+
+# 69. ANONIMATO
+
+Si quien denuncia marca la casilla de anonimato, los campos de contacto **no se
+guardan**.
+
+No se guardan ocultos. No se guardan cifrados. No se guardan.
+
+Un campo almacenado es un campo que puede filtrarse, ser citado en un
+requerimiento judicial o aparecer en un export. El anonimato tiene que vivir en
+el modelo de datos, no en la interfaz.
 
 ---
 
@@ -1438,6 +1390,8 @@ Investigation
 Breaking News
 ```
 
+El paso de denuncia a publicación siempre pasa por una decisión humana.
+
 ---
 
 # 71. SECURITY QA
@@ -1445,21 +1399,19 @@ Breaking News
 Antes de producción probar:
 
 ```txt
-RBAC
+RBAC de los tres roles
 
 field access
 
-draft isolation
+aislamiento de borradores
 
-restricted evidence
+acceso a denuncias
 
-MinIO access
+fugas en el índice de búsqueda
 
-search leaks
+permisos del admin
 
-admin permissions
-
-session security
+seguridad de sesión
 
 uploads
 ```
@@ -1846,20 +1798,14 @@ VIDEO
 El usuario público no puede conocer la existencia de:
 
 ```txt
-draft investigations
-
-restricted evidence
-
-internal sources
-
-access grants
-
-audit events
-
-internal users
-
-review notes
+borradores
+denuncias
+usuarios internos
+notas de revisión
 ```
+
+Ni por la API, ni por el índice de búsqueda, ni por la diferencia entre un 404 y
+un 403.
 
 ---
 
@@ -1902,9 +1848,9 @@ No leaked secrets
 
 No draft indexing
 
-No restricted indexing
+No tips indexing
 
-No Denuncias ↔ Payload DB coupling
+Denuncias solo legibles por admin y editor
 ```
 
 ---

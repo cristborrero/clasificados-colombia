@@ -34,16 +34,9 @@ export const VideoStories: CollectionConfig = {
       return { _status: { equals: 'published' } }
     },
     create: ({ req }) =>
-      hasRole(getUser(req), [
-        'administrator',
-        'editor_in_chief',
-        'investigative_editor',
-        'editor',
-        'reporter',
-        'photo_editor',
-      ]),
+      hasRole(getUser(req), ['admin', 'editor', 'author']),
     update: canUpdateEditorialContent,
-    delete: ({ req }) => hasRole(getUser(req), ['administrator', 'editor_in_chief']),
+    delete: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
   },
 
   admin: {

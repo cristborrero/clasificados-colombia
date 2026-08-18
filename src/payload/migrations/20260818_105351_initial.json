@@ -112,7 +112,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'contributor'"
+          "default": "'author'"
         },
         "status": {
           "name": "status",
@@ -723,6 +723,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "navigation_label": {
           "name": "navigation_label",
           "type": "varchar",
@@ -818,6 +824,21 @@
           "method": "btree",
           "with": {}
         },
+        "categories_parent_idx": {
+          "name": "categories_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "categories_active_idx": {
           "name": "categories_active_idx",
           "columns": [
@@ -864,7 +885,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "categories_parent_id_categories_id_fk": {
+          "name": "categories_parent_id_categories_id_fk",
+          "tableFrom": "categories",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -4721,6 +4756,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "topics_id": {
+          "name": "topics_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "people_id": {
           "name": "people_id",
           "type": "integer",
@@ -4810,6 +4851,21 @@
           "method": "btree",
           "with": {}
         },
+        "investigations_rels_topics_id_idx": {
+          "name": "investigations_rels_topics_id_idx",
+          "columns": [
+            {
+              "expression": "topics_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "investigations_rels_people_id_idx": {
           "name": "investigations_rels_people_id_idx",
           "columns": [
@@ -4874,6 +4930,19 @@
           "tableTo": "sources",
           "columnsFrom": [
             "sources_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "investigations_rels_topics_fk": {
+          "name": "investigations_rels_topics_fk",
+          "tableFrom": "investigations_rels",
+          "tableTo": "topics",
+          "columnsFrom": [
+            "topics_id"
           ],
           "columnsTo": [
             "id"
@@ -5844,6 +5913,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "topics_id": {
+          "name": "topics_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "people_id": {
           "name": "people_id",
           "type": "integer",
@@ -5933,6 +6008,21 @@
           "method": "btree",
           "with": {}
         },
+        "_investigations_v_rels_topics_id_idx": {
+          "name": "_investigations_v_rels_topics_id_idx",
+          "columns": [
+            {
+              "expression": "topics_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "_investigations_v_rels_people_id_idx": {
           "name": "_investigations_v_rels_people_id_idx",
           "columns": [
@@ -5997,6 +6087,19 @@
           "tableTo": "sources",
           "columnsFrom": [
             "sources_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "_investigations_v_rels_topics_fk": {
+          "name": "_investigations_v_rels_topics_fk",
+          "tableFrom": "_investigations_v_rels",
+          "tableTo": "topics",
+          "columnsFrom": [
+            "topics_id"
           ],
           "columnsTo": [
             "id"
@@ -7105,6 +7208,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "headline_figure": {
+          "name": "headline_figure",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "headline_figure_context": {
+          "name": "headline_figure_context",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
         "hero_image_id": {
           "name": "hero_image_id",
           "type": "integer",
@@ -7766,6 +7881,18 @@
         },
         "version_dek": {
           "name": "version_dek",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_headline_figure": {
+          "name": "version_headline_figure",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version_headline_figure_context": {
+          "name": "version_headline_figure_context",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
@@ -9698,8 +9825,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.evidence": {
-      "name": "evidence",
+    "public.evidence_documents": {
+      "name": "evidence_documents",
       "schema": "",
       "columns": {
         "id": {
@@ -9720,73 +9847,32 @@
           "primaryKey": false,
           "notNull": false
         },
-        "classification": {
-          "name": "classification",
-          "type": "enum_evidence_classification",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'restricted'"
-        },
-        "status": {
-          "name": "status",
-          "type": "enum_evidence_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "bucket": {
-          "name": "bucket",
+        "document_type": {
+          "name": "document_type",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
-        "object_key": {
-          "name": "object_key",
+        "institution": {
+          "name": "institution",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
-        "mime_type": {
-          "name": "mime_type",
-          "type": "varchar",
+        "document_date": {
+          "name": "document_date",
+          "type": "timestamp(3) with time zone",
           "primaryKey": false,
           "notNull": false
         },
-        "size": {
-          "name": "size",
+        "page_count": {
+          "name": "page_count",
           "type": "numeric",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "checksum": {
-          "name": "checksum",
-          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
         "related_investigation_id": {
           "name": "related_investigation_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "retention": {
-          "name": "retention",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "legal_hold": {
-          "name": "legal_hold",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "uploaded_by_id": {
-          "name": "uploaded_by_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -9804,41 +9890,65 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "url": {
+          "name": "url",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "thumbnail_u_r_l": {
+          "name": "thumbnail_u_r_l",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filename": {
+          "name": "filename",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "filesize": {
+          "name": "filesize",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "width": {
+          "name": "width",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focal_x": {
+          "name": "focal_x",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "focal_y": {
+          "name": "focal_y",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
-        "evidence_classification_idx": {
-          "name": "evidence_classification_idx",
-          "columns": [
-            {
-              "expression": "classification",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evidence_status_idx": {
-          "name": "evidence_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evidence_related_investigation_idx": {
-          "name": "evidence_related_investigation_idx",
+        "evidence_documents_related_investigation_idx": {
+          "name": "evidence_documents_related_investigation_idx",
           "columns": [
             {
               "expression": "related_investigation_id",
@@ -9852,23 +9962,8 @@
           "method": "btree",
           "with": {}
         },
-        "evidence_uploaded_by_idx": {
-          "name": "evidence_uploaded_by_idx",
-          "columns": [
-            {
-              "expression": "uploaded_by_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evidence_updated_at_idx": {
-          "name": "evidence_updated_at_idx",
+        "evidence_documents_updated_at_idx": {
+          "name": "evidence_documents_updated_at_idx",
           "columns": [
             {
               "expression": "updated_at",
@@ -9882,8 +9977,8 @@
           "method": "btree",
           "with": {}
         },
-        "evidence_created_at_idx": {
-          "name": "evidence_created_at_idx",
+        "evidence_documents_created_at_idx": {
+          "name": "evidence_documents_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -9896,28 +9991,30 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "evidence_documents_filename_idx": {
+          "name": "evidence_documents_filename_idx",
+          "columns": [
+            {
+              "expression": "filename",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
-        "evidence_related_investigation_id_investigations_id_fk": {
-          "name": "evidence_related_investigation_id_investigations_id_fk",
-          "tableFrom": "evidence",
+        "evidence_documents_related_investigation_id_investigations_id_fk": {
+          "name": "evidence_documents_related_investigation_id_investigations_id_fk",
+          "tableFrom": "evidence_documents",
           "tableTo": "investigations",
           "columnsFrom": [
             "related_investigation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "evidence_uploaded_by_id_users_id_fk": {
-          "name": "evidence_uploaded_by_id_users_id_fk",
-          "tableFrom": "evidence",
-          "tableTo": "users",
-          "columnsFrom": [
-            "uploaded_by_id"
           ],
           "columnsTo": [
             "id"
@@ -10277,79 +10374,41 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.evidence_access_grants": {
-      "name": "evidence_access_grants",
+    "public.tips_attachments": {
+      "name": "tips_attachments",
       "schema": "",
       "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "file_id": {
+          "name": "file_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "evidence_id": {
-          "name": "evidence_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "granted_by_id": {
-          "name": "granted_by_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reason": {
-          "name": "reason",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revoked_at": {
-          "name": "revoked_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "revoked_by_id": {
-          "name": "revoked_by_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {
-        "evidence_access_grants_user_idx": {
-          "name": "evidence_access_grants_user_idx",
+        "tips_attachments_order_idx": {
+          "name": "tips_attachments_order_idx",
           "columns": [
             {
-              "expression": "user_id",
+              "expression": "_order",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10360,11 +10419,11 @@
           "method": "btree",
           "with": {}
         },
-        "evidence_access_grants_evidence_idx": {
-          "name": "evidence_access_grants_evidence_idx",
+        "tips_attachments_parent_id_idx": {
+          "name": "tips_attachments_parent_id_idx",
           "columns": [
             {
-              "expression": "evidence_id",
+              "expression": "_parent_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10375,56 +10434,11 @@
           "method": "btree",
           "with": {}
         },
-        "evidence_access_grants_granted_by_idx": {
-          "name": "evidence_access_grants_granted_by_idx",
+        "tips_attachments_file_idx": {
+          "name": "tips_attachments_file_idx",
           "columns": [
             {
-              "expression": "granted_by_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evidence_access_grants_revoked_by_idx": {
-          "name": "evidence_access_grants_revoked_by_idx",
-          "columns": [
-            {
-              "expression": "revoked_by_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evidence_access_grants_updated_at_idx": {
-          "name": "evidence_access_grants_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "evidence_access_grants_created_at_idx": {
-          "name": "evidence_access_grants_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
+              "expression": "file_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10437,12 +10451,12 @@
         }
       },
       "foreignKeys": {
-        "evidence_access_grants_user_id_users_id_fk": {
-          "name": "evidence_access_grants_user_id_users_id_fk",
-          "tableFrom": "evidence_access_grants",
-          "tableTo": "users",
+        "tips_attachments_file_id_media_id_fk": {
+          "name": "tips_attachments_file_id_media_id_fk",
+          "tableFrom": "tips_attachments",
+          "tableTo": "media",
           "columnsFrom": [
-            "user_id"
+            "file_id"
           ],
           "columnsTo": [
             "id"
@@ -10450,43 +10464,17 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "evidence_access_grants_evidence_id_evidence_id_fk": {
-          "name": "evidence_access_grants_evidence_id_evidence_id_fk",
-          "tableFrom": "evidence_access_grants",
-          "tableTo": "evidence",
+        "tips_attachments_parent_id_fk": {
+          "name": "tips_attachments_parent_id_fk",
+          "tableFrom": "tips_attachments",
+          "tableTo": "tips",
           "columnsFrom": [
-            "evidence_id"
+            "_parent_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "evidence_access_grants_granted_by_id_users_id_fk": {
-          "name": "evidence_access_grants_granted_by_id_users_id_fk",
-          "tableFrom": "evidence_access_grants",
-          "tableTo": "users",
-          "columnsFrom": [
-            "granted_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "evidence_access_grants_revoked_by_id_users_id_fk": {
-          "name": "evidence_access_grants_revoked_by_id_users_id_fk",
-          "tableFrom": "evidence_access_grants",
-          "tableTo": "users",
-          "columnsFrom": [
-            "revoked_by_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -10496,8 +10484,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.investigation_teams": {
-      "name": "investigation_teams",
+    "public.tips": {
+      "name": "tips",
       "schema": "",
       "columns": {
         "id": {
@@ -10506,30 +10494,62 @@
           "primaryKey": true,
           "notNull": true
         },
-        "name": {
-          "name": "name",
+        "title": {
+          "name": "title",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "investigation_id": {
-          "name": "investigation_id",
-          "type": "integer",
+        "description": {
+          "name": "description",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "lead_id": {
-          "name": "lead_id",
-          "type": "integer",
+        "location": {
+          "name": "location",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
-        "active": {
-          "name": "active",
+        "anonymous": {
+          "name": "anonymous",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
-          "default": true
+          "default": false
+        },
+        "contact_name": {
+          "name": "contact_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_phone": {
+          "name": "contact_phone",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum_tips_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'new'"
+        },
+        "internal_notes": {
+          "name": "internal_notes",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "updated_at": {
           "name": "updated_at",
@@ -10547,11 +10567,11 @@
         }
       },
       "indexes": {
-        "investigation_teams_investigation_idx": {
-          "name": "investigation_teams_investigation_idx",
+        "tips_anonymous_idx": {
+          "name": "tips_anonymous_idx",
           "columns": [
             {
-              "expression": "investigation_id",
+              "expression": "anonymous",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10562,11 +10582,11 @@
           "method": "btree",
           "with": {}
         },
-        "investigation_teams_lead_idx": {
-          "name": "investigation_teams_lead_idx",
+        "tips_status_idx": {
+          "name": "tips_status_idx",
           "columns": [
             {
-              "expression": "lead_id",
+              "expression": "status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -10577,23 +10597,8 @@
           "method": "btree",
           "with": {}
         },
-        "investigation_teams_active_idx": {
-          "name": "investigation_teams_active_idx",
-          "columns": [
-            {
-              "expression": "active",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "investigation_teams_updated_at_idx": {
-          "name": "investigation_teams_updated_at_idx",
+        "tips_updated_at_idx": {
+          "name": "tips_updated_at_idx",
           "columns": [
             {
               "expression": "updated_at",
@@ -10607,8 +10612,8 @@
           "method": "btree",
           "with": {}
         },
-        "investigation_teams_created_at_idx": {
-          "name": "investigation_teams_created_at_idx",
+        "tips_created_at_idx": {
+          "name": "tips_created_at_idx",
           "columns": [
             {
               "expression": "created_at",
@@ -10623,165 +10628,7 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "investigation_teams_investigation_id_investigations_id_fk": {
-          "name": "investigation_teams_investigation_id_investigations_id_fk",
-          "tableFrom": "investigation_teams",
-          "tableTo": "investigations",
-          "columnsFrom": [
-            "investigation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "investigation_teams_lead_id_users_id_fk": {
-          "name": "investigation_teams_lead_id_users_id_fk",
-          "tableFrom": "investigation_teams",
-          "tableTo": "users",
-          "columnsFrom": [
-            "lead_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.investigation_teams_rels": {
-      "name": "investigation_teams_rels",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "path": {
-          "name": "path",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "users_id": {
-          "name": "users_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "investigation_teams_rels_order_idx": {
-          "name": "investigation_teams_rels_order_idx",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "investigation_teams_rels_parent_idx": {
-          "name": "investigation_teams_rels_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "investigation_teams_rels_path_idx": {
-          "name": "investigation_teams_rels_path_idx",
-          "columns": [
-            {
-              "expression": "path",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "investigation_teams_rels_users_id_idx": {
-          "name": "investigation_teams_rels_users_id_idx",
-          "columns": [
-            {
-              "expression": "users_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "investigation_teams_rels_parent_fk": {
-          "name": "investigation_teams_rels_parent_fk",
-          "tableFrom": "investigation_teams_rels",
-          "tableTo": "investigation_teams",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "investigation_teams_rels_users_fk": {
-          "name": "investigation_teams_rels_users_fk",
-          "tableFrom": "investigation_teams_rels",
-          "tableTo": "users",
-          "columnsFrom": [
-            "users_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -11026,8 +10873,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "evidence_id": {
-          "name": "evidence_id",
+        "evidence_documents_id": {
+          "name": "evidence_documents_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -11044,14 +10891,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "evidence_access_grants_id": {
-          "name": "evidence_access_grants_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "investigation_teams_id": {
-          "name": "investigation_teams_id",
+        "tips_id": {
+          "name": "tips_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": false
@@ -11298,11 +11139,11 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_evidence_id_idx": {
-          "name": "payload_locked_documents_rels_evidence_id_idx",
+        "payload_locked_documents_rels_evidence_documents_id_idx": {
+          "name": "payload_locked_documents_rels_evidence_documents_id_idx",
           "columns": [
             {
-              "expression": "evidence_id",
+              "expression": "evidence_documents_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11343,26 +11184,11 @@
           "method": "btree",
           "with": {}
         },
-        "payload_locked_documents_rels_evidence_access_grants_id_idx": {
-          "name": "payload_locked_documents_rels_evidence_access_grants_id_idx",
+        "payload_locked_documents_rels_tips_id_idx": {
+          "name": "payload_locked_documents_rels_tips_id_idx",
           "columns": [
             {
-              "expression": "evidence_access_grants_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "payload_locked_documents_rels_investigation_teams_id_idx": {
-          "name": "payload_locked_documents_rels_investigation_teams_id_idx",
-          "columns": [
-            {
-              "expression": "investigation_teams_id",
+              "expression": "tips_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -11557,12 +11383,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payload_locked_documents_rels_evidence_fk": {
-          "name": "payload_locked_documents_rels_evidence_fk",
+        "payload_locked_documents_rels_evidence_documents_fk": {
+          "name": "payload_locked_documents_rels_evidence_documents_fk",
           "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "evidence",
+          "tableTo": "evidence_documents",
           "columnsFrom": [
-            "evidence_id"
+            "evidence_documents_id"
           ],
           "columnsTo": [
             "id"
@@ -11596,25 +11422,12 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "payload_locked_documents_rels_evidence_access_grants_fk": {
-          "name": "payload_locked_documents_rels_evidence_access_grants_fk",
+        "payload_locked_documents_rels_tips_fk": {
+          "name": "payload_locked_documents_rels_tips_fk",
           "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "evidence_access_grants",
+          "tableTo": "tips",
           "columnsFrom": [
-            "evidence_access_grants_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "payload_locked_documents_rels_investigation_teams_fk": {
-          "name": "payload_locked_documents_rels_investigation_teams_fk",
-          "tableFrom": "payload_locked_documents_rels",
-          "tableTo": "investigation_teams",
-          "columnsFrom": [
-            "investigation_teams_id"
+            "tips_id"
           ],
           "columnsTo": [
             "id"
@@ -12726,6 +12539,1584 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.homepage_blocks_hero": {
+      "name": "homepage_blocks_hero",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "image_first": {
+          "name": "image_first",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_hero_order_idx": {
+          "name": "homepage_blocks_hero_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_hero_parent_id_idx": {
+          "name": "homepage_blocks_hero_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_hero_path_idx": {
+          "name": "homepage_blocks_hero_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_hero_parent_id_fk": {
+          "name": "homepage_blocks_hero_parent_id_fk",
+          "tableFrom": "homepage_blocks_hero",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_secondary": {
+      "name": "homepage_blocks_secondary",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lead_count": {
+          "name": "lead_count",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 2
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_secondary_order_idx": {
+          "name": "homepage_blocks_secondary_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_secondary_parent_id_idx": {
+          "name": "homepage_blocks_secondary_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_secondary_path_idx": {
+          "name": "homepage_blocks_secondary_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_secondary_category_idx": {
+          "name": "homepage_blocks_secondary_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_secondary_category_id_categories_id_fk": {
+          "name": "homepage_blocks_secondary_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_secondary",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_secondary_parent_id_fk": {
+          "name": "homepage_blocks_secondary_parent_id_fk",
+          "tableFrom": "homepage_blocks_secondary",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_latest": {
+      "name": "homepage_blocks_latest",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_latest_order_idx": {
+          "name": "homepage_blocks_latest_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_latest_parent_id_idx": {
+          "name": "homepage_blocks_latest_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_latest_path_idx": {
+          "name": "homepage_blocks_latest_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_latest_category_idx": {
+          "name": "homepage_blocks_latest_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_latest_category_id_categories_id_fk": {
+          "name": "homepage_blocks_latest_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_latest",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_latest_parent_id_fk": {
+          "name": "homepage_blocks_latest_parent_id_fk",
+          "tableFrom": "homepage_blocks_latest",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_investigations": {
+      "name": "homepage_blocks_investigations",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_label": {
+          "name": "cta_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_href": {
+          "name": "cta_href",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_investigations_order_idx": {
+          "name": "homepage_blocks_investigations_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_investigations_parent_id_idx": {
+          "name": "homepage_blocks_investigations_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_investigations_path_idx": {
+          "name": "homepage_blocks_investigations_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_investigations_category_idx": {
+          "name": "homepage_blocks_investigations_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_investigations_category_id_categories_id_fk": {
+          "name": "homepage_blocks_investigations_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_investigations",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_investigations_parent_id_fk": {
+          "name": "homepage_blocks_investigations_parent_id_fk",
+          "tableFrom": "homepage_blocks_investigations",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_analysis": {
+      "name": "homepage_blocks_analysis",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_label": {
+          "name": "cta_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_href": {
+          "name": "cta_href",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_analysis_order_idx": {
+          "name": "homepage_blocks_analysis_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_analysis_parent_id_idx": {
+          "name": "homepage_blocks_analysis_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_analysis_path_idx": {
+          "name": "homepage_blocks_analysis_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_analysis_category_idx": {
+          "name": "homepage_blocks_analysis_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_analysis_category_id_categories_id_fk": {
+          "name": "homepage_blocks_analysis_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_analysis",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_analysis_parent_id_fk": {
+          "name": "homepage_blocks_analysis_parent_id_fk",
+          "tableFrom": "homepage_blocks_analysis",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_data": {
+      "name": "homepage_blocks_data",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_label": {
+          "name": "cta_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_href": {
+          "name": "cta_href",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_data_order_idx": {
+          "name": "homepage_blocks_data_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_data_parent_id_idx": {
+          "name": "homepage_blocks_data_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_data_path_idx": {
+          "name": "homepage_blocks_data_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_data_category_idx": {
+          "name": "homepage_blocks_data_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_data_category_id_categories_id_fk": {
+          "name": "homepage_blocks_data_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_data",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_data_parent_id_fk": {
+          "name": "homepage_blocks_data_parent_id_fk",
+          "tableFrom": "homepage_blocks_data",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_video": {
+      "name": "homepage_blocks_video",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_label": {
+          "name": "cta_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_href": {
+          "name": "cta_href",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_video_order_idx": {
+          "name": "homepage_blocks_video_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_video_parent_id_idx": {
+          "name": "homepage_blocks_video_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_video_path_idx": {
+          "name": "homepage_blocks_video_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_video_category_idx": {
+          "name": "homepage_blocks_video_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_video_category_id_categories_id_fk": {
+          "name": "homepage_blocks_video_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_video",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_video_parent_id_fk": {
+          "name": "homepage_blocks_video_parent_id_fk",
+          "tableFrom": "homepage_blocks_video",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_opinion": {
+      "name": "homepage_blocks_opinion",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "limit": {
+          "name": "limit",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 6
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_label": {
+          "name": "cta_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_href": {
+          "name": "cta_href",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_opinion_order_idx": {
+          "name": "homepage_blocks_opinion_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_opinion_parent_id_idx": {
+          "name": "homepage_blocks_opinion_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_opinion_path_idx": {
+          "name": "homepage_blocks_opinion_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_opinion_category_idx": {
+          "name": "homepage_blocks_opinion_category_idx",
+          "columns": [
+            {
+              "expression": "category_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_opinion_category_id_categories_id_fk": {
+          "name": "homepage_blocks_opinion_category_id_categories_id_fk",
+          "tableFrom": "homepage_blocks_opinion",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "homepage_blocks_opinion_parent_id_fk": {
+          "name": "homepage_blocks_opinion_parent_id_fk",
+          "tableFrom": "homepage_blocks_opinion",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_blocks_newsletter": {
+      "name": "homepage_blocks_newsletter",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_path": {
+          "name": "_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cta_label": {
+          "name": "cta_label",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "block_name": {
+          "name": "block_name",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_blocks_newsletter_order_idx": {
+          "name": "homepage_blocks_newsletter_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_newsletter_parent_id_idx": {
+          "name": "homepage_blocks_newsletter_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_blocks_newsletter_path_idx": {
+          "name": "homepage_blocks_newsletter_path_idx",
+          "columns": [
+            {
+              "expression": "_path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_blocks_newsletter_parent_id_fk": {
+          "name": "homepage_blocks_newsletter_parent_id_fk",
+          "tableFrom": "homepage_blocks_newsletter",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage": {
+      "name": "homepage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.homepage_rels": {
+      "name": "homepage_rels",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "path": {
+          "name": "path",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "articles_id": {
+          "name": "articles_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "investigations_id": {
+          "name": "investigations_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_stories_id": {
+          "name": "data_stories_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "homepage_rels_order_idx": {
+          "name": "homepage_rels_order_idx",
+          "columns": [
+            {
+              "expression": "order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_rels_parent_idx": {
+          "name": "homepage_rels_parent_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_rels_path_idx": {
+          "name": "homepage_rels_path_idx",
+          "columns": [
+            {
+              "expression": "path",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_rels_articles_id_idx": {
+          "name": "homepage_rels_articles_id_idx",
+          "columns": [
+            {
+              "expression": "articles_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_rels_investigations_id_idx": {
+          "name": "homepage_rels_investigations_id_idx",
+          "columns": [
+            {
+              "expression": "investigations_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "homepage_rels_data_stories_id_idx": {
+          "name": "homepage_rels_data_stories_id_idx",
+          "columns": [
+            {
+              "expression": "data_stories_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "homepage_rels_parent_fk": {
+          "name": "homepage_rels_parent_fk",
+          "tableFrom": "homepage_rels",
+          "tableTo": "homepage",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "homepage_rels_articles_fk": {
+          "name": "homepage_rels_articles_fk",
+          "tableFrom": "homepage_rels",
+          "tableTo": "articles",
+          "columnsFrom": [
+            "articles_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "homepage_rels_investigations_fk": {
+          "name": "homepage_rels_investigations_fk",
+          "tableFrom": "homepage_rels",
+          "tableTo": "investigations",
+          "columnsFrom": [
+            "investigations_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "homepage_rels_data_stories_fk": {
+          "name": "homepage_rels_data_stories_fk",
+          "tableFrom": "homepage_rels",
+          "tableTo": "data_stories",
+          "columnsFrom": [
+            "data_stories_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.breaking_news": {
       "name": "breaking_news",
       "schema": "",
@@ -12838,15 +14229,9 @@
       "name": "enum_users_role",
       "schema": "public",
       "values": [
-        "administrator",
-        "editor_in_chief",
-        "investigative_editor",
+        "admin",
         "editor",
-        "reporter",
-        "fact_checker",
-        "legal_reviewer",
-        "photo_editor",
-        "contributor"
+        "author"
       ]
     },
     "public.enum_users_status": {
@@ -13420,26 +14805,6 @@
         "internal"
       ]
     },
-    "public.enum_evidence_classification": {
-      "name": "enum_evidence_classification",
-      "schema": "public",
-      "values": [
-        "public",
-        "internal",
-        "restricted"
-      ]
-    },
-    "public.enum_evidence_status": {
-      "name": "enum_evidence_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "verified",
-        "approved",
-        "quarantined",
-        "archived"
-      ]
-    },
     "public.enum_redirects_status_code": {
       "name": "enum_redirects_status_code",
       "schema": "public",
@@ -13462,13 +14827,6 @@
         "content_published",
         "content_unpublished",
         "content_deleted",
-        "evidence_uploaded",
-        "evidence_downloaded",
-        "evidence_access_denied",
-        "classification_changed",
-        "access_granted",
-        "access_revoked",
-        "legal_hold_changed",
         "settings_changed"
       ]
     },
@@ -13478,6 +14836,16 @@
       "values": [
         "allowed",
         "denied"
+      ]
+    },
+    "public.enum_tips_status": {
+      "name": "enum_tips_status",
+      "schema": "public",
+      "values": [
+        "new",
+        "reviewing",
+        "archived",
+        "escalated"
       ]
     },
     "public.enum_navigation_primary_link_type": {
@@ -13525,6 +14893,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "cb3912f7-c6e0-43fb-9505-45daf2c1e99a",
+  "id": "43e1dc64-6bf5-4359-b39f-c4fffda3662d",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }

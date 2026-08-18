@@ -1,218 +1,210 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  adminFieldOnly,
   adminOnly,
   adminOrSelf,
   authenticatedOnly,
   canManageUsers,
   canPublish,
+  canUpdateEditorialContent,
   denyAll,
+  editorialStaffOnly,
   getUser,
   hasRole,
   isActive,
   isAdmin,
   isAuthenticated,
-  isContributor,
+  isAuthor,
   isEditor,
-  isEditorInChief,
-  isFactChecker,
-  isInvestigativeEditor,
-  isLegalReviewer,
-  isPhotoEditor,
-  isReporter,
-  systemFieldOnly,
+  publicActiveOrEditorial,
   type AccessUser,
 } from './helpers'
 import { ROLES, type Role } from './roles'
 
-const user = (role: Role, status: AccessUser['status'] = 'active', id: number | string = 1) =>
-  ({ id, role, status }) satisfies AccessUser
+const user = (role: Role, status: AccessUser['status'] = 'active'): AccessUser => ({
+  id: 1,
+  role,
+  status,
+})
 
-/** Minimal stand-in for Payload's access argument. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const args = (u: AccessUser | null): any => ({ req: { user: u } })
+/** Payload passes the whole request; these helpers only read `user`. */
+const req = (value: AccessUser | null) => ({ req: { user: value } }) as never
 
 describe('getUser', () => {
-  it('returns null for an anonymous request', () => {
+  it('reads a well-formed user', () => {
+    expect(getUser({ user: user('editor') })?.role).toBe('editor')
+  })
+
+  it('returns null rather than trusting a malformed one', () => {
     expect(getUser({})).toBeNull()
     expect(getUser({ user: null })).toBeNull()
-    expect(getUser({ user: undefined })).toBeNull()
-  })
-
-  it('rejects a user-shaped object with no id rather than trusting it', () => {
-    expect(getUser({ user: { role: 'administrator' } })).toBeNull()
-  })
-
-  it('accepts id 0, which is falsy but valid', () => {
-    expect(getUser({ user: { id: 0, role: 'reporter', status: 'active' } })).not.toBeNull()
+    expect(getUser({ user: {} })).toBeNull()
+    expect(getUser({ user: { role: 'admin' } })).toBeNull()
   })
 })
 
+/**
+ * The distinction between `isAuthenticated` and `isActive` is the one that
+ * matters: a token minted before an account was suspended is still a valid
+ * token. Login is blocked at `beforeLogin`, but that decision has to survive
+ * into every request or the suspension only takes effect at the next sign-in.
+ */
 describe('isAuthenticated vs isActive', () => {
-  it('separates "logged in" from "allowed to act"', () => {
-    const suspended = user('editor', 'suspended')
-
-    expect(isAuthenticated(suspended)).toBe(true)
-    expect(isActive(suspended)).toBe(false)
-  })
-
-  it('treats disabled as not active', () => {
-    expect(isActive(user('editor', 'disabled'))).toBe(false)
-  })
-
-  it('treats a missing status as not active — deny by default', () => {
-    expect(isActive({ id: 1, role: 'administrator' })).toBe(false)
-  })
-
-  it('treats anonymous as neither', () => {
+  it('treats any user as authenticated', () => {
+    expect(isAuthenticated(user('author', 'suspended'))).toBe(true)
     expect(isAuthenticated(null)).toBe(false)
+  })
+
+  it('treats only an active user as able to operate', () => {
+    expect(isActive(user('admin'))).toBe(true)
+    expect(isActive(user('admin', 'suspended'))).toBe(false)
+    expect(isActive(user('admin', 'disabled'))).toBe(false)
     expect(isActive(null)).toBe(false)
   })
 })
 
 describe('role predicates', () => {
-  const predicates: Array<[Role, (u: AccessUser | null) => boolean]> = [
-    ['administrator', isAdmin],
-    ['editor_in_chief', isEditorInChief],
-    ['investigative_editor', isInvestigativeEditor],
-    ['editor', isEditor],
-    ['reporter', isReporter],
-    ['fact_checker', isFactChecker],
-    ['legal_reviewer', isLegalReviewer],
-    ['photo_editor', isPhotoEditor],
-    ['contributor', isContributor],
-  ]
-
-  it('covers every declared role', () => {
-    expect(predicates.map(([role]) => role).sort()).toEqual([...ROLES].sort())
+  it('identifies each role', () => {
+    expect(isAdmin(user('admin'))).toBe(true)
+    expect(isEditor(user('editor'))).toBe(true)
+    expect(isAuthor(user('author'))).toBe(true)
   })
 
-  it.each(predicates)('%s matches only itself', (role, predicate) => {
-    expect(predicate(user(role))).toBe(true)
-
-    for (const other of ROLES.filter((r) => r !== role)) {
-      expect(predicate(user(other))).toBe(false)
+  it('never identifies a suspended account as holding its role', () => {
+    for (const role of ROLES) {
+      expect(hasRole(user(role, 'suspended'), [role]), role).toBe(false)
+      expect(hasRole(user(role, 'disabled'), [role]), role).toBe(false)
     }
   })
 
-  it.each(predicates)('%s is false when the account is not active', (role, predicate) => {
-    // A suspended administrator is not an administrator for access purposes.
-    expect(predicate(user(role, 'suspended'))).toBe(false)
-    expect(predicate(user(role, 'disabled'))).toBe(false)
-  })
-
-  it.each(predicates)('%s is false for anonymous', (_role, predicate) => {
-    expect(predicate(null)).toBe(false)
-  })
-})
-
-describe('hasRole', () => {
-  it('matches any role in the list', () => {
-    expect(hasRole(user('editor'), ['editor', 'editor_in_chief'])).toBe(true)
-    expect(hasRole(user('editor_in_chief'), ['editor', 'editor_in_chief'])).toBe(true)
-  })
-
-  it('rejects roles outside the list', () => {
-    expect(hasRole(user('reporter'), ['editor', 'editor_in_chief'])).toBe(false)
-  })
-
-  it('rejects an empty list — granting nothing must grant nothing', () => {
-    expect(hasRole(user('administrator'), [])).toBe(false)
-  })
-
-  it('requires an active account', () => {
-    expect(hasRole(user('editor', 'suspended'), ['editor'])).toBe(false)
-  })
-})
-
-describe('canManageUsers', () => {
-  it('is administrator-only', () => {
-    // PRD Nº5 §8 separates technical administration from editorial authority:
-    // the Editor in Chief runs the newsroom but does not hand out logins.
-    expect(canManageUsers(user('administrator'))).toBe(true)
-    expect(canManageUsers(user('editor_in_chief'))).toBe(false)
-
-    for (const role of ROLES.filter((r) => r !== 'administrator')) {
-      expect(canManageUsers(user(role))).toBe(false)
-    }
+  it('is exclusive: one role, one predicate', () => {
+    expect(isEditor(user('admin'))).toBe(false)
+    expect(isAuthor(user('editor'))).toBe(false)
+    expect(isAdmin(user('author'))).toBe(false)
   })
 })
 
 describe('canPublish', () => {
-  it('admits only editor and editor in chief', () => {
-    // PRD Nº7 §49. Note this is the role gate only — workflow state is checked
-    // by the collections that have it (F4, F5).
+  it('admits admin and editor', () => {
+    expect(canPublish(user('admin'))).toBe(true)
     expect(canPublish(user('editor'))).toBe(true)
-    expect(canPublish(user('editor_in_chief'))).toBe(true)
   })
 
-  it('excludes everyone else, including administrator', () => {
-    // PRD Nº5 §8: an administrator manages the system, not the front page.
-    for (const role of ROLES.filter((r) => r !== 'editor' && r !== 'editor_in_chief')) {
-      expect(canPublish(user(role))).toBe(false)
-    }
+  it('refuses an author', () => {
+    // The rule the whole editorial model rests on.
+    expect(canPublish(user('author'))).toBe(false)
+  })
+
+  it('refuses an anonymous or suspended caller', () => {
+    expect(canPublish(null)).toBe(false)
+    expect(canPublish(user('editor', 'suspended'))).toBe(false)
+  })
+})
+
+describe('canManageUsers', () => {
+  it('is admin only', () => {
+    // Running the newsroom and handing out credentials are different jobs.
+    expect(canManageUsers(user('admin'))).toBe(true)
+    expect(canManageUsers(user('editor'))).toBe(false)
+    expect(canManageUsers(user('author'))).toBe(false)
   })
 })
 
 describe('denyAll', () => {
-  it('denies everyone, including an active administrator', () => {
-    expect(denyAll(args(user('administrator')))).toBe(false)
-    expect(denyAll(args(null))).toBe(false)
+  it('denies everyone, including an administrator', () => {
+    for (const role of ROLES) {
+      expect(denyAll(req(user(role))), role).toBe(false)
+    }
+
+    expect(denyAll(req(null))).toBe(false)
   })
 })
 
-describe('authenticatedOnly', () => {
-  it('admits any active user and refuses anonymous or inactive ones', () => {
-    expect(authenticatedOnly(args(user('contributor')))).toBe(true)
-    expect(authenticatedOnly(args(user('contributor', 'suspended')))).toBe(false)
-    expect(authenticatedOnly(args(null))).toBe(false)
+describe('authenticatedOnly / adminOnly / editorialStaffOnly', () => {
+  it('authenticatedOnly admits any active user', () => {
+    for (const role of ROLES) expect(authenticatedOnly(req(user(role))), role).toBe(true)
+
+    expect(authenticatedOnly(req(null))).toBe(false)
+    expect(authenticatedOnly(req(user('admin', 'disabled')))).toBe(false)
+  })
+
+  it('adminOnly admits only admin', () => {
+    expect(adminOnly(req(user('admin')))).toBe(true)
+    expect(adminOnly(req(user('editor')))).toBe(false)
+    expect(adminOnly(req(user('author')))).toBe(false)
+  })
+
+  it('editorialStaffOnly admits admin and editor', () => {
+    expect(editorialStaffOnly(req(user('admin')))).toBe(true)
+    expect(editorialStaffOnly(req(user('editor')))).toBe(true)
+    expect(editorialStaffOnly(req(user('author')))).toBe(false)
   })
 })
 
-describe('adminOnly', () => {
-  it('admits an active administrator only', () => {
-    expect(adminOnly(args(user('administrator')))).toBe(true)
-    expect(adminOnly(args(user('administrator', 'suspended')))).toBe(false)
-    expect(adminOnly(args(user('editor_in_chief')))).toBe(false)
-    expect(adminOnly(args(null))).toBe(false)
-  })
-})
-
+/**
+ * These helpers return a Payload `Where` filter rather than a boolean, and that
+ * is deliberate: filtering at the query level means unauthorised rows are never
+ * loaded, and list endpoints report honest totals instead of leaking how many
+ * records exist.
+ */
 describe('adminOrSelf', () => {
-  it('gives an administrator unrestricted access', () => {
-    expect(adminOrSelf(args(user('administrator')))).toBe(true)
+  it('lets an administrator see everything', () => {
+    expect(adminOrSelf(req(user('admin')))).toBe(true)
   })
 
-  it('narrows everyone else to their own document with a query filter', () => {
-    // PRD Nº7 §106: filtering at the query level means other people's records
-    // are never loaded, so list totals cannot leak how many accounts exist.
-    expect(adminOrSelf(args(user('reporter', 'active', 7)))).toEqual({ id: { equals: 7 } })
+  it('narrows everyone else to their own record', () => {
+    expect(adminOrSelf(req({ id: 7, role: 'editor', status: 'active' }))).toEqual({
+      id: { equals: 7 },
+    })
   })
 
-  it('preserves a string id without coercing it', () => {
-    expect(adminOrSelf(args(user('editor', 'active', 'abc')))).toEqual({ id: { equals: 'abc' } })
-  })
-
-  it('denies anonymous and inactive accounts outright', () => {
-    expect(adminOrSelf(args(null))).toBe(false)
-    expect(adminOrSelf(args(user('reporter', 'suspended')))).toBe(false)
-    expect(adminOrSelf(args(user('reporter', 'disabled')))).toBe(false)
+  it('refuses an anonymous or inactive caller outright', () => {
+    expect(adminOrSelf(req(null))).toBe(false)
+    expect(adminOrSelf(req(user('admin', 'suspended')))).toBe(false)
   })
 })
 
-describe('field access', () => {
-  it('adminFieldOnly admits only an active administrator', () => {
-    expect(adminFieldOnly(args(user('administrator')))).toBe(true)
-    expect(adminFieldOnly(args(user('editor_in_chief')))).toBe(false)
-    expect(adminFieldOnly(args(user('administrator', 'disabled')))).toBe(false)
-    expect(adminFieldOnly(args(null))).toBe(false)
+describe('publicActiveOrEditorial', () => {
+  it('shows the newsroom everything', () => {
+    for (const role of ROLES) {
+      expect(publicActiveOrEditorial(req(user(role))), role).toBe(true)
+    }
   })
 
-  it('systemFieldOnly admits nobody, not even an administrator', () => {
-    // These fields exist to be trustworthy during an incident. A value an
-    // administrator can forge through the API is not evidence.
-    expect(systemFieldOnly(args(user('administrator')))).toBe(false)
-    expect(systemFieldOnly(args(null))).toBe(false)
+  it('shows an anonymous reader only active records', () => {
+    // Retiring a category sets `active = false` rather than deleting it, so it
+    // has to stop being publicly visible without breaking published content
+    // that still points at it.
+    expect(publicActiveOrEditorial(req(null))).toEqual({ active: { equals: true } })
+  })
+})
+
+describe('canUpdateEditorialContent', () => {
+  it('lets admin and editor edit anything', () => {
+    expect(canUpdateEditorialContent(req(user('admin')))).toBe(true)
+    expect(canUpdateEditorialContent(req(user('editor')))).toBe(true)
+  })
+
+  it('narrows an author to their own unpublished work', () => {
+    const filter = canUpdateEditorialContent(req({ id: 9, role: 'author', status: 'active' }))
+
+    expect(filter).toEqual({
+      and: [{ createdBy: { equals: 9 } }, { _status: { not_equals: 'published' } }],
+    })
+  })
+
+  it('stops an author editing their own piece once it is published', () => {
+    // A published article is a public record, not a personal document. The
+    // `_status` clause is what enforces that, so it must always be present.
+    const filter = canUpdateEditorialContent(
+      req({ id: 9, role: 'author', status: 'active' }),
+    ) as { and: { _status?: { not_equals: string } }[] }
+
+    expect(filter.and.some((clause) => clause._status?.not_equals === 'published')).toBe(true)
+  })
+
+  it('refuses an anonymous or inactive caller', () => {
+    expect(canUpdateEditorialContent(req(null))).toBe(false)
+    expect(canUpdateEditorialContent(req(user('editor', 'disabled')))).toBe(false)
   })
 })

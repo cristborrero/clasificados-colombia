@@ -21,7 +21,7 @@ import {
  * collections (F4, F5, F6).
  *
  * These assertions exist because the collection previously shipped without a
- * collection-level access block: Payload's defaults applied and a reporter
+ * collection-level access block: Payload's defaults applied and an author
  * could delete the administrator through this exact endpoint.
  *
  * Runs on chromium only — this is HTTP behaviour, and the server cannot tell
@@ -66,7 +66,7 @@ test.describe('access matrix · users', () => {
     })
 
     const wrongPassword = await request.post('/api/users/login', {
-      data: { email: ACCOUNTS.reporter, password: 'contraseña-incorrecta' },
+      data: { email: ACCOUNTS.author, password: 'contraseña-incorrecta' },
     })
 
     expect(disabled.status()).toBe(401)
@@ -74,12 +74,12 @@ test.describe('access matrix · users', () => {
     expect(await disabled.text()).toBe(await wrongPassword.text())
   })
 
-  test('a reporter sees only their own account, never the roster', async ({ request }) => {
+  test('an author sees only their own account, never the roster', async ({ request }) => {
     // PRD Nº7 §9 and §106: the filter is applied in the query, so the total
     // cannot leak how many accounts exist.
-    const reporter = await login(request, ACCOUNTS.reporter)
+    const author = await login(request, ACCOUNTS.author)
 
-    const response = await request.get('/api/users', { headers: auth(reporter) })
+    const response = await request.get('/api/users', { headers: auth(author) })
     const body = (await response.json()) as {
       totalDocs: number
       docs: Array<{ id: number | string }>
@@ -87,41 +87,41 @@ test.describe('access matrix · users', () => {
 
     expect(response.status()).toBe(200)
     expect(body.totalDocs).toBe(1)
-    expect(body.docs[0]?.id).toBe(reporter.id)
+    expect(body.docs[0]?.id).toBe(author.id)
   })
 
-  test('a reporter cannot read another account directly', async ({ baseURL }) => {
+  test('an author cannot read another account directly', async ({ baseURL }) => {
     const admin = await identity(baseURL, ACCOUNTS.admin)
-    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const author = await identity(baseURL, ACCOUNTS.author)
 
-    const response = await reporter.ctx.get(`/api/users/${admin.id}`)
+    const response = await author.ctx.get(`/api/users/${admin.id}`)
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
-    await Promise.all([admin.dispose(), reporter.dispose()])
+    await Promise.all([admin.dispose(), author.dispose()])
   })
 
-  test('a reporter cannot create accounts', async ({ request }) => {
-    const reporter = await login(request, ACCOUNTS.reporter)
+  test('an author cannot create accounts', async ({ request }) => {
+    const author = await login(request, ACCOUNTS.author)
 
     const response = await request.post('/api/users', {
-      headers: auth(reporter),
-      data: { email: 'creado.por.reportero@example.test', password: 'whatever-123456', name: 'X' },
+      headers: auth(author),
+      data: { email: 'creado.por.autor@example.test', password: 'whatever-123456', name: 'X' },
     })
 
     expect(response.status()).toBe(403)
   })
 
-  test('a reporter cannot delete the administrator', async ({ baseURL }) => {
+  test('an author cannot delete the administrator', async ({ baseURL }) => {
     // The regression this whole phase exists for. This previously returned 200
     // and removed the account.
     //
-    // Separate contexts per identity: a shared one would let the reporter's
+    // Separate contexts per identity: a shared one would let the author's
     // cookie speak for the administrator on the survival check below.
     const admin = await identity(baseURL, ACCOUNTS.admin)
-    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const author = await identity(baseURL, ACCOUNTS.author)
 
-    const response = await reporter.ctx.delete(`/api/users/${admin.id}`)
+    const response = await author.ctx.delete(`/api/users/${admin.id}`)
 
     expect(response.status()).toBeGreaterThanOrEqual(400)
 
@@ -139,18 +139,18 @@ test.describe('access matrix · users', () => {
     const stillThere = await verifier.ctx.get(`/api/users/${admin.id}`)
     expect(stillThere.status()).toBe(200)
 
-    await Promise.all([admin.dispose(), reporter.dispose(), verifier.dispose()])
+    await Promise.all([admin.dispose(), author.dispose(), verifier.dispose()])
   })
 
-  test('a reporter cannot rename the administrator', async ({ baseURL }) => {
+  test('an author cannot rename the administrator', async ({ baseURL }) => {
     const admin = await identity(baseURL, ACCOUNTS.admin)
-    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const author = await identity(baseURL, ACCOUNTS.author)
 
     const before = (await (await admin.ctx.get(`/api/users/${admin.id}`)).json()) as {
       name: string
     }
 
-    const response = await reporter.ctx.patch(`/api/users/${admin.id}`, {
+    const response = await author.ctx.patch(`/api/users/${admin.id}`, {
       data: { name: 'RENOMBRADO POR UN REPORTERO' },
     })
 
@@ -163,56 +163,56 @@ test.describe('access matrix · users', () => {
     }
     expect(after.name).toBe(before.name)
 
-    await Promise.all([admin.dispose(), reporter.dispose(), verifier.dispose()])
+    await Promise.all([admin.dispose(), author.dispose(), verifier.dispose()])
   })
 
-  test('a reporter cannot promote itself to administrator', async ({ request }) => {
+  test('an author cannot promote itself to administrator', async ({ request }) => {
     // PRD Nº5 §17-§18. Payload drops the forbidden field rather than rejecting
     // the request, so the status code is not the assertion — the stored role is.
-    const reporter = await login(request, ACCOUNTS.reporter)
+    const author = await login(request, ACCOUNTS.author)
 
-    await request.patch(`/api/users/${reporter.id}`, {
-      headers: auth(reporter),
-      data: { role: 'administrator' },
+    await request.patch(`/api/users/${author.id}`, {
+      headers: auth(author),
+      data: { role: 'admin' },
     })
 
     const after = (await (
-      await request.get(`/api/users/${reporter.id}`, { headers: auth(reporter) })
+      await request.get(`/api/users/${author.id}`, { headers: auth(author) })
     ).json()) as { role: string }
 
-    expect(after.role).toBe('reporter')
+    expect(after.role).toBe('author')
   })
 
-  test('a reporter cannot reactivate or change its own status', async ({ request }) => {
-    const reporter = await login(request, ACCOUNTS.reporter)
+  test('an author cannot reactivate or change its own status', async ({ request }) => {
+    const author = await login(request, ACCOUNTS.author)
 
-    await request.patch(`/api/users/${reporter.id}`, {
-      headers: auth(reporter),
+    await request.patch(`/api/users/${author.id}`, {
+      headers: auth(author),
       data: { status: 'suspended' },
     })
 
     const after = (await (
-      await request.get(`/api/users/${reporter.id}`, { headers: auth(reporter) })
+      await request.get(`/api/users/${author.id}`, { headers: auth(author) })
     ).json()) as { status: string }
 
     expect(after.status).toBe('active')
   })
 
-  test('a reporter can still edit its own non-security fields', async ({ request }) => {
+  test('an author can still edit its own non-security fields', async ({ request }) => {
     // Denying everything would also be wrong. People must be able to fix their
     // own name (PRD Nº7 §9).
-    const reporter = await login(request, ACCOUNTS.reporter)
+    const author = await login(request, ACCOUNTS.author)
     const newName = `Reportero ${Date.now()}`
 
-    const response = await request.patch(`/api/users/${reporter.id}`, {
-      headers: auth(reporter),
+    const response = await request.patch(`/api/users/${author.id}`, {
+      headers: auth(author),
       data: { name: newName },
     })
 
     expect(response.status()).toBe(200)
 
     const after = (await (
-      await request.get(`/api/users/${reporter.id}`, { headers: auth(reporter) })
+      await request.get(`/api/users/${author.id}`, { headers: auth(author) })
     ).json()) as { name: string }
 
     expect(after.name).toBe(newName)
@@ -223,17 +223,17 @@ test.describe('access matrix · users', () => {
   }) => {
     // PRD Nº5 §8: separation of duties. Running the newsroom is not the same
     // as handing out logins.
-    const editorInChief = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
 
     const created = await request.post('/api/users', {
-      headers: auth(editorInChief),
+      headers: auth(editor),
       data: { email: 'creado.por.jefe@example.test', password: 'whatever-123456', name: 'X' },
     })
 
     expect(created.status()).toBe(403)
 
     const roster = (await (
-      await request.get('/api/users', { headers: auth(editorInChief) })
+      await request.get('/api/users', { headers: auth(editor) })
     ).json()) as { totalDocs: number }
 
     expect(roster.totalDocs).toBe(1)
@@ -250,7 +250,7 @@ test.describe('access matrix · users', () => {
     const email = `temporal.${Date.now()}@example.test`
     const created = await request.post('/api/users', {
       headers: auth(admin),
-      data: { email, password: 'whatever-123456', name: 'Cuenta temporal', role: 'contributor' },
+      data: { email, password: 'whatever-123456', name: 'Cuenta temporal', role: 'author' },
     })
     expect(created.status()).toBe(201)
 

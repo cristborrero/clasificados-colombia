@@ -2,9 +2,42 @@
 
 ## Clasificados Colombia · Plataforma Editorial Digital v2
 
-**Fecha:** 2026-08-17
-**Estado:** Repository Audit completado · Sin implementación iniciada
-**Fuente de verdad:** `/docs/prd/` (10 documentos) + `CLAUDE.md`
+**Creado:** 2026-08-17
+**Última actualización:** 2026-08-18
+**Fuente de verdad:** `docs/prd/PRD-MASTER-clasificados-colombia-v2.md` + `CLAUDE.md`
+
+---
+
+> ## ⚠ Simplificación arquitectónica — 2026-08-18
+>
+> Este plan se escribió contra los diez PRD originales. Cinco de ellos están
+> archivados y **partes de este documento describen una arquitectura que ya no
+> se construye**. Se conserva porque el análisis de fases, dependencias y
+> riesgos sigue siendo válido, pero léelo con esta corrección encima:
+>
+> | Lo que dice el plan | Lo que rige hoy |
+> | --- | --- |
+> | 9 roles (`administrator`…`contributor`) | 3 roles: `admin`, `editor`, `author` |
+> | F6 Evidence Vault: clasificación de 3 niveles, grants, URLs de 60 s | Colección `evidence-documents` estándar sobre S3/MinIO. Si no puede ser público, no se sube |
+> | F7 Auditoría append-only de cada lectura | Registro de operaciones (publicación, despublicación, cambio de rol) |
+> | F21 Denuncias como servicio aislado con su propia base | Colección `tips` dentro de Payload, con Turnstile y rate limiting |
+> | F19 Cuatro redes Docker aisladas | Un solo stack: app + Postgres + Meilisearch |
+> | Flujo de 8 estados editoriales | `draft → review → published` (+ `archived`); verificación y revisión legal son campos, no estados |
+>
+> ### Estado real de las fases
+>
+> | Fase | Estado |
+> | --- | --- |
+> | F0–F5 | Completadas |
+> | F6–F7 | **Retiradas.** El código se eliminó en la simplificación |
+> | F8–F13 | Completadas (shell, componentes, portada, artículo, investigación, perfiles) |
+> | F14 | Completada (Meilisearch, página de búsqueda, endpoint) |
+> | F15–F19, F22 | Pendientes |
+> | F20 | **Bloqueada** — faltan credenciales de Contabo/Coolify |
+> | F21 | Redefinida: colección `tips`. Falta el formulario público y su endpoint |
+>
+> Decisiones asociadas: `docs/adr/ADR-003-refundicion-de-migraciones.md` y
+> `docs/archive/prd-complex-v1/README.md`.
 
 ---
 

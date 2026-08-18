@@ -1,6 +1,6 @@
 import type { Field } from 'payload'
 
-import { adminFieldOnly } from '@/payload/access/helpers'
+import { editorialStaffFieldOnly } from '@/payload/access/helpers'
 import {
   editorialStatusOptions,
   factCheckStatusOptions,
@@ -8,16 +8,21 @@ import {
 } from '@/editorial/status'
 
 /**
- * Newsroom workflow group (PRD Nº7 §38).
+ * Newsroom workflow group (PRD Master §26).
  *
  * `editorialStatus` is one half of the ADR-001 contract — it says where a piece
  * sits in the process, while Payload's `_status` says whether it is publicly
  * visible. The hook in `hooks/editorial/enforceStatusContract.ts` keeps them
  * consistent; neither field means anything on its own.
  *
- * PRD Nº5 §19 lists `legalStatus` and `factCheckStatus` among the fields that
- * need field-level access, and §98 explains why: without it, a mass-assignment
- * payload marks its own work as legally approved.
+ * `legalStatus` and `factCheckStatus` carry field-level access for a specific
+ * reason: without it, a mass-assignment payload marks its own work as verified
+ * and legally approved, and the publication guard then waves it through.
+ *
+ * These two fields are what replaced the `fact_checker` and `legal_reviewer`
+ * roles in the 2026-08-18 simplification. The rule they enforce is unchanged —
+ * the author of a piece cannot clear it — but it is now a field permission
+ * rather than two more principals in an access matrix.
  */
 export type WorkflowFieldOptions = {
   /** Investigations require legal review by default (PRD Nº7 §56). */
@@ -55,12 +60,16 @@ export function workflowFields({ legalReviewByDefault = false }: WorkflowFieldOp
         label: 'Verificación de datos',
         access: {
           /*
-           * Restricted to administrators for now. The correct owner is the
-           * fact_checker role, but that rule belongs with the assignment
-           * fields that F4 has not built yet — and locking it down too far is
-           * recoverable, while leaving it open is not (PRD Nº5 §2).
+           * Admin and editor, never author.
+           *
+           * This is the field that decides whether a piece may be published, so
+           * the person who wrote it must not be the person who marks it
+           * verified. That separation was the entire job of the old
+           * `fact_checker` role; with three roles it survives as a field
+           * permission instead of a principal, which is cheaper and enforces
+           * the same thing.
            */
-          update: adminFieldOnly,
+          update: editorialStaffFieldOnly,
         },
       },
       {
@@ -70,7 +79,12 @@ export function workflowFields({ legalReviewByDefault = false }: WorkflowFieldOp
         defaultValue: legalReviewByDefault ? 'pending' : 'not_required',
         label: 'Revisión legal',
         access: {
-          update: adminFieldOnly,
+          /*
+           * Same rule as fact checking: an author cannot clear their own piece
+           * for legal risk. A published article that names someone is the one
+           * place where "I checked it myself" is not an acceptable answer.
+           */
+          update: editorialStaffFieldOnly,
         },
       },
       {

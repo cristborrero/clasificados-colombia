@@ -1591,11 +1591,13 @@ schema version
 
 ---
 
-# 110. No search management for reporters
+# 110. Quién toca el ranking
 
-Cambiar ranking/synonyms:
+*(Actualizado 2026-08-18 — modelo de tres roles, ver PRD Master §23)*
 
-solo roles técnicos/editoriales autorizados.
+Cambiar ranking o sinónimos: solo `admin`.
+
+`author` no toca la configuración de búsqueda.
 
 ---
 
@@ -1615,13 +1617,14 @@ apply to Meilisearch
 
 # 112. Search settings permission
 
-Recomendado:
-
 ```txt
-administrator
-+
-editor_in_chief for editorial synonyms only
+admin    configuración de búsqueda
+editor   sinónimos editoriales, si llega a existir el editor en Payload
 ```
+
+Nota: la configuración vive versionada en `src/search/settings.ts`
+(CLAUDE.md §39). Un editor de sinónimos en Payload sería una fuente adicional,
+y dos fuentes de verdad para el ranking es peor que ninguna interfaz.
 
 ---
 

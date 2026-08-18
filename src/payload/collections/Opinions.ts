@@ -39,15 +39,9 @@ export const Opinions: CollectionConfig = {
       return { _status: { equals: 'published' } }
     },
     create: ({ req }) =>
-      hasRole(getUser(req), [
-        'administrator',
-        'editor_in_chief',
-        'editor',
-        'reporter',
-        'contributor',
-      ]),
+      hasRole(getUser(req), ['admin', 'editor', 'author']),
     update: canUpdateEditorialContent,
-    delete: ({ req }) => hasRole(getUser(req), ['administrator', 'editor_in_chief']),
+    delete: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
   },
 
   admin: {

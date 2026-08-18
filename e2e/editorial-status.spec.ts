@@ -57,7 +57,7 @@ test.describe('ADR-001 · editorial status contract', () => {
   test('1 · publishing a draft is rejected by the API, not merely hidden in the admin', async ({
     request,
   }) => {
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const response = await request.post('/api/articles', {
@@ -79,7 +79,7 @@ test.describe('ADR-001 · editorial status contract', () => {
 
   test('1b · a piece in legal review cannot be made public', async ({ request }) => {
     // The case the ADR was written for.
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const response = await request.post('/api/articles', {
@@ -98,7 +98,7 @@ test.describe('ADR-001 · editorial status contract', () => {
   })
 
   test('2 · editorially published content cannot stay hidden', async ({ request }) => {
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const response = await request.post('/api/articles', {
@@ -116,16 +116,16 @@ test.describe('ADR-001 · editorial status contract', () => {
     expect(response.status()).toBeGreaterThanOrEqual(400)
   })
 
-  test('3 · a reporter cannot publish, even setting both fields at once', async ({ baseURL }) => {
+  test('3 · an author cannot publish, even setting both fields at once', async ({ baseURL }) => {
     // PRD Nº7 §49 restricts publication to editor and editor in chief. The
-    // reporter here supplies a fully coherent pair, so only the role check can
+    // author here supplies a fully coherent pair, so only the role check can
     // stop it.
     // Two identities, two contexts — see the note in support/api.ts.
-    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+    const author = await identity(baseURL, ACCOUNTS.author)
     const admin = await identity(baseURL, ACCOUNTS.admin)
     const { categoryId, authorId } = await referenceIds(admin.ctx, admin)
 
-    const response = await reporter.ctx.post('/api/articles', {
+    const response = await author.ctx.post('/api/articles', {
       data: {
         title: uniqueTitle('rule-3'),
         category: categoryId,
@@ -143,11 +143,27 @@ test.describe('ADR-001 · editorial status contract', () => {
     expect(response.status()).toBe(403)
   })
 
-  test('3b · an administrator cannot publish either — separation of duties', async ({
-    request,
-  }) => {
-    // PRD Nº5 §8. Running the servers does not confer the right to put
-    // something on the front page.
+  test('3b · an administrator can publish', async ({ request }) => {
+    /*
+     * This assertion is inverted from what it was before 2026-08-18.
+     *
+     * The nine-role model deliberately withheld publishing from
+     * `administrator`: PRD Nº5 §8 separated technical administration from
+     * editorial authority, so running the servers did not confer the right to
+     * put something on the front page.
+     *
+     * The three-role model drops that separation, and does so knowingly. With
+     * three roles there is nobody left to be "the technical one" — an admin in
+     * a newsroom this size is a person who also edits. Keeping the old rule
+     * would have meant every organisation needed at least two accounts to
+     * publish anything, which is the kind of constraint that ends with a shared
+     * editor login.
+     *
+     * The trade is recorded here rather than in a comment nobody reads: admin
+     * is now genuinely full control, and the protection against accidental
+     * publication is the publication guard — fact check, legal review, byline —
+     * not the org chart.
+     */
     const admin = await login(request, ACCOUNTS.admin)
     const { categoryId, authorId } = await referenceIds(request, admin)
 
@@ -167,7 +183,7 @@ test.describe('ADR-001 · editorial status contract', () => {
       },
     })
 
-    expect(response.status()).toBe(403)
+    expect(response.status()).toBeLessThan(400)
   })
 
   test('4 · an anonymous reader never receives a draft, whatever its editorial status', async ({
@@ -181,7 +197,7 @@ test.describe('ADR-001 · editorial status contract', () => {
     // above — which is precisely how this assertion first appeared to fail
     // while the product was behaving correctly.
     const anon = await anonymous(baseURL)
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const title = uniqueTitle('unpublished')
@@ -232,7 +248,7 @@ test.describe('ADR-001 · editorial status contract', () => {
   }) => {
     // The contract must not be so tight that nothing can be published.
     const anon = await anonymous(baseURL)
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const title = uniqueTitle('published')
@@ -268,7 +284,7 @@ test.describe('ADR-001 · editorial status contract', () => {
   })
 
   test('6 · publishing is refused while fact checking is unfinished', async ({ request }) => {
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const response = await request.post('/api/articles', {
@@ -294,7 +310,7 @@ test.describe('ADR-001 · editorial status contract', () => {
   test('7 · an invalid workflow transition is refused', async ({ request }) => {
     // PRD Nº5 §21-§22: draft → published is not a legal move; publication is
     // reachable only from approved or scheduled.
-    const editor = await login(request, ACCOUNTS.editorInChief)
+    const editor = await login(request, ACCOUNTS.editor)
     const { categoryId, authorId } = await referenceIds(request, editor)
 
     const created = await request.post('/api/articles', {

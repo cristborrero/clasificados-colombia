@@ -11,12 +11,11 @@ import { AuditEvents } from './payload/collections/AuditEvents'
 import { Authors } from './payload/collections/Authors'
 import { Categories } from './payload/collections/Categories'
 import { DataStories } from './payload/collections/DataStories'
-import { Evidence } from './payload/collections/Evidence'
-import { EvidenceAccessGrants } from './payload/collections/EvidenceAccessGrants'
+import { EvidenceDocuments } from './payload/collections/EvidenceDocuments'
+import { Tips } from './payload/collections/Tips'
 import { Topics } from './payload/collections/Topics'
 import { Articles } from './payload/collections/Articles'
 import { Investigations } from './payload/collections/Investigations'
-import { InvestigationTeams } from './payload/collections/InvestigationTeams'
 import { Media } from './payload/collections/Media'
 import { Opinions } from './payload/collections/Opinions'
 import { Organizations } from './payload/collections/Organizations'
@@ -62,11 +61,10 @@ export default buildConfig({
     DataStories,
     VideoStories,
     Sources,
-    Evidence,
+    EvidenceDocuments,
     Redirects,
     AuditEvents,
-    EvidenceAccessGrants,
-    InvestigationTeams,
+    Tips,
   ],
 
   globals: [SiteSettings, Navigation, Homepage, BreakingNews],

@@ -43,6 +43,18 @@ export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
+
+  /*
+   * Capped locally. Playwright defaults to half the cores — five browsers on
+   * this machine — and with the memory this laptop actually has free that ends
+   * with the OS killing them mid-test. The symptom is misleading: tests fail
+   * with "Protocol error … session closed" and 90-second timeouts, which reads
+   * as an application hang rather than as a browser that stopped existing. Ten
+   * article tests "failed" that way on a page that renders perfectly.
+   *
+   * CI gets its own resources, so the cap is local only.
+   */
+  workers: process.env.CI ? undefined : 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? 'github' : 'list',

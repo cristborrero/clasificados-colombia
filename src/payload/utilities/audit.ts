@@ -14,6 +14,22 @@ import type { Payload, PayloadRequest } from 'payload'
  * visible in the technical logs.
  */
 
+/**
+ * Operations worth recording (PRD Master §51, CLAUDE.md §27).
+ *
+ * Narrowed on 2026-08-18 with the retirement of the Evidence Vault: the seven
+ * events about classification, grants and per-read evidence access describe
+ * machinery that no longer exists.
+ *
+ * What is left answers the question actually asked after an incident — who
+ * published this, who took it down, who changed whose role. That is cheap to
+ * keep and worth keeping. Auditing every read was neither.
+ *
+ * This union must stay in step with the `action` options on the AuditEvents
+ * collection. It drifted once already: the collection was narrowed and this was
+ * not, and `tsc --noEmit` passed because the generated Payload types had not
+ * been regenerated yet. Only the production build caught it.
+ */
 export type AuditAction =
   | 'login_success'
   | 'login_failure'
@@ -23,13 +39,6 @@ export type AuditAction =
   | 'content_published'
   | 'content_unpublished'
   | 'content_deleted'
-  | 'evidence_uploaded'
-  | 'evidence_downloaded'
-  | 'evidence_access_denied'
-  | 'classification_changed'
-  | 'access_granted'
-  | 'access_revoked'
-  | 'legal_hold_changed'
   | 'settings_changed'
 
 export type AuditEventInput = {

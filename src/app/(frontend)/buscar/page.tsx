@@ -101,7 +101,7 @@ export default async function SearchPage({ searchParams }: Params) {
               {outcome.total === 1 ? 'resultado' : 'resultados'}
             </MetaText>
 
-            <ol className="mt-6">
+            <ol aria-label="Resultados" className="mt-6">
               {outcome.results.map((result) => (
                 <SearchResultItem key={result.id} result={result} />
               ))}

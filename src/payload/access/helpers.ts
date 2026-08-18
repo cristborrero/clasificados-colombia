@@ -3,17 +3,21 @@ import type { Access, FieldAccess, Where } from 'payload'
 import { isAdministrator, type Role, type UserStatus } from './roles'
 
 /**
- * Access-control primitives (PRD Nº5 §2, §9, §10; PRD Nº7 §105-§106).
+ * Access-control primitives (PRD Master §23, §51; CLAUDE.md §15-§17).
  *
  * DENY BY DEFAULT. Every resource assumes no access until a rule grants it.
  * The inverse — allow everything, then subtract exceptions — is how the hole
- * this phase closes appeared in the first place: `Users` shipped without a
- * collection-level `access` block, Payload's permissive defaults applied, and
- * any authenticated account could delete any other.
+ * this file exists to prevent appeared in the first place: `Users` shipped
+ * without a collection-level `access` block, Payload's permissive defaults
+ * applied, and any authenticated account could delete any other.
  *
- * PRD Nº5 §4 is the rule these functions exist to honour: the UI may hide, the
- * backend must deny. Nothing here should ever be duplicated as an
- * `admin.condition`.
+ * The rule these functions serve: **the UI may hide, the backend must deny.**
+ * Nothing here should ever be duplicated as an `admin.condition`.
+ *
+ * Simplified on 2026-08-18 from nine roles to three. The helpers that encoded
+ * distinctions between `fact_checker`, `legal_reviewer` and `photo_editor` are
+ * gone; what those roles guarded is now enforced by fields on the content
+ * (`factCheckStatus`, `legalStatus`) rather than by principals in a matrix.
  */
 
 /**
@@ -37,19 +41,16 @@ export function getUser(req: { user?: unknown }): AccessUser | null {
   return user
 }
 
-/* ── Predicates ─────────────────────────────────────────────────────────────
- * Named per PRD Nº5 §10 so that `user.role === 'editor'` never gets written
- * across fifty files (PRD Nº5 §9).
- */
+/* ── Predicates ─────────────────────────────────────────────────────────────*/
 
 export const isAuthenticated = (user: AccessUser | null): boolean => user !== null
 
 /**
  * Authenticated *and* permitted to operate.
  *
- * A suspended account that still holds a valid token must not keep working
- * (PRD Nº5 §82-§83). Login is blocked at `beforeLogin`, but a token issued
- * before suspension would otherwise outlive the decision.
+ * A suspended account that still holds a valid token must not keep working.
+ * Login is blocked at `beforeLogin`, but a token issued before the suspension
+ * would otherwise outlive the decision.
  */
 export const isActive = (user: AccessUser | null): boolean =>
   user !== null && user.status === 'active'
@@ -57,62 +58,41 @@ export const isActive = (user: AccessUser | null): boolean =>
 export const isAdmin = (user: AccessUser | null): boolean =>
   isActive(user) && isAdministrator(user?.role)
 
-export const isEditorInChief = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'editor_in_chief'
-
-export const isInvestigativeEditor = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'investigative_editor'
-
 export const isEditor = (user: AccessUser | null): boolean =>
   isActive(user) && user?.role === 'editor'
 
-export const isReporter = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'reporter'
-
-export const isFactChecker = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'fact_checker'
-
-export const isLegalReviewer = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'legal_reviewer'
-
-export const isPhotoEditor = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'photo_editor'
-
-export const isContributor = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'contributor'
+export const isAuthor = (user: AccessUser | null): boolean =>
+  isActive(user) && user?.role === 'author'
 
 /** Membership test that keeps role lists declarative. */
 export const hasRole = (user: AccessUser | null, roles: readonly Role[]): boolean =>
   isActive(user) && !!user?.role && roles.includes(user.role)
 
 /**
- * Who may administer accounts (PRD Nº7 §9).
+ * Who may administer accounts.
  *
- * Administrator only. PRD Nº5 §8 deliberately separates technical
- * administration from editorial authority — an Editor in Chief runs the
- * newsroom but does not hand out logins.
+ * `admin` only. Running the newsroom and handing out credentials are different
+ * jobs — an editor runs the first and should not hold the second.
  */
 export const canManageUsers = (user: AccessUser | null): boolean => isAdmin(user)
 
 /**
- * Role gate for publishing (PRD Nº5 §24, PRD Nº7 §49).
+ * Role gate for publishing.
  *
- * This is only the *role* half of the decision. The full guard also requires
- * workflow state — `editorialStatus`, `factCheckStatus`, `legalStatus`,
- * required fields — and lands with the collections that have those fields
- * (F4 for Articles, F5 for Investigations). Naming it now keeps the concept in
- * one place; it must never be treated as sufficient on its own.
+ * Only the *role* half of the decision. The full guard also requires the piece
+ * to satisfy its publication preconditions — fact checking resolved, legal
+ * review resolved, a byline present, and a methodology on investigations. That
+ * lives in `enforceStatusContract`, and this must never be treated as
+ * sufficient on its own.
  */
-export const canPublish = (user: AccessUser | null): boolean =>
-  hasRole(user, ['editor', 'editor_in_chief'])
+export const canPublish = (user: AccessUser | null): boolean => hasRole(user, ['admin', 'editor'])
 
 /* ── Reusable Access functions ─────────────────────────────────────────────*/
 
 /**
  * Explicit denial.
  *
- * Used where an operation must be impossible through the API — append-only
- * audit events (PRD Nº7 §76), system-written fields — rather than merely
+ * Used where an operation must be impossible through the API rather than merely
  * unimplemented. An operation with no access rule is a bug; an operation with
  * `denyAll` is a decision.
  */
@@ -124,13 +104,16 @@ export const authenticatedOnly: Access = ({ req }) => isActive(getUser(req))
 /** Administrator only. */
 export const adminOnly: Access = ({ req }) => isAdmin(getUser(req))
 
+/** Administrator or editor — the two roles accountable for what is published. */
+export const editorialStaffOnly: Access = ({ req }) => hasRole(getUser(req), ['admin', 'editor'])
+
 /**
  * Administrator sees everything; anyone else sees only their own document.
  *
- * Returns a Payload `Where` filter rather than a boolean, per PRD Nº7 §106:
- * filtering at the query level means unauthorised documents are never loaded,
- * instead of being fetched and then hidden. It also makes list endpoints
- * report honest totals rather than leaking how many records exist.
+ * Returns a Payload `Where` filter rather than a boolean: filtering at the
+ * query level means unauthorised documents are never loaded, instead of being
+ * fetched and then hidden. It also makes list endpoints report honest totals
+ * rather than leaking how many records exist.
  */
 export const adminOrSelf: Access = ({ req }) => {
   const user = getUser(req)
@@ -145,12 +128,9 @@ export const adminOrSelf: Access = ({ req }) => {
  * Public reference data: anonymous readers see only what is active.
  *
  * Authors, categories and topics are public by nature — the frontend needs them
- * to render bylines and section pages. But PRD Nº7 §118 asks to retire them
- * with `active = false` rather than deleting, so an inactive record must stop
- * being publicly visible without breaking the published content that still
- * points at it.
- *
- * Returns a filter rather than a boolean so the inactive rows are never loaded.
+ * to render bylines and section pages. But retiring one sets `active = false`
+ * rather than deleting it, so an inactive record must stop being publicly
+ * visible without breaking the published content that still points at it.
  */
 export const publicActiveOrEditorial: Access = ({ req }) => {
   const user = getUser(req)
@@ -161,50 +141,24 @@ export const publicActiveOrEditorial: Access = ({ req }) => {
 }
 
 /**
- * Write access for editorial reference data.
+ * Update access for editorial content.
  *
- * Broader than administrator: a newsroom that needs a ticket to add a topic
- * will stop adding topics. Excludes contributor, who by PRD Nº5 §8 only drafts
- * their own pieces.
- */
-export const editorialStaffOnly: Access = ({ req }) =>
-  hasRole(getUser(req), [
-    'administrator',
-    'editor_in_chief',
-    'investigative_editor',
-    'editor',
-    'photo_editor',
-  ])
-
-/**
- * Update access for editorial content (PRD Nº7 §48, PRD Nº5 §13).
+ * Admin and editor edit anything. An author edits only what they created — and,
+ * crucially, only while it is still unpublished: a published article is a
+ * public record, not a personal document.
  *
- * "Basado en role + ownership + assignment + status. No solo rol."
- *
- * Senior editorial roles edit anything. Everyone else edits only what they
- * created or were assigned — and, crucially, only while it is still a draft:
- * PRD Nº5 §13 stops a reporter editing their own piece once it is published,
- * because a published article is a public record, not a personal document.
- *
- * Returns a filter, so unauthorised rows are never loaded (PRD Nº7 §106).
+ * Returns a filter, so unauthorised rows are never loaded.
  */
 export const canUpdateEditorialContent: Access = ({ req }) => {
   const user = getUser(req)
 
   if (!isActive(user)) return false
+  if (hasRole(user, ['admin', 'editor'])) return true
 
-  if (hasRole(user, ['administrator', 'editor_in_chief', 'investigative_editor', 'editor'])) {
-    return true
-  }
-
-  const ownedOrAssigned: Where[] = [
-    { createdBy: { equals: user!.id } },
-    { assignedEditor: { equals: user!.id } },
-  ]
-
+  const owned: Where = { createdBy: { equals: user!.id } }
   const notYetPublic: Where = { _status: { not_equals: 'published' } }
 
-  return { and: [{ or: ownedOrAssigned }, notYetPublic] } satisfies Where
+  return { and: [owned, notYetPublic] } satisfies Where
 }
 
 /* ── Field-level access ────────────────────────────────────────────────────*/
@@ -212,27 +166,20 @@ export const canUpdateEditorialContent: Access = ({ req }) => {
 /**
  * Field access for values only an administrator may write.
  *
- * PRD Nº5 §19 lists the fields that need this: `role`, `status`,
- * `classification`, `legalStatus`, `factCheckStatus`, `publishedAt`,
- * `securityMetadata`. PRD Nº5 §98 is the reason — without field access, a
- * mass-assignment payload sets whatever it likes.
+ * `role`, `status`, and anything else that decides what an account can do.
+ * Without field-level access a mass-assignment payload sets whatever it likes —
+ * including its own role.
  */
 export const adminFieldOnly: FieldAccess = ({ req }) => isAdmin(getUser(req))
 
 /** Field-level counterpart of `editorialStaffOnly`. */
 export const editorialStaffFieldOnly: FieldAccess = ({ req }) =>
-  hasRole(getUser(req), [
-    'administrator',
-    'editor_in_chief',
-    'investigative_editor',
-    'editor',
-    'photo_editor',
-  ])
+  hasRole(getUser(req), ['admin', 'editor'])
 
 /**
  * Fields written by the system and by nothing else.
  *
  * Not even an administrator can forge these through the API, which is what
- * makes them worth reading during an incident (PRD Nº5 §53-§56).
+ * makes them worth reading during an incident.
  */
 export const systemFieldOnly: FieldAccess = () => false

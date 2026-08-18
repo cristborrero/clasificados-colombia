@@ -1,6 +1,5 @@
 import type { Entity } from '@/components/investigations/EntityList'
 import type { PublicEvidenceCard } from '@/components/evidence/EvidenceCard'
-import { toPublicEvidence } from '@/evidence/authorization'
 import { countWords } from '@/lib/format/wordCount'
 import { getPayloadClient } from '@/lib/payload/client'
 
@@ -140,32 +139,41 @@ export async function getInvestigationBySlug(slug: string): Promise<Investigatio
       : []
   })
 
-  const evidenceResult = await payload.find({
-    collection: 'evidence',
+  /*
+   * Documents attached to this investigation.
+   *
+   * The classification/grant machinery is gone (2026-08-18): a document in this
+   * collection is a published document by definition, because the rule is now
+   * "if it cannot be public, it does not go in the CMS". So this is an ordinary
+   * read, and the storage location still never reaches the client — Payload's
+   * upload handling gives a URL, not a bucket and key.
+   */
+  const documentsResult = await payload.find({
+    collection: 'evidence-documents',
     depth: 0,
     limit: 50,
     where: { relatedInvestigation: { equals: doc.id } },
     overrideAccess: false,
   })
 
-  const evidence = evidenceResult.docs.flatMap((raw) => {
+  const evidence = documentsResult.docs.flatMap((raw) => {
     const record = raw as unknown as Record<string, unknown>
+    const title = asString(record.title)
 
-    const projected = toPublicEvidence({
-      id: record.id as string | number,
-      title: asString(record.title) ?? '',
-      description: asString(record.description),
-      mimeType: asString(record.mimeType),
-      size: asNumber(record.size),
-      documentType: asString(record.documentType),
-      institution: asString(record.institution),
-      documentDate: asString(record.documentDate),
-      pageCount: asNumber(record.pageCount),
-      classification: record.classification as never,
-      status: record.status as never,
-    })
+    if (!title) return []
 
-    return projected && projected.title ? [projected as PublicEvidenceCard] : []
+    return [
+      {
+        id: record.id as string | number,
+        title,
+        documentType: asString(record.documentType),
+        institution: asString(record.institution),
+        documentDate: asString(record.documentDate),
+        description: asString(record.description),
+        pageCount: asNumber(record.pageCount),
+        url: asString(record.url),
+      } satisfies PublicEvidenceCard,
+    ]
   })
 
   return {

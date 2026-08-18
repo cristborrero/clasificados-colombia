@@ -203,7 +203,9 @@ export const Users: CollectionConfig = {
       required: true,
       index: true, // PRD Nº7 §7
       options: roleOptions,
-      defaultValue: 'contributor' satisfies Role,
+      // The least-privileged role, so a mis-clicked "save" on a new account
+      // cannot create a publisher.
+      defaultValue: 'author' satisfies Role,
       label: 'Rol',
       admin: {
         description:

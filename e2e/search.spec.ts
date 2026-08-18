@@ -23,14 +23,16 @@ test.describe('F14 search', () => {
     await page.goto('/buscar')
 
     await expect(page.getByText('Escribí qué estás buscando')).toBeVisible()
-    await expect(page.locator('main ol li')).toHaveCount(0)
+    // Scoped to the results list: breadcrumbs are an <ol> too, and a
+    // selector that matches them is a selector that fails for the wrong reason.
+    await expect(page.getByRole('list', { name: 'Resultados' })).toHaveCount(0)
   })
 
   test('finds published content', async ({ page }) => {
     await page.goto('/buscar?q=contratos')
 
     await expect(page.getByText(/Resultados para/)).toBeVisible()
-    await expect(page.locator('main ol > li').first()).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Resultados' }).locator('li').first()).toBeVisible()
   })
 
   test('highlights the match as text, never as markup', async ({ page }) => {
@@ -59,13 +61,15 @@ test.describe('F14 search', () => {
     // PRD Nº9 §53: shareable, and the back button works.
     await page.goto('/buscar?q=contratos')
 
-    const unfiltered = await page.locator('main ol > li').count()
+    const results = page.getByRole('list', { name: 'Resultados' }).locator('li')
+
+    const unfiltered = await results.count()
 
     await page.getByRole('link', { name: 'Investigaciones', exact: true }).click()
 
     await expect(page).toHaveURL(/type=investigation/)
 
-    const filtered = await page.locator('main ol > li').count()
+    const filtered = await results.count()
     expect(filtered).toBeLessThanOrEqual(unfiltered)
   })
 

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+
 import type { Payload } from 'payload'
 
 /**
@@ -22,25 +24,25 @@ const SEED_USERS = [
   {
     email: 'admin@clasificadoscolombia.test',
     name: 'Administrador de desarrollo',
-    role: 'administrator',
+    role: 'admin',
     status: 'active',
   },
   {
-    email: 'editor.jefe@clasificadoscolombia.test',
-    name: 'Editora en jefe de desarrollo',
-    role: 'editor_in_chief',
+    email: 'editor@clasificadoscolombia.test',
+    name: 'Editora de desarrollo',
+    role: 'editor',
     status: 'active',
   },
   {
-    email: 'reportero@clasificadoscolombia.test',
-    name: 'Reportero de desarrollo',
-    role: 'reporter',
+    email: 'autor@clasificadoscolombia.test',
+    name: 'Autor de desarrollo',
+    role: 'author',
     status: 'active',
   },
   {
     email: 'deshabilitado@clasificadoscolombia.test',
     name: 'Cuenta deshabilitada de desarrollo',
-    role: 'reporter',
+    role: 'author',
     status: 'disabled',
   },
 ] as const
@@ -174,7 +176,7 @@ export async function seedArticles(payload: Payload): Promise<void> {
     }),
     payload.find({
       collection: 'users',
-      where: { email: { equals: 'editor.jefe@clasificadoscolombia.test' } },
+      where: { email: { equals: 'editor@clasificadoscolombia.test' } },
       limit: 1,
       overrideAccess: true,
     }),
@@ -194,14 +196,14 @@ export async function seedArticles(payload: Payload): Promise<void> {
    * publishing path. Passing a real, authorised user keeps the rule intact and
    * proves it works.
    */
-  const editorInChief = editors.docs[0]
+  const editor = editors.docs[0]
 
   if (!categoryId || !authorId) {
     throw new Error('Seed editorial incompleto: faltan la categoría o el autor de demostración.')
   }
 
-  if (!editorInChief) {
-    throw new Error('Seed editorial incompleto: falta la editora en jefe que publica las notas.')
+  if (!editor) {
+    throw new Error('Seed editorial incompleto: falta la editora que publica las notas.')
   }
 
   /*
@@ -286,7 +288,7 @@ export async function seedArticles(payload: Payload): Promise<void> {
     await payload.create({
       collection: 'articles',
       overrideAccess: true,
-      user: editorInChief,
+      user: editor,
       data: {
         title,
         slug,
@@ -330,21 +332,25 @@ export async function seedArticles(payload: Payload): Promise<void> {
 export async function seedInvestigations(payload: Payload): Promise<void> {
   assertNotProduction()
 
+  const demoDocument = await readFile(
+    new URL('./fixtures/demo-documento.pdf', import.meta.url),
+  )
+
   const [author, person, organization, topic, editors] = await Promise.all([
     payload.find({ collection: 'authors', where: { slug: { equals: 'demo-periodista' } }, limit: 1, overrideAccess: true }),
     payload.find({ collection: 'people', where: { slug: { equals: 'demo-persona' } }, limit: 1, overrideAccess: true }),
     payload.find({ collection: 'organizations', where: { slug: { equals: 'demo-entidad' } }, limit: 1, overrideAccess: true }),
     payload.find({ collection: 'topics', where: { slug: { equals: 'demo-contratacion' } }, limit: 1, overrideAccess: true }),
-    payload.find({ collection: 'users', where: { email: { equals: 'editor.jefe@clasificadoscolombia.test' } }, limit: 1, overrideAccess: true }),
+    payload.find({ collection: 'users', where: { email: { equals: 'editor@clasificadoscolombia.test' } }, limit: 1, overrideAccess: true }),
   ])
 
   const authorId = author.docs[0]?.id
   const personId = person.docs[0]?.id
   const organizationId = organization.docs[0]?.id
   const topicId = topic.docs[0]?.id
-  const editorInChief = editors.docs[0]
+  const editor = editors.docs[0]
 
-  if (!authorId || !personId || !organizationId || !topicId || !editorInChief) {
+  if (!authorId || !personId || !organizationId || !topicId || !editor) {
     throw new Error('Seed de investigación incompleto: faltan referencias de demostración.')
   }
 
@@ -363,7 +369,7 @@ export async function seedInvestigations(payload: Payload): Promise<void> {
       await payload.create({
         collection: 'investigations',
         overrideAccess: true,
-        user: editorInChief,
+        user: editor,
         data: {
           title: 'DEMO · Los contratos que nadie quiso explicar',
           slug,
@@ -412,30 +418,20 @@ export async function seedInvestigations(payload: Payload): Promise<void> {
       })
     ).id
 
-  const evidenceFixtures = [
+  const documentFixtures = [
     {
       title: 'DEMO · Contrato 2025-0431',
-      classification: 'public',
-      status: 'approved',
       documentType: 'Contrato',
       institution: 'DEMO Entidad Pública',
       documentDate: '2025-11-03T00:00:00.000Z',
       pageCount: 18,
       description: 'Documento público de demostración.',
     },
-    {
-      title: 'DEMO · Expediente reservado',
-      classification: 'restricted',
-      status: 'approved',
-      documentType: 'Expediente',
-      institution: 'DEMO Entidad Pública',
-      description: 'NO DEBE APARECER EN EL FRONTEND PÚBLICO.',
-    },
   ] as const
 
-  for (const fixture of evidenceFixtures) {
+  for (const fixture of documentFixtures) {
     const found = await payload.find({
-      collection: 'evidence',
+      collection: 'evidence-documents',
       where: { title: { equals: fixture.title } },
       limit: 1,
       overrideAccess: true,
@@ -444,14 +440,24 @@ export async function seedInvestigations(payload: Payload): Promise<void> {
     if (found.totalDocs > 0) continue
 
     await payload.create({
-      collection: 'evidence',
+      collection: 'evidence-documents',
       overrideAccess: true,
-      user: editorInChief,
-      data: {
-        ...fixture,
-        objectKey: `demo/${fixture.title.replace(/\W+/g, '-').toLowerCase()}.pdf`,
-        relatedInvestigation: investigationId,
-      } as never,
+      user: editor,
+      data: { ...fixture, relatedInvestigation: investigationId } as never,
+      /*
+       * A real PDF, not a byte string that starts with %PDF.
+       *
+       * The first attempt used a hand-written placeholder and Payload rejected
+       * it — "Invalid PDF file" — because it validates the structure, not the
+       * magic number. Which is the correct behaviour, and worth keeping: a seed
+       * that can only load a fake file would not prove the upload path works.
+       */
+      file: {
+        data: demoDocument,
+        mimetype: 'application/pdf',
+        name: 'demo-contrato-2025-0431.pdf',
+        size: demoDocument.byteLength,
+      },
     })
   }
 }

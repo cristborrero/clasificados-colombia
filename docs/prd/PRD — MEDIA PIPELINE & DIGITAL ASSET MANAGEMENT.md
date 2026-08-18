@@ -699,18 +699,13 @@ internal identifiers
 
 # 48. MEDIA UPLOAD ACCESS
 
-Roles:
+*(Actualizado 2026-08-18 — modelo de tres roles, ver PRD Master §23)*
 
 ```txt
-photo_editor
-reporter
-editor
-editor_in_chief
+admin    sube y administra media
+editor   sube y administra media
+author   sube media para sus propias piezas
 ```
-
-Contributor:
-
-opcional/restringido.
 
 ---
 

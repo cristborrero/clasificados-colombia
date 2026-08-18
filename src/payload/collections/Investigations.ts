@@ -56,13 +56,7 @@ export const Investigations: CollectionConfig = {
     },
 
     create: ({ req }) =>
-      hasRole(getUser(req), [
-        'administrator',
-        'editor_in_chief',
-        'investigative_editor',
-        'editor',
-        'reporter',
-      ]),
+      hasRole(getUser(req), ['admin', 'editor', 'author']),
 
     /*
      * PRD Nº7 §55: a reporter reaches only investigations they created or were
@@ -72,7 +66,7 @@ export const Investigations: CollectionConfig = {
     update: canUpdateEditorialContent,
 
     // PRD Nº5 §15: archive, never delete.
-    delete: ({ req }) => hasRole(getUser(req), ['administrator', 'editor_in_chief']),
+    delete: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
   },
 
   admin: {

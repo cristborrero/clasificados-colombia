@@ -12,12 +12,15 @@ import {
 /**
  * Media — public editorial assets (PRD Nº10 §4).
  *
- * CRITICAL BOUNDARY (PRD Nº10 §2, §145, §149): this collection is not the
- * Evidence Vault. Media is published to the world by design; evidence carries
- * `public | internal | restricted` classifications, lives in MinIO behind
- * authorisation, and never enters this collection. An original evidence
- * document that ends up here is a source-protection failure, not a filing
- * mistake.
+ * Media is editorial imagery — photographs, illustrations, posters. Documents
+ * that support an investigation live in `evidence-documents`, which keeps their
+ * own metadata (issuing body, document date, page count) because a reader needs
+ * that to judge a record before opening it.
+ *
+ * The separation survives the 2026-08-18 simplification for a plainer reason
+ * than before: the two are described differently and listed differently, and
+ * merging them would mean every photograph grows fields about issuing
+ * institutions.
  *
  * SCOPE: F4 needs images that articles can point at. The full pipeline — AVIF
  * and WebP derivatives, EXIF stripping, hotspot cropping, duplicate detection,
@@ -31,14 +34,7 @@ export const Media: CollectionConfig = {
     // Published imagery is public by nature.
     read: () => true,
     create: ({ req }) =>
-      hasRole(getUser(req), [
-        'administrator',
-        'editor_in_chief',
-        'investigative_editor',
-        'editor',
-        'photo_editor',
-        'reporter',
-      ]),
+      hasRole(getUser(req), ['admin', 'editor', 'author']),
     update: editorialStaffOnly,
     /*
      * PRD Nº10 §49-§51: an asset used by published content must not be

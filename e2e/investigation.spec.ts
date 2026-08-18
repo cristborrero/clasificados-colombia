@@ -58,28 +58,45 @@ test.describe('F12 investigation template', () => {
     await expect(page.getByRole('heading', { name: 'Cómo investigamos' })).toBeVisible()
   })
 
-  test('shows the public document and links it to the authorising endpoint', async ({ page }) => {
+  test('shows the attached document and serves it without leaking its location', async ({
+    page,
+  }) => {
     await page.goto(INVESTIGATION)
 
     const documents = page.locator('section[aria-labelledby="documentos"]')
 
     await expect(documents).toContainText('DEMO · Contrato 2025-0431')
-    await expect(documents.getByRole('link', { name: /Ver documento/ }).first()).toHaveAttribute(
-      'href',
-      /^\/api\/evidence\/\d+\/access$/,
-    )
+
+    // A real, followable URL from Payload's upload handling — never a bucket
+    // and key.
+    const href = await documents
+      .getByRole('link', { name: /Ver documento/ })
+      .first()
+      .getAttribute('href')
+
+    expect(href).toBeTruthy()
+    expect(href).not.toContain('bucket')
+    expect(href).not.toContain('objectKey')
   })
 
-  test('never reveals the restricted document, not even as a placeholder', async ({ page }) => {
-    // The assertion this whole file exists for (PRD Nº8 §88).
+  test('never exposes internal fields or storage paths', async ({ page }) => {
+    /*
+     * Rewritten on 2026-08-18. The original assertion was that a *restricted*
+     * document never appeared, not even as a placeholder — the classification
+     * tier that made that possible no longer exists, because the rule became
+     * "if it cannot be public, it does not go in the CMS".
+     *
+     * The check that remains is the one that still has teeth: whatever the page
+     * renders, it renders through a projection, so internal field names and
+     * storage locations never reach the browser.
+     */
     await page.goto(INVESTIGATION)
 
     const html = await page.content()
 
-    expect(html).not.toContain('Expediente reservado')
-    expect(html).not.toContain('NO DEBE APARECER')
     expect(html).not.toContain('objectKey')
-    expect(html.toLowerCase()).not.toContain('documento restringido')
+    expect(html).not.toContain('internalNotes')
+    expect(html).not.toMatch(/evidence-(internal|restricted)/)
   })
 
   test('offers chapter navigation when there is more than one chapter', async ({ page }) => {

@@ -76,18 +76,25 @@ test.describe('F9 editorial components', () => {
     await expect(page.getByText('Duración 4:32')).toBeVisible()
   })
 
-  test('evidence links to the authorising endpoint, never to storage', async ({ page }) => {
-    // PRD Nº8 §86: the UI gets a controlled URL from a secure endpoint. An
-    // object key in the markup would bypass authorisation and the audit trail.
+  test('a document card never exposes a storage location', async ({ page }) => {
+    /*
+     * Rewritten on 2026-08-18. This used to assert a link to
+     * `/api/evidence/<id>/access`, the endpoint that authorised, audited and
+     * then minted a 60-second URL. That machinery is gone with the Evidence
+     * Vault: a document in the collection is a published document by
+     * definition.
+     *
+     * What survives is the half that was right regardless — knowing where a
+     * file lives is most of the work of reaching it, so a bucket name or an
+     * object key must never appear in the markup.
+     */
     await page.goto(SHOWCASE)
 
-    const link = page.getByRole('link', { name: /Ver documento/ }).first()
-
-    await expect(link).toHaveAttribute('href', '/api/evidence/1/access')
-
     const html = await page.content()
+
     expect(html).not.toContain('objectKey')
-    expect(html).not.toContain('evidence-restricted')
+    expect(html).not.toContain('bucket')
+    expect(html).not.toMatch(/evidence-(internal|restricted)/)
   })
 
   test('an empty list says so instead of rendering an empty list', async ({ page }) => {

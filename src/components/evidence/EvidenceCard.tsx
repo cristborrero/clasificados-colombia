@@ -5,23 +5,20 @@ import { cn } from '@/components/ui/cn'
 import { formatEditorialDate, toDateTimeAttribute } from '@/lib/format/date'
 
 /**
- * Evidence card (PRD Nº8 §84, §86, §88).
+ * Document card (PRD Master §20, PRD Nº8 §84).
  *
- * THE RULE THAT MATTERS IS §88: restricted evidence must never appear in the
- * public frontend, and it must not appear as a placeholder either — no
- * "Documento restringido" card, because saying a document exists is often the
- * disclosure. The existence of a subpoena can identify the source who provided
- * it.
+ * Shows the metadata a reader needs in order to judge a document before opening
+ * it: what kind of record it is, who issued it, when, and how long it runs.
  *
- * This component cannot break that rule, and not because it is careful. It
- * accepts only `PublicEvidence` — the projection built in F6 that has no
- * `bucket` and no `objectKey` by construction, and that `toPublicEvidence`
- * returns `null` for whenever the classification is not public. There is no
- * prop here that could carry a restricted document, so there is no branch to
- * get wrong.
+ * Simplified on 2026-08-18. This used to guard against restricted evidence
+ * reaching the public frontend, with a projection that returned `null` for
+ * anything not public. That guard is gone because what it guarded is gone: a
+ * document in this collection is a published document by definition, since the
+ * rule is now "if it cannot be public, it does not go in the CMS".
  *
- * §86: the card links to `/api/evidence/<id>/access`, which authorises, audits
- * and only then mints a short-lived URL. It never receives an object key.
+ * What survives is the part that was right independently: the card renders a
+ * URL, never a storage location. Knowing where a file lives is most of the work
+ * of reaching it.
  */
 export type PublicEvidenceCard = {
   id: string | number
@@ -32,6 +29,8 @@ export type PublicEvidenceCard = {
   documentDate?: string | null
   description?: string | null
   pageCount?: number | null
+  /** Served by Payload's upload handling. Never a bucket and key. */
+  url?: string | null
 }
 
 export type EvidenceCardProps = {
@@ -40,8 +39,6 @@ export type EvidenceCardProps = {
   className?: string
 }
 
-/** The authorising endpoint, never the storage path (§86). */
-export const evidenceAccessPath = (id: string | number): string => `/api/evidence/${id}/access`
 
 export function EvidenceCard({ evidence, headingLevel = 'h4', className }: EvidenceCardProps) {
   const Heading = headingLevel
@@ -100,9 +97,12 @@ export function EvidenceCard({ evidence, headingLevel = 'h4', className }: Evide
           <Body className="text-[color:var(--color-text-muted)]">{evidence.description}</Body>
         ) : null}
 
+        {evidence.url ? (
         <p className="mt-1">
           <a
-            href={evidenceAccessPath(evidence.id)}
+            href={evidence.url}
+            target="_blank"
+            rel="noopener"
             className={cn(
               'font-[family-name:var(--font-sans)] text-[length:var(--text-metadata)] font-semibold',
               'underline underline-offset-4',
@@ -115,6 +115,7 @@ export function EvidenceCard({ evidence, headingLevel = 'h4', className }: Evide
             <span className="sr-only"> — {evidence.title}</span>
           </a>
         </p>
+        ) : null}
       </div>
     </article>
   )

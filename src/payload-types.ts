@@ -80,11 +80,10 @@ export interface Config {
     'data-stories': DataStory;
     'video-stories': VideoStory;
     sources: Source;
-    evidence: Evidence;
+    'evidence-documents': EvidenceDocument;
     redirects: Redirect;
     'audit-events': AuditEvent;
-    'evidence-access-grants': EvidenceAccessGrant;
-    'investigation-teams': InvestigationTeam;
+    tips: Tip;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -105,11 +104,10 @@ export interface Config {
     'data-stories': DataStoriesSelect<false> | DataStoriesSelect<true>;
     'video-stories': VideoStoriesSelect<false> | VideoStoriesSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
-    evidence: EvidenceSelect<false> | EvidenceSelect<true>;
+    'evidence-documents': EvidenceDocumentsSelect<false> | EvidenceDocumentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'audit-events': AuditEventsSelect<false> | AuditEventsSelect<true>;
-    'evidence-access-grants': EvidenceAccessGrantsSelect<false> | EvidenceAccessGrantsSelect<true>;
-    'investigation-teams': InvestigationTeamsSelect<false> | InvestigationTeamsSelect<true>;
+    tips: TipsSelect<false> | TipsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -174,16 +172,7 @@ export interface User {
   /**
    * Determina qué puede hacer esta persona. Solo un administrador puede modificarlo.
    */
-  role:
-    | 'administrator'
-    | 'editor_in_chief'
-    | 'investigative_editor'
-    | 'editor'
-    | 'reporter'
-    | 'fact_checker'
-    | 'legal_reviewer'
-    | 'photo_editor'
-    | 'contributor';
+  role: 'admin' | 'editor' | 'author';
   /**
    * Deshabilitado impide el inicio de sesión. Al salir del equipo, deshabilitar de inmediato (PRD Nº4 §96).
    */
@@ -1346,17 +1335,17 @@ export interface VideoStory {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Metadatos de evidencia. El archivo vive en MinIO y solo se alcanza mediante autorización auditada.
+ * Documentos publicados que respaldan una investigación. Si no puede ser público, no se sube.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "evidence".
+ * via the `definition` "evidence-documents".
  */
-export interface Evidence {
+export interface EvidenceDocument {
   id: number;
-  /**
-   * Descripción del documento. No incluir nombres de fuentes reservadas (PRD Nº5 §122).
-   */
   title: string;
+  /**
+   * Por qué este documento importa. Un documento sin contexto es un archivo.
+   */
   description?: string | null;
   /**
    * Contrato, acta, resolución, oficio…
@@ -1368,40 +1357,18 @@ export interface Evidence {
    */
   documentDate?: string | null;
   pageCount?: number | null;
-  /**
-   * Reservada por defecto. Bajar la clasificación es una operación sensible que exige doble aprobación (PRD Nº5 §50).
-   */
-  classification: 'public' | 'internal' | 'restricted';
-  /**
-   * Solo el material aprobado puede servirse públicamente (PRD Nº7 §70).
-   */
-  status: 'pending' | 'verified' | 'approved' | 'quarantined' | 'archived';
-  /**
-   * Se deriva de la clasificación. No editable (PRD Nº7 §69).
-   */
-  bucket?: string | null;
-  /**
-   * Identificador aleatorio en MinIO. Nunca se entrega al navegador.
-   */
-  objectKey?: string | null;
-  mimeType?: string | null;
-  size?: number | null;
-  /**
-   * Permite verificar que el archivo almacenado es el registrado (PRD Nº5 §58-§59). No sustituye una firma digital.
-   */
-  checksum?: string | null;
-  /**
-   * Da acceso al equipo de esa investigación (necesidad de conocer).
-   */
   relatedInvestigation?: (number | null) | Investigation;
-  retention?: string | null;
-  /**
-   * Suspende cualquier eliminación automática. Activarlo o quitarlo requiere autoridad elevada (PRD Nº5 §62).
-   */
-  legalHold?: boolean | null;
-  uploadedBy?: (number | null) | User;
   updatedAt: string;
   createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * Redirecciones permanentes. Se evalúan antes de devolver un 404.
@@ -1453,13 +1420,6 @@ export interface AuditEvent {
     | 'content_published'
     | 'content_unpublished'
     | 'content_deleted'
-    | 'evidence_uploaded'
-    | 'evidence_downloaded'
-    | 'evidence_access_denied'
-    | 'classification_changed'
-    | 'access_granted'
-    | 'access_revoked'
-    | 'legal_hold_changed'
     | 'settings_changed';
   /**
    * Identificador del usuario. Vacío cuando la acción fue anónima.
@@ -1495,45 +1455,37 @@ export interface AuditEvent {
   createdAt: string;
 }
 /**
- * Autorizaciones puntuales sobre evidencia reservada. Para retirar acceso, registrar la revocación — no borrar.
+ * Denuncias recibidas. Ninguna se convierte en contenido automáticamente.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "evidence-access-grants".
+ * via the `definition` "tips".
  */
-export interface EvidenceAccessGrant {
+export interface Tip {
   id: number;
-  user: number | User;
-  evidence: number | Evidence;
-  grantedBy?: (number | null) | User;
+  title: string;
+  description: string;
+  location?: string | null;
   /**
-   * Por qué esta persona necesita este documento. Obligatorio.
+   * Si está marcada, no se guardó ningún dato de contacto.
    */
-  reason: string;
+  anonymous?: boolean | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  attachments?:
+    | {
+        file: number | Media;
+        id?: string | null;
+      }[]
+    | null;
   /**
-   * Recomendado. Un acceso sin vencimiento es un acceso que nadie recuerda.
+   * Derivar NO publica nada: solo marca que la redacción decidió trabajarla.
    */
-  expiresAt?: string | null;
-  revokedAt?: string | null;
-  revokedBy?: (number | null) | User;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Equipos con necesidad de conocer. Desactivar al cerrar la investigación.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "investigation-teams".
- */
-export interface InvestigationTeam {
-  id: number;
-  name: string;
-  investigation: number | Investigation;
-  members: (number | User)[];
-  lead?: (number | null) | User;
+  status: 'new' | 'reviewing' | 'archived' | 'escalated';
   /**
-   * Al desactivar, el equipo deja de dar acceso a evidencia reservada.
+   * Nunca se muestran públicamente.
    */
-  active?: boolean | null;
+  internalNotes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1614,8 +1566,8 @@ export interface PayloadLockedDocument {
         value: number | Source;
       } | null)
     | ({
-        relationTo: 'evidence';
-        value: number | Evidence;
+        relationTo: 'evidence-documents';
+        value: number | EvidenceDocument;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1626,12 +1578,8 @@ export interface PayloadLockedDocument {
         value: number | AuditEvent;
       } | null)
     | ({
-        relationTo: 'evidence-access-grants';
-        value: number | EvidenceAccessGrant;
-      } | null)
-    | ({
-        relationTo: 'investigation-teams';
-        value: number | InvestigationTeam;
+        relationTo: 'tips';
+        value: number | Tip;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2264,28 +2212,27 @@ export interface SourcesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "evidence_select".
+ * via the `definition` "evidence-documents_select".
  */
-export interface EvidenceSelect<T extends boolean = true> {
+export interface EvidenceDocumentsSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   documentType?: T;
   institution?: T;
   documentDate?: T;
   pageCount?: T;
-  classification?: T;
-  status?: T;
-  bucket?: T;
-  objectKey?: T;
-  mimeType?: T;
-  size?: T;
-  checksum?: T;
   relatedInvestigation?: T;
-  retention?: T;
-  legalHold?: T;
-  uploadedBy?: T;
   updatedAt?: T;
   createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2320,29 +2267,24 @@ export interface AuditEventsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "evidence-access-grants_select".
+ * via the `definition` "tips_select".
  */
-export interface EvidenceAccessGrantsSelect<T extends boolean = true> {
-  user?: T;
-  evidence?: T;
-  grantedBy?: T;
-  reason?: T;
-  expiresAt?: T;
-  revokedAt?: T;
-  revokedBy?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "investigation-teams_select".
- */
-export interface InvestigationTeamsSelect<T extends boolean = true> {
-  name?: T;
-  investigation?: T;
-  members?: T;
-  lead?: T;
-  active?: T;
+export interface TipsSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  location?: T;
+  anonymous?: T;
+  contactName?: T;
+  contactEmail?: T;
+  contactPhone?: T;
+  attachments?:
+    | T
+    | {
+        file?: T;
+        id?: T;
+      };
+  status?: T;
+  internalNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

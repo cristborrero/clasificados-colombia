@@ -48,7 +48,7 @@ test.describe('investigations · publication guards', () => {
   test.skip(({ browserName }) => browserName !== 'chromium', 'HTTP-level, browser-independent')
 
   test('publishing without methodology is refused', async ({ baseURL }) => {
-    const editor = await identity(baseURL, ACCOUNTS.editorInChief)
+    const editor = await identity(baseURL, ACCOUNTS.editor)
     const { authorId } = await fixtures(editor.ctx, editor)
 
     const response = await editor.ctx.post('/api/investigations', {
@@ -74,7 +74,7 @@ test.describe('investigations · publication guards', () => {
     // PRD Arquitectura §12. This is the rule the whole collection exists to
     // protect: without it, marking review as not required would skip the review
     // that matters most.
-    const editor = await identity(baseURL, ACCOUNTS.editorInChief)
+    const editor = await identity(baseURL, ACCOUNTS.editor)
     const { authorId, personId } = await fixtures(editor.ctx, editor)
 
     const response = await editor.ctx.post('/api/investigations', {
@@ -97,7 +97,7 @@ test.describe('investigations · publication guards', () => {
   })
 
   test('naming people with explicit legal approval publishes', async ({ baseURL }) => {
-    const editor = await identity(baseURL, ACCOUNTS.editorInChief)
+    const editor = await identity(baseURL, ACCOUNTS.editor)
     const { authorId, personId } = await fixtures(editor.ctx, editor)
 
     const response = await editor.ctx.post('/api/investigations', {
@@ -119,7 +119,7 @@ test.describe('investigations · publication guards', () => {
   })
 
   test('an unpublished investigation is unreachable from the internet', async ({ baseURL }) => {
-    const editor = await identity(baseURL, ACCOUNTS.editorInChief)
+    const editor = await identity(baseURL, ACCOUNTS.editor)
     const { authorId } = await fixtures(editor.ctx, editor)
     const anon = await anonymous(baseURL)
 
@@ -149,14 +149,14 @@ test.describe('investigations · publication guards', () => {
     await Promise.all([anon.dispose(), editor.dispose()])
   })
 
-  test('a reporter cannot publish an investigation', async ({ baseURL }) => {
-    const reporter = await identity(baseURL, ACCOUNTS.reporter)
+  test('an author cannot publish an investigation', async ({ baseURL }) => {
+    const author = await identity(baseURL, ACCOUNTS.author)
     const admin = await identity(baseURL, ACCOUNTS.admin)
     const { authorId } = await fixtures(admin.ctx, admin)
 
-    const response = await reporter.ctx.post('/api/investigations', {
+    const response = await author.ctx.post('/api/investigations', {
       data: {
-        ...baseInvestigation(uniqueTitle('reportero'), authorId),
+        ...baseInvestigation(uniqueTitle('autor'), authorId),
         _status: 'published',
         workflow: {
           editorialStatus: 'published',
@@ -168,6 +168,6 @@ test.describe('investigations · publication guards', () => {
 
     expect(response.status()).toBe(403)
 
-    await Promise.all([reporter.dispose(), admin.dispose()])
+    await Promise.all([author.dispose(), admin.dispose()])
   })
 })

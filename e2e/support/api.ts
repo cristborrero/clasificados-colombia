@@ -19,10 +19,17 @@ import { expect, request as playwrightRequest, type APIRequestContext } from '@p
 
 export const DEV_PASSWORD = 'clasificados-dev-password'
 
+/**
+ * Seeded accounts, one per role (PRD Master §23).
+ *
+ * Renamed on 2026-08-18 with the move from nine roles to three. `author` is the
+ * least-privileged role and therefore the one most of the denial assertions
+ * speak as: a rule that holds for an author is the rule that matters.
+ */
 export const ACCOUNTS = {
   admin: 'admin@clasificadoscolombia.test',
-  editorInChief: 'editor.jefe@clasificadoscolombia.test',
-  reporter: 'reportero@clasificadoscolombia.test',
+  editor: 'editor@clasificadoscolombia.test',
+  author: 'autor@clasificadoscolombia.test',
   disabled: 'deshabilitado@clasificadoscolombia.test',
 } as const
 
@@ -40,7 +47,25 @@ export async function anonymous(baseURL: string | undefined): Promise<APIRequest
  * cookie the context now holds, so that every request states which identity it
  * intends to be. Implicit auth is what made the bug above possible.
  */
-export async function login(request: APIRequestContext, email: string): Promise<Session> {
+/**
+ * Sessions, memoised per account for the lifetime of the worker.
+ *
+ * Payload 3 keeps a bounded list of sessions per user and evicts the oldest
+ * when it fills. Logging in once per test blew through that: the suite made
+ * sixteen sessions for the same two accounts, and a token minted early stopped
+ * being accepted while the test holding it was still running. The failure
+ * surfaced as "You are not allowed to perform this action" on an operation that
+ * was perfectly legal — which sends you looking at access control instead of at
+ * session bookkeeping.
+ *
+ * One session per account per worker fixes it and is also closer to how a real
+ * client behaves. Tests that specifically need a fresh session — the ones
+ * verifying that a deleted or renamed account is really gone — use `identity`,
+ * which always authenticates anew in its own context.
+ */
+const sessions = new Map<string, Promise<Session>>()
+
+async function authenticate(request: APIRequestContext, email: string): Promise<Session> {
   const response = await request.post('/api/users/login', {
     data: { email, password: DEV_PASSWORD },
   })
@@ -50,6 +75,23 @@ export async function login(request: APIRequestContext, email: string): Promise<
   const body = (await response.json()) as { token: string; user: { id: number | string } }
 
   return { token: body.token, id: body.user.id }
+}
+
+export async function login(request: APIRequestContext, email: string): Promise<Session> {
+  const existing = sessions.get(email)
+  if (existing) return existing
+
+  // The promise is cached, not the result, so concurrent callers share one
+  // in-flight login rather than racing to create two sessions.
+  const pending = authenticate(request, email)
+  sessions.set(email, pending)
+
+  try {
+    return await pending
+  } catch (error) {
+    sessions.delete(email)
+    throw error
+  }
 }
 
 export const authHeader = (session: Session) => ({ Authorization: `JWT ${session.token}` })
@@ -73,12 +115,51 @@ export type Identity = Session & { ctx: APIRequestContext; dispose: () => Promis
  * One cookie jar per identity removes the entire class of problem.
  */
 export async function identity(baseURL: string | undefined, email: string): Promise<Identity> {
-  const ctx = await playwrightRequest.newContext({ baseURL })
-  const session = await login(ctx, email)
+  /*
+   * Authenticate once, then hand the token to a fresh context as a header.
+   *
+   * The obvious version — a new context that logs in for itself — mints a new
+   * Payload session on every call, and Payload keeps a bounded list per user.
+   * With several specs each building two or three identities, tokens issued
+   * early stopped being accepted while the tests holding them were still
+   * running. The failure reads as a permissions bug: 403 on an operation the
+   * role is plainly allowed to perform.
+   *
+   * The equally obvious fix — reuse the memoised token — breaks differently:
+   * `login` no longer POSTs inside the new context, so that context never
+   * receives the `payload-token` cookie and every request goes out
+   * unauthenticated. That is the 403 this comment was written after.
+   *
+   * So: one session per account, carried explicitly. The context stays
+   * isolated, which is the point of `identity` — a shared context lets one
+   * account's cookie answer for another, and a test meant to prove the
+   * administrator survived a deletion attempt ends up asking as the attacker.
+   * A fresh context has no cookie, so the header is unambiguous.
+   */
+  const session = await login(await sharedContext(baseURL), email)
+
+  const ctx = await playwrightRequest.newContext({
+    baseURL,
+    extraHTTPHeaders: { Authorization: `JWT ${session.token}` },
+  })
 
   return {
     ...session,
     ctx,
     dispose: () => ctx.dispose(),
   }
+}
+
+/**
+ * One context per worker used solely to perform logins.
+ *
+ * Kept apart from the identity contexts so that the cookie a login sets never
+ * lands in a context a test is about to make assertions with.
+ */
+let loginContext: Promise<APIRequestContext> | null = null
+
+function sharedContext(baseURL: string | undefined): Promise<APIRequestContext> {
+  loginContext ??= playwrightRequest.newContext({ baseURL })
+
+  return loginContext
 }

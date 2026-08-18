@@ -80,6 +80,36 @@ export const DataStories: CollectionConfig = {
       label: 'Autoría',
     },
 
+    /*
+     * The headline figure (PRD Nº8 §55).
+     *
+     * `headlineFigureContext` is not optional alongside it, and the card drops
+     * the number entirely when the context is missing. §55 says "con contexto",
+     * and the reason is editorial rather than typographic: "68.000 M" with no
+     * unit and no comparison is a number, not a finding. A reader cannot tell
+     * whether it is large.
+     */
+    {
+      name: 'headlineFigure',
+      type: 'text',
+      label: 'Cifra destacada',
+      admin: {
+        description: 'Ya formateada para lectura, por ejemplo «68.000 M». Opcional.',
+      },
+    },
+
+    {
+      name: 'headlineFigureContext',
+      type: 'text',
+      label: 'Qué representa la cifra',
+      admin: {
+        description:
+          'Obligatorio si hay cifra: sin esto la tarjeta la oculta (PRD Nº8 §55).',
+        condition: (_, siblingData: { headlineFigure?: string }) =>
+          Boolean(siblingData?.headlineFigure),
+      },
+    },
+
     {
       name: 'hero',
       type: 'group',

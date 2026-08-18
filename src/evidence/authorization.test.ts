@@ -304,3 +304,66 @@ describe('toPublicEvidence', () => {
     expect(toPublicEvidence({ ...row, classification: 'public', status: 'pending' })).toBeNull()
   })
 })
+
+describe('toPublicEvidence · descriptive metadata (PRD Nº8 §84)', () => {
+  const approved = {
+    id: 7,
+    title: 'Contrato 2025-0431',
+    classification: 'public' as const,
+    status: 'approved' as const,
+  }
+
+  it('carries the fields an evidence card needs', () => {
+    expect(
+      toPublicEvidence({
+        ...approved,
+        documentType: 'Contrato',
+        institution: 'Gobernación',
+        documentDate: '2025-11-03T00:00:00.000Z',
+        pageCount: 18,
+      }),
+    ).toEqual({
+      id: 7,
+      title: 'Contrato 2025-0431',
+      documentType: 'Contrato',
+      institution: 'Gobernación',
+      documentDate: '2025-11-03T00:00:00.000Z',
+      pageCount: 18,
+    })
+  })
+
+  it('still never carries a location', () => {
+    // The point of the projection: bucket and objectKey are absent by
+    // construction, and adding descriptive fields must not change that.
+    const projected = toPublicEvidence({
+      ...approved,
+      documentType: 'Contrato',
+      institution: 'Gobernación',
+    })
+
+    expect(projected).not.toHaveProperty('bucket')
+    expect(projected).not.toHaveProperty('objectKey')
+    expect(Object.keys(projected!)).toEqual(['id', 'title', 'documentType', 'institution'])
+  })
+
+  it('omits empty metadata rather than emitting nulls', () => {
+    expect(
+      toPublicEvidence({ ...approved, documentType: null, institution: '', pageCount: null }),
+    ).toEqual({ id: 7, title: 'Contrato 2025-0431' })
+  })
+
+  it('refuses a restricted document however complete its metadata', () => {
+    expect(
+      toPublicEvidence({
+        ...approved,
+        classification: 'restricted',
+        documentType: 'Contrato',
+        institution: 'Gobernación',
+      }),
+    ).toBeNull()
+  })
+
+  it('refuses a public document that has not been approved', () => {
+    expect(toPublicEvidence({ ...approved, status: 'pending', pageCount: 18 })).toBeNull()
+  })
+})

@@ -1,4 +1,4 @@
-import type { ArticleSummary } from '@/data/articles'
+import type { EditorialSummary } from '@/data/collections'
 
 /**
  * What a card needs to render.
@@ -19,7 +19,7 @@ export type CardArticle = {
 }
 
 /** Compile-time proof that the data layer satisfies what the cards need. */
-export type _CardArticleMatchesData = ArticleSummary extends CardArticle ? true : never
+export type _CardArticleMatchesData = EditorialSummary extends CardArticle ? true : never
 
 /** Articles live at the site root (PRD SEO §14: short, permanent URLs). */
 export const articlePath = (slug: string): string => `/${slug}`

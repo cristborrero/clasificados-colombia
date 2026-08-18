@@ -102,6 +102,44 @@ export const Evidence: CollectionConfig = {
 
     { name: 'description', type: 'textarea', label: 'Descripción' },
 
+    /*
+     * Descriptive metadata (PRD Nº8 §84).
+     *
+     * What a reader needs in order to judge a document before opening it: what
+     * kind of record it is, who issued it, when, and how long it runs. None of
+     * it says where the file lives, so all of it is safe to publish alongside a
+     * public document — and without it an evidence card is a filename.
+     */
+    {
+      name: 'documentType',
+      type: 'text',
+      label: 'Tipo de documento',
+      admin: { description: 'Contrato, acta, resolución, oficio…' },
+    },
+
+    {
+      name: 'institution',
+      type: 'text',
+      label: 'Entidad que lo emitió',
+    },
+
+    {
+      name: 'documentDate',
+      type: 'date',
+      label: 'Fecha del documento',
+      admin: {
+        date: { pickerAppearance: 'dayOnly' },
+        description: 'La fecha del documento, no la de su carga.',
+      },
+    },
+
+    {
+      name: 'pageCount',
+      type: 'number',
+      min: 1,
+      label: 'Páginas',
+    },
+
     {
       name: 'classification',
       type: 'select',

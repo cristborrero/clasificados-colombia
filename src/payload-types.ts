@@ -443,6 +443,10 @@ export interface Category {
    */
   description?: string | null;
   /**
+   * Vacío para una sección principal. Una sola profundidad.
+   */
+  parent?: (number | null) | Category;
+  /**
    * Si se deja vacío se usa el nombre. Útil cuando el nombre es largo.
    */
   navigationLabel?: string | null;
@@ -894,6 +898,7 @@ export interface Investigation {
         id?: string | null;
       }[]
     | null;
+  topics?: (number | Topic)[] | null;
   /**
    * ATENCIÓN: si esta lista no está vacía, la revisión legal debe estar APROBADA para publicar. Mencionar a alguien no implica imputación; el contexto va en el texto.
    */
@@ -1118,6 +1123,14 @@ export interface DataStory {
   slugLocked?: boolean | null;
   dek?: string | null;
   authors: (number | Author)[];
+  /**
+   * Ya formateada para lectura, por ejemplo «68.000 M». Opcional.
+   */
+  headlineFigure?: string | null;
+  /**
+   * Obligatorio si hay cifra: sin esto la tarjeta la oculta (PRD Nº8 §55).
+   */
+  headlineFigureContext?: string | null;
   hero?: {
     image?: (number | null) | Media;
     captionOverride?: string | null;
@@ -1345,6 +1358,16 @@ export interface Evidence {
    */
   title: string;
   description?: string | null;
+  /**
+   * Contrato, acta, resolución, oficio…
+   */
+  documentType?: string | null;
+  institution?: string | null;
+  /**
+   * La fecha del documento, no la de su carga.
+   */
+  documentDate?: string | null;
+  pageCount?: number | null;
   /**
    * Reservada por defecto. Bajar la clasificación es una operación sensible que exige doble aprobación (PRD Nº5 §50).
    */
@@ -1732,6 +1755,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   slug?: T;
   slugLocked?: T;
   description?: T;
+  parent?: T;
   navigationLabel?: T;
   order?: T;
   active?: T;
@@ -2012,6 +2036,7 @@ export interface InvestigationsSelect<T extends boolean = true> {
         sources?: T;
         id?: T;
       };
+  topics?: T;
   people?: T;
   organizations?: T;
   sources?: T;
@@ -2117,6 +2142,8 @@ export interface DataStoriesSelect<T extends boolean = true> {
   slugLocked?: T;
   dek?: T;
   authors?: T;
+  headlineFigure?: T;
+  headlineFigureContext?: T;
   hero?:
     | T
     | {
@@ -2242,6 +2269,10 @@ export interface SourcesSelect<T extends boolean = true> {
 export interface EvidenceSelect<T extends boolean = true> {
   title?: T;
   description?: T;
+  documentType?: T;
+  institution?: T;
+  documentDate?: T;
+  pageCount?: T;
   classification?: T;
   status?: T;
   bucket?: T;

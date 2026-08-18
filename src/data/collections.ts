@@ -4,6 +4,7 @@ import { getPayloadClient } from '@/lib/payload/client'
 
 import {
   asNumber,
+  asRecord,
   asString,
   toImageRef,
   toNamedRef,
@@ -47,7 +48,7 @@ export type EditorialSummary = {
   duration: number | null
 }
 
-function toSummary(doc: Record<string, unknown>): EditorialSummary | null {
+export function toSummary(doc: Record<string, unknown>): EditorialSummary | null {
   const slug = asString(doc.slug)
   const title = asString(doc.title)
 
@@ -60,10 +61,22 @@ function toSummary(doc: Record<string, unknown>): EditorialSummary | null {
     slug,
     title,
     dek: asString(doc.dek),
-    publishedAt: asString(doc.publishedAt),
+    /*
+     * `publishedAt` lives inside the `publication` group, not at the top level.
+     * Reading the wrong path did not fail loudly — it produced `null`, which
+     * silently removed every timestamp from the homepage stream and made
+     * `sort: '-publishedAt'` order by a column that does not exist.
+     */
+    publishedAt: asString(asRecord(doc.publication as never)?.publishedAt),
     category: toNamedRef(doc.category as never),
     authors: toNamedRefs(doc.authors),
-    image: toImageRef((doc.featuredImage ?? doc.poster ?? doc.heroImage) as never),
+    /*
+     * Articles, investigations, opinions and data stories keep their lead
+     * image under a `hero` group; video stories call theirs `poster`. Reading
+     * both here is what lets one projector serve five collections without a
+     * per-collection branch.
+     */
+    image: toImageRef((asRecord(doc.hero as never)?.image ?? doc.poster) as never),
     figure: asString(doc.headlineFigure),
     figureContext: asString(doc.headlineFigureContext),
     duration: asNumber(doc.duration),
@@ -94,7 +107,7 @@ export async function listPublished(
       // One extra is fetched so a dropped document does not silently shorten
       // the band by one.
       limit: limit + 1,
-      sort: '-publishedAt',
+      sort: '-publication.publishedAt',
       where: conditions.length > 0 ? { and: conditions } : undefined,
       overrideAccess: false,
     })

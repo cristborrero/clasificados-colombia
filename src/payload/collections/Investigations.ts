@@ -236,6 +236,23 @@ export const Investigations: CollectionConfig = {
       ],
     },
 
+    /*
+     * Topics (PRD Nº8 §91).
+     *
+     * A section is where a piece is filed; a topic is what it is about, and it
+     * accumulates across sections over years. An investigation with no topic
+     * cannot be gathered with the coverage that led to it — which is precisely
+     * the reader who arrives mid-story and wants the substantial work.
+     */
+    {
+      name: 'topics',
+      type: 'relationship',
+      relationTo: 'topics',
+      hasMany: true,
+      index: true,
+      label: 'Temas',
+    },
+
     {
       name: 'people',
       type: 'relationship',

@@ -62,6 +62,26 @@ export const Categories: CollectionConfig = {
       },
     },
 
+    /*
+     * Subsections (PRD Nº8 §90).
+     *
+     * A section page has to be an editorial page rather than a flat list, and
+     * one of the things that makes it one is being able to say what lives
+     * inside it. One level only, by convention: a taxonomy deep enough to need
+     * a tree is a taxonomy the reader has already stopped following.
+     */
+    {
+      name: 'parent',
+      type: 'relationship',
+      relationTo: 'categories',
+      index: true,
+      label: 'Sección madre',
+      admin: {
+        description: 'Vacío para una sección principal. Una sola profundidad.',
+      },
+      filterOptions: ({ id }) => (id ? { id: { not_equals: id } } : true),
+    },
+
     {
       name: 'navigationLabel',
       type: 'text',

@@ -1,0 +1,111 @@
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+
+import { ArticleCard } from '@/components/articles/ArticleCard'
+import { Breadcrumbs } from '@/components/articles/Breadcrumbs'
+import { LatestNewsList } from '@/components/articles/LatestNewsList'
+import { Lead, HeadlineXL } from '@/components/editorial/Typography'
+import { InvestigationCard } from '@/components/investigations/InvestigationCard'
+import { Container } from '@/components/layout/Container'
+import { SectionHeader } from '@/components/layout/SectionHeader'
+import { getTopicBySlug } from '@/data/profiles'
+import { getSiteSettings } from '@/data/site'
+
+/**
+ * Topic page (PRD Nº8 §91).
+ *
+ * *"Similar a Category pero más contextual."* The difference is what a topic
+ * is: a section is where a story is filed, a topic is what a story is about,
+ * and a topic accumulates across sections over years.
+ *
+ * So the investigations come first here, where the section page leads with the
+ * newest thing. Someone arriving at a topic page has usually arrived mid-story
+ * and needs the substantial work, not the most recent update.
+ */
+type Params = { params: Promise<{ slug: string }> }
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { slug } = await params
+  const topic = await getTopicBySlug(slug)
+
+  if (!topic) return { title: 'Tema no encontrado' }
+
+  return { title: topic.name, description: topic.description ?? undefined }
+}
+
+export default async function TopicPage({ params }: Params) {
+  const { slug } = await params
+
+  const [topic, settings] = await Promise.all([getTopicBySlug(slug), getSiteSettings()])
+
+  if (!topic) notFound()
+
+  return (
+    <>
+      <Container width="editorial" className="py-12">
+        <Breadcrumbs
+          items={[{ label: settings.siteName, href: '/' }, { label: topic.name }]}
+          className="mb-8"
+        />
+
+        <HeadlineXL className="text-[length:var(--text-h2)]">{topic.name}</HeadlineXL>
+
+        {topic.description ? (
+          <Lead className="mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
+            {topic.description}
+          </Lead>
+        ) : null}
+      </Container>
+
+      {topic.investigations.length > 0 ? (
+        <Container width="editorial" as="section" className="pb-12">
+          <SectionHeader title="Investigaciones" />
+
+          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+            {topic.investigations.map((item) => (
+              <InvestigationCard
+                key={item.slug}
+                investigation={{
+                  slug: item.slug,
+                  title: item.title,
+                  dek: item.dek,
+                  publishedAt: item.publishedAt,
+                  authors: item.authors,
+                  image: item.image,
+                }}
+              />
+            ))}
+          </div>
+        </Container>
+      ) : null}
+
+      <Container width="editorial" as="section" className="pb-24">
+        <SectionHeader title="Cobertura" />
+
+        {topic.articles.length > 0 ? (
+          <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+            {topic.articles.map((item) => (
+              <ArticleCard
+                key={item.slug}
+                article={{
+                  slug: item.slug,
+                  title: item.title,
+                  dek: item.dek,
+                  publishedAt: item.publishedAt,
+                  category: item.category,
+                  authors: item.authors,
+                  image: item.image,
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <LatestNewsList
+            articles={[]}
+            emptyMessage={`Todavía no hay cobertura publicada sobre ${topic.name}.`}
+          />
+        )}
+      </Container>
+    </>
+  )
+}

@@ -245,6 +245,14 @@ export type PublicEvidence = {
   description?: string
   mimeType?: string
   size?: number
+  /* The descriptive fields PRD Nº8 §84 puts on an evidence card. All of them
+     are metadata a reader needs in order to judge a document — what kind of
+     record it is, who issued it, when, and how long it runs. None of them
+     reveals where the file lives. */
+  documentType?: string
+  institution?: string
+  documentDate?: string
+  pageCount?: number
 }
 
 export function toPublicEvidence(evidence: {
@@ -253,6 +261,10 @@ export function toPublicEvidence(evidence: {
   description?: string | null
   mimeType?: string | null
   size?: number | null
+  documentType?: string | null
+  institution?: string | null
+  documentDate?: string | null
+  pageCount?: number | null
   classification: Classification
   status: EvidenceStatus
 }): PublicEvidence | null {
@@ -264,5 +276,9 @@ export function toPublicEvidence(evidence: {
     ...(evidence.description ? { description: evidence.description } : {}),
     ...(evidence.mimeType ? { mimeType: evidence.mimeType } : {}),
     ...(evidence.size != null ? { size: evidence.size } : {}),
+    ...(evidence.documentType ? { documentType: evidence.documentType } : {}),
+    ...(evidence.institution ? { institution: evidence.institution } : {}),
+    ...(evidence.documentDate ? { documentDate: evidence.documentDate } : {}),
+    ...(evidence.pageCount != null ? { pageCount: evidence.pageCount } : {}),
   }
 }

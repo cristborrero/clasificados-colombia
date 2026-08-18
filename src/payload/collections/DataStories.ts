@@ -11,6 +11,7 @@ import { workflowFields } from '@/payload/fields/workflow'
 import { createStatusContractHook } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
+import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
 /**
  * Data stories (PRD Nº7 §59-§60).
@@ -55,13 +56,14 @@ export const DataStories: CollectionConfig = {
   versions: { drafts: true, maxPerDoc: 50 },
 
   hooks: {
+    afterDelete: [syncSearchAfterDelete('data-stories')],
     // Methodology is a publication precondition here, as it is for investigations.
     beforeChange: [
       createStatusContractHook({ requiresMethodology: true }),
       lockSlugOnPublish,
       recordFirstPublication,
     ],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/datos/${slug}` })],
+    afterChange: [createSlugRedirect({ buildPath: (slug) => `/datos/${slug}` }), syncSearchAfterChange('data-stories')],
   },
 
   fields: [

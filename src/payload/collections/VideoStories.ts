@@ -9,6 +9,7 @@ import { workflowFields } from '@/payload/fields/workflow'
 import { enforceStatusContract } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
+import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
 /**
  * Video stories (PRD Nº7 §61).
@@ -55,8 +56,9 @@ export const VideoStories: CollectionConfig = {
   versions: { drafts: true, maxPerDoc: 50 },
 
   hooks: {
+    afterDelete: [syncSearchAfterDelete('video-stories')],
     beforeChange: [enforceStatusContract, lockSlugOnPublish, recordFirstPublication],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/video/${slug}` })],
+    afterChange: [createSlugRedirect({ buildPath: (slug) => `/video/${slug}` }), syncSearchAfterChange('video-stories')],
   },
 
   fields: [

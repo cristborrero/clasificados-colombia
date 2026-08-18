@@ -11,6 +11,7 @@ import { workflowFields } from '@/payload/fields/workflow'
 import { enforceStatusContract } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
+import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
 /**
  * Opinion pieces (PRD Nº7 §57-§58).
@@ -59,8 +60,9 @@ export const Opinions: CollectionConfig = {
   versions: { drafts: true, maxPerDoc: 50 },
 
   hooks: {
+    afterDelete: [syncSearchAfterDelete('opinions')],
     beforeChange: [enforceStatusContract, lockSlugOnPublish, recordFirstPublication],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/opinion/${slug}` })],
+    afterChange: [createSlugRedirect({ buildPath: (slug) => `/opinion/${slug}` }), syncSearchAfterChange('opinions')],
   },
 
   fields: [

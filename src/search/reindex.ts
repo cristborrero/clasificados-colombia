@@ -1,24 +1,44 @@
+import config from '@payload-config'
+import { getPayload } from 'payload'
+
+import { isSearchConfigured } from './client'
+import { reindexAll } from './indexer'
+
 /**
  * `pnpm search:reindex` — full Meilisearch rebuild from Payload.
  *
- * Required by PRD Nº7 §152, Nº9 §90-§92 and CLAUDE.md §41. Implemented in F14.
+ * Required by PRD Nº7 §152, Nº9 §3 and §90-§92, and CLAUDE.md §41.
  *
- * The command exists now, and fails loudly, for a specific reason: a documented
- * command that silently does nothing is worse than a missing one. Anyone who
- * runs this before F14 gets told exactly where it stands.
+ * This command is what makes it legitimate to treat the index as a derivative
+ * rather than as data: PRD Nº9 §3 says that if Meilisearch is lost entirely,
+ * Payload plus a full reindex must restore search — which is also why PRD Nº4
+ * §65 leaves Meilisearch out of the backup plan. If this command stops working,
+ * that decision quietly stops being true.
  *
- * Target flow (PRD Nº9 §91):
- *   create new index → apply settings → batch documents (500–1000)
- *                    → validate counts → swap index
- *
- * Invariants it must honour:
- *   - only `published` + `public` content enters the index (§4)
- *   - Payload stays the canonical source; Meilisearch is derived (§2)
- *   - running it twice must produce the same logical state (§153 / §84)
+ * Idempotent (§84). Documents are written by a stable id derived from
+ * collection and record id, so running it twice produces the same logical
+ * state.
  */
-export default async function reindex(): Promise<never> {
-  throw new Error(
-    'search:reindex is not implemented yet — it lands in F14 (Search). ' +
-      'See docs/implementation/MASTER-IMPLEMENTATION-PLAN.md §5 (F14).',
+const payload = await getPayload({ config })
+
+if (!isSearchConfigured()) {
+  payload.logger.error(
+    'Meilisearch no está configurado: falta MEILI_HOST y MEILI_INDEXER_KEY (o MEILI_MASTER_KEY).',
+  )
+
+  process.exit(1)
+}
+
+const started = Date.now()
+
+const results = await reindexAll(payload)
+
+for (const result of results) {
+  payload.logger.info(
+    `${result.collection}: ${result.indexed} indexados, ${result.skipped} omitidos por no ser públicos.`,
   )
 }
+
+const total = results.reduce((sum, result) => sum + result.indexed, 0)
+
+payload.logger.info(`Reindexación completa: ${total} documentos en ${Date.now() - started} ms.`)

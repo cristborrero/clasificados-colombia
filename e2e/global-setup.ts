@@ -24,12 +24,37 @@ import { request as playwrightRequest, type FullConfig } from '@playwright/test'
  */
 
 const SEED_SCRIPT = 'src/payload/scripts/seed-users.ts'
+const REINDEX_SCRIPT = 'src/search/reindex.ts'
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
   execFileSync(process.execPath, ['node_modules/payload/bin.js', 'run', SEED_SCRIPT], {
     stdio: 'inherit',
     env: process.env,
   })
+
+  /*
+   * Rebuild the search index from the freshly seeded database.
+   *
+   * Not merely convenience. `migrate:fresh` resets the sequence, so a previous
+   * run's documents sit in Meilisearch under ids that now belong to different
+   * records — search results pointing at content that no longer exists. A
+   * reindex here makes the index a function of the database rather than of
+   * whatever ran last, and doubles as a smoke test of the command PRD Nº9 §3
+   * depends on for disaster recovery.
+   *
+   * Non-fatal: a suite that cannot run at all because Meilisearch is down would
+   * contradict the very property the search tests assert — that the site works
+   * without it. The search specs fail loudly on their own if the index is
+   * empty.
+   */
+  try {
+    execFileSync(process.execPath, ['node_modules/payload/bin.js', 'run', REINDEX_SCRIPT], {
+      stdio: 'inherit',
+      env: process.env,
+    })
+  } catch {
+    console.warn('[global-setup] No se pudo reindexar Meilisearch; las pruebas de búsqueda lo reportarán.')
+  }
 
   const baseURL = config.projects[0]?.use?.baseURL
   if (!baseURL) return

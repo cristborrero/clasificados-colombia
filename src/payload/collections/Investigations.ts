@@ -11,6 +11,7 @@ import { workflowFields } from '@/payload/fields/workflow'
 import { createStatusContractHook } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
+import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
 /**
  * Investigations (PRD Nº7 §50-§56).
@@ -85,6 +86,7 @@ export const Investigations: CollectionConfig = {
   versions: { drafts: true, maxPerDoc: 100 },
 
   hooks: {
+    afterDelete: [syncSearchAfterDelete('investigations')],
     beforeChange: [
       createStatusContractHook({
         requiresMethodology: true,
@@ -93,7 +95,7 @@ export const Investigations: CollectionConfig = {
       lockSlugOnPublish,
       recordFirstPublication,
     ],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/investigacion/${slug}` })],
+    afterChange: [createSlugRedirect({ buildPath: (slug) => `/investigacion/${slug}` }), syncSearchAfterChange('investigations')],
   },
 
   fields: [

@@ -2,6 +2,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { es } from '@payloadcms/translations/languages/es'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { buildConfig } from 'payload'
@@ -32,6 +33,51 @@ import { VideoStories } from './payload/collections/VideoStories'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+/**
+ * Outgoing mail.
+ *
+ * Returns `undefined` when SMTP is not configured, which makes Payload fall
+ * back to printing mail to the console. That is correct in development and an
+ * honest degradation in production — the alternative, refusing to boot, would
+ * take the whole site down over a feature most readers never touch.
+ *
+ * It is not free, though: without mail there is no password reset, so every
+ * forgotten password becomes a console intervention on the server. The warning
+ * below exists so that shows up in the logs instead of being discovered by an
+ * editor who is locked out.
+ */
+function buildEmailAdapter() {
+  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM_ADDRESS, SMTP_FROM_NAME } =
+    serverEnv
+
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS || !SMTP_FROM_ADDRESS) {
+    console.warn(
+      '[email] SMTP sin configurar: el correo se escribirá en consola y la ' +
+        'recuperación de contraseña no funcionará.',
+    )
+
+    return undefined
+  }
+
+  const port = SMTP_PORT ?? 587
+
+  return nodemailerAdapter({
+    defaultFromAddress: SMTP_FROM_ADDRESS,
+    defaultFromName: SMTP_FROM_NAME ?? 'Clasificados Colombia',
+    transportOptions: {
+      host: SMTP_HOST,
+      port,
+      /*
+       * 465 is implicit TLS; anything else negotiates STARTTLS. Getting this
+       * backwards produces a connection that hangs rather than one that fails,
+       * which is a much worse way to find out.
+       */
+      secure: port === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    },
+  })
+}
 
 export default buildConfig({
   admin: {
@@ -76,6 +122,8 @@ export default buildConfig({
     supportedLanguages: { es },
     fallbackLanguage: 'es',
   },
+
+  email: buildEmailAdapter(),
 
   /*
    * Order shapes the admin sidebar within each group. Newsroom reference data

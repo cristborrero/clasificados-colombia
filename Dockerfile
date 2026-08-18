@@ -89,6 +89,13 @@ ENV PAYLOAD_SECRET=${PAYLOAD_SECRET}
 ARG NEXT_PUBLIC_SERVER_URL=http://localhost:3000
 ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 
+# Same rule, same reason: the tip form reads this in a Client Component, so the
+# value present at build time is the one that ships. The default is Cloudflare's
+# published test key, which always passes — fine for building and verifying an
+# image, never for one that gets deployed.
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+
 RUN pnpm build
 
 # ── migrator ─────────────────────────────────────────────────────────────────

@@ -50,6 +50,32 @@ export const serverEnvSchema = z.object({
   MINIO_REGION: z.string().min(1).default('us-east-1'),
 
   MEDIA_PIPELINE_VERSION: z.coerce.number().int().positive().default(1),
+
+  /*
+   * Outgoing mail.
+   *
+   * Optional on purpose: without it Payload falls back to writing mail to the
+   * console, which is the right behaviour in development and an explicit,
+   * visible degradation in production rather than a crash on boot.
+   *
+   * What it costs when absent is not cosmetic, though — password reset stops
+   * working, so every forgotten password becomes a console intervention on the
+   * server. `src/payload.config.ts` logs a warning when it is missing.
+   */
+  SMTP_HOST: optionalString(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: optionalString(),
+  SMTP_PASS: optionalString(),
+  SMTP_FROM_ADDRESS: optionalString(),
+  SMTP_FROM_NAME: optionalString(),
+
+  /*
+   * Anti-abuse on the public tip form.
+   *
+   * The endpoint fails closed without the secret — see
+   * `src/lib/antiabuse/turnstile.ts` for why that is the safer direction.
+   */
+  TURNSTILE_SECRET_KEY: optionalString(),
 })
 
 export const publicEnvSchema = z.object({

@@ -28,6 +28,9 @@ playwright-report/
 test-results/
 blob-report/
 .playwright/
+# Browser binaries, pinned to this volume by playwright.config.ts so they never
+# land on the internal disk. ~850 MB.
+.playwright-browsers/
 
 # Local service data (Docker named volumes are external, this guards stray binds)
 .docker-data/

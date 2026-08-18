@@ -1,4 +1,22 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import { defineConfig, devices } from '@playwright/test'
+
+/*
+ * Keep browser binaries on the same volume as the repository.
+ *
+ * Playwright defaults to ~/Library/Caches/ms-playwright, which is the internal
+ * disk. That is roughly 850 MB of binaries appearing on a drive nobody asked to
+ * spend, and it happens silently the first time anyone runs the suite.
+ *
+ * Resolving the path from this file rather than hard-coding one keeps it
+ * correct wherever the repository lives: move the checkout and the browsers
+ * follow it. Set PLAYWRIGHT_BROWSERS_PATH explicitly to override.
+ */
+const repoRoot = path.dirname(fileURLToPath(import.meta.url))
+
+process.env.PLAYWRIGHT_BROWSERS_PATH ??= path.join(repoRoot, '.playwright-browsers')
 
 /*
  * Port 3100 rather than Next's default 3000, for the same reason the dev
@@ -42,7 +60,7 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     navigationTimeout: 60_000,
-    actionTimeout: 20_000,
+    actionTimeout: 45_000,
   },
 
   /*

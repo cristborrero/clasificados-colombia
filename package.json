@@ -22,6 +22,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "browsers:install": "PLAYWRIGHT_BROWSERS_PATH=./.playwright-browsers playwright install chromium webkit",
     "test:e2e:full": "pnpm build && playwright test",
     "payload": "payload",
     "generate:types": "payload generate:types",

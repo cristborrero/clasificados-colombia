@@ -317,11 +317,11 @@ PRD Nº4 §70 pide `/api/health`; `CLAUDE.md` §60 pide `/api/health/live` y `/a
 
 **Resolución:** implementar los tres. `/api/health/live` (proceso vivo, sin dependencias), `/api/health/ready` (DB alcanzable), `/api/health` como alias de readiness. PRD Nº9 §118: Meilisearch caído **no** debe hacer fallar readiness.
 
-## 4.8 C-08 · shadcn/ui + Base UI simultáneos — **DECISIÓN PENDIENTE**
+## 4.8 C-08 · shadcn/ui + Base UI simultáneos — **RESUELTO (ADR-002, 2026-08-18)**
 
 PRD Master §8 y PRD Nº8 §2 listan ambos. shadcn/ui se apoya históricamente en Radix; sumar Base UI introduce dos librerías de primitives para el mismo propósito, en contra de la política de dependencias mínimas (PRD Master §8, `CLAUDE.md` §85).
 
-**Recomendación:** elegir **una** familia de primitives. Dado el volumen real de componentes interactivos del producto (dialog de búsqueda, menú móvil, combobox de autocomplete, galería) la superficie es pequeña. Requiere ADR-002 en Fase 1.
+**Resolución (ADR-002):** Radix Primitives, instalados primitive por primitive. Base UI queda habilitada como excepción puntual, no como default, en los términos condicionales del PRD (*«cuando aporte accesibilidad»*). Motivo verificado el 2026-08-18: Base UI publica `1.0.0-rc.0` — un release candidate — mientras `@radix-ui/react-dialog` publica `1.1.23` estable; y *«shadcn/ui solo como primitives»* se resuelve en la práctica a Radix, porque shadcn no es dependencia de runtime sino un generador cuyo aporte estilado prohíbe PRD Master §321. Detalle en `docs/adr/ADR-002-libreria-de-primitives.md`.
 
 ## 4.9 C-09 · Ubicación del servicio de Denuncias — **DECISIÓN PENDIENTE**
 
@@ -847,7 +847,7 @@ Preferir Payload Local API server-side. Pero **respetar Access Control conscient
 | ADR     | Tema                                                  | Requerido antes de                       |
 | ------- | ----------------------------------------------------- | ---------------------------------------- |
 | ADR-001 | Contrato `_status` vs `editorialStatus` (C-06)        | F4                                       |
-| ADR-002 | Librería de primitives: shadcn/Radix o Base UI (C-08) | F1                                       |
+| ADR-002 | Librería de primitives: shadcn/Radix o Base UI (C-08) | F8 — ✅ aceptado 2026-08-18 (Radix)      |
 | ADR-003 | Ubicación del servicio de Denuncias (C-09)            | F21 (decidir ya, afecta layout del repo) |
 | ADR-004 | BreakingNews Global vs Collection (C-04)              | F4                                       |
 | ADR-005 | `timelineEvents` array vs Collection (C-05)           | F5                                       |

@@ -1,23 +1,28 @@
+import { Container } from '@/components/layout/Container'
+
 /*
- * F0 placeholder.
+ * F8 placeholder.
  *
- * This is NOT the homepage. The real homepage is F10 and depends on the design
- * system (F1), editorial components (F9) and the content model (F4).
+ * This is NOT the homepage. The real homepage is F10 and depends on the
+ * editorial components of F9.
  *
- * Its only job is to prove the frontend route group renders and that Tailwind
- * and the brand tokens are wired.
+ * It no longer renders its own `<main>`: the layout owns that landmark, and two
+ * `main` elements on one page leave a screen reader with no single answer to
+ * "where does the content start" — which is exactly what the skip link needs.
  */
 export default function Page() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-6 px-6 py-24">
-      <p className="text-xs font-semibold tracking-[0.2em] text-[var(--color-investigation-red)] uppercase">
-        Fase 0 · Baseline
+    <Container width="reading" className="flex flex-col gap-6 py-24">
+      <p className="text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--letter-spacing)] text-[color:var(--color-accent)] uppercase">
+        Fase 8 · Shell del sitio
       </p>
 
-      <h1 className="text-4xl font-semibold text-balance">Clasificados Colombia</h1>
+      <h1 className="font-[family-name:var(--font-editorial)] text-[length:var(--text-h1)] text-balance">
+        Clasificados Colombia
+      </h1>
 
-      <p className="max-w-prose text-lg text-[var(--color-ink)]/70">
-        Scaffold operativo. Next.js y Payload CMS corren en el mismo proceso sobre PostgreSQL.
+      <p className="text-[length:var(--text-lead)] text-[color:var(--color-text-muted)]">
+        Header, navegación y pie ya se leen desde Payload. La portada editorial es F10.
       </p>
 
       {/*
@@ -29,7 +34,7 @@ export default function Page() {
             soft-navigating to them would be meaningless.
       */}
       {/* eslint-disable @next/next/no-html-link-for-pages */}
-      <ul className="max-w-prose space-y-1 text-sm text-[var(--color-ink)]/70">
+      <ul className="space-y-1 text-[length:var(--text-metadata)] text-[color:var(--color-text-muted)]">
         <li>
           Admin editorial:{' '}
           <a className="underline underline-offset-4" href="/admin">
@@ -50,6 +55,6 @@ export default function Page() {
         </li>
       </ul>
       {/* eslint-enable @next/next/no-html-link-for-pages */}
-    </main>
+    </Container>
   )
 }

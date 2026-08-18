@@ -119,8 +119,18 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+    navigation: Navigation;
+    homepage: Homepage;
+    'breaking-news': BreakingNew;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    navigation: NavigationSelect<false> | NavigationSelect<true>;
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'breaking-news': BreakingNewsSelect<false> | BreakingNewsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -2344,6 +2354,495 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Identidad del sitio y datos del publisher para structured data.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName: string;
+  siteDescription?: string | null;
+  /**
+   * PRD SEO §67: datos reales y visibles. Un medio sin contacto parece una entidad anónima.
+   */
+  contact?: {
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  };
+  /**
+   * Alimenta el Organization de schema.org. PRD SEO §37: logo oficial, URL permanente, sin mockups.
+   */
+  organization?: {
+    legalName?: string | null;
+    logo?: (number | null) | Media;
+    /**
+     * Solo perfiles verificables (PRD SEO §35).
+     */
+    sameAs?:
+      | {
+          url: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Menús del sitio. Nunca se codifican en componentes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation".
+ */
+export interface Navigation {
+  id: number;
+  /**
+   * PRD Nº8 §11: sin mega-menú. Si no cabe en una línea, la jerarquía editorial está mal.
+   */
+  primary?:
+    | {
+        label: string;
+        linkType?: ('internal' | 'external') | null;
+        /**
+         * La URL se deriva del slug, así el enlace sobrevive a un cambio de slug.
+         */
+        category?: (number | null) | Category;
+        url?: string | null;
+        newTab?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  secondary?:
+    | {
+        label: string;
+        linkType?: ('internal' | 'external') | null;
+        /**
+         * La URL se deriva del slug, así el enlace sobrevive a un cambio de slug.
+         */
+        category?: (number | null) | Category;
+        url?: string | null;
+        newTab?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  footer?:
+    | {
+        title: string;
+        links?:
+          | {
+              label: string;
+              linkType?: ('internal' | 'external') | null;
+              /**
+               * La URL se deriva del slug, así el enlace sobrevive a un cambio de slug.
+               */
+              category?: (number | null) | Category;
+              url?: string | null;
+              newTab?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  social?:
+    | {
+        platform: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Orden de la portada. Se reordena arrastrando, sin tocar código.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  bands?:
+    | (
+        | {
+            /**
+             * PRD Nº8 §38: el hero admite nota, investigación o dato. Vacío = la publicación más reciente.
+             */
+            article?:
+              | ({
+                  relationTo: 'articles';
+                  value: number | Article;
+                } | null)
+              | ({
+                  relationTo: 'investigations';
+                  value: number | Investigation;
+                } | null)
+              | ({
+                  relationTo: 'data-stories';
+                  value: number | DataStory;
+                } | null);
+            /**
+             * PRD Nº8 §39: 7 columnas de imagen y 5 de texto, o al revés.
+             */
+            imageFirst?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'hero';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            /**
+             * PRD Nº8 §44: no todas con el mismo peso.
+             */
+            leadCount?: number | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'secondary';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'latest';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            ctaLabel?: string | null;
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'investigations';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            ctaLabel?: string | null;
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'analysis';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            ctaLabel?: string | null;
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'data';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            ctaLabel?: string | null;
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'video';
+          }
+        | {
+            /**
+             * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
+             */
+            title?: string | null;
+            limit?: number | null;
+            /**
+             * Opcional. Vacío = todas las secciones.
+             */
+            category?: (number | null) | Category;
+            ctaLabel?: string | null;
+            ctaHref?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'opinion';
+          }
+        | {
+            title?: string | null;
+            description?: string | null;
+            ctaLabel?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'newsletter';
+          }
+      )[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Barra de última hora. Siempre con fecha de expiración.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "breaking-news".
+ */
+export interface BreakingNew {
+  id: number;
+  enabled?: boolean | null;
+  /**
+   * Determina el color de la barra. El texto siempre acompaña al color: nunca se comunica solo con color.
+   */
+  severity: 'breaking' | 'alert' | 'developing' | 'confirmed';
+  headline: string;
+  description?: string | null;
+  relatedArticle?: (number | null) | Article;
+  startsAt: string;
+  /**
+   * Obligatoria: evita banners olvidados (PRD Nº5 §26).
+   */
+  expiresAt: string;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  siteDescription?: T;
+  contact?:
+    | T
+    | {
+        email?: T;
+        phone?: T;
+        address?: T;
+      };
+  organization?:
+    | T
+    | {
+        legalName?: T;
+        logo?: T;
+        sameAs?:
+          | T
+          | {
+              url?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation_select".
+ */
+export interface NavigationSelect<T extends boolean = true> {
+  primary?:
+    | T
+    | {
+        label?: T;
+        linkType?: T;
+        category?: T;
+        url?: T;
+        newTab?: T;
+        id?: T;
+      };
+  secondary?:
+    | T
+    | {
+        label?: T;
+        linkType?: T;
+        category?: T;
+        url?: T;
+        newTab?: T;
+        id?: T;
+      };
+  footer?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              linkType?: T;
+              category?: T;
+              url?: T;
+              newTab?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  social?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  bands?:
+    | T
+    | {
+        hero?:
+          | T
+          | {
+              article?: T;
+              imageFirst?: T;
+              id?: T;
+              blockName?: T;
+            };
+        secondary?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              leadCount?: T;
+              id?: T;
+              blockName?: T;
+            };
+        latest?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              id?: T;
+              blockName?: T;
+            };
+        investigations?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        analysis?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        data?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        video?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        opinion?:
+          | T
+          | {
+              title?: T;
+              limit?: T;
+              category?: T;
+              ctaLabel?: T;
+              ctaHref?: T;
+              id?: T;
+              blockName?: T;
+            };
+        newsletter?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              ctaLabel?: T;
+              id?: T;
+              blockName?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "breaking-news_select".
+ */
+export interface BreakingNewsSelect<T extends boolean = true> {
+  enabled?: T;
+  severity?: T;
+  headline?: T;
+  description?: T;
+  relatedArticle?: T;
+  startsAt?: T;
+  expiresAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -5,6 +5,8 @@ import * as migration_20260817_222327_articles_media_redirects from './20260817_
 import * as migration_20260818_005628_entities_and_content_types from './20260818_005628_entities_and_content_types';
 import * as migration_20260818_012946_investigations from './20260818_012946_investigations';
 import * as migration_20260818_032404_evidence_vault_and_audit from './20260818_032404_evidence_vault_and_audit';
+import * as migration_20260818_041357_f8_site_shell_globals from './20260818_041357_f8_site_shell_globals';
+import * as migration_20260818_045512_f10_homepage_composition from './20260818_045512_f10_homepage_composition';
 
 export const migrations = [
   {
@@ -40,6 +42,16 @@ export const migrations = [
   {
     up: migration_20260818_032404_evidence_vault_and_audit.up,
     down: migration_20260818_032404_evidence_vault_and_audit.down,
-    name: '20260818_032404_evidence_vault_and_audit'
+    name: '20260818_032404_evidence_vault_and_audit',
+  },
+  {
+    up: migration_20260818_041357_f8_site_shell_globals.up,
+    down: migration_20260818_041357_f8_site_shell_globals.down,
+    name: '20260818_041357_f8_site_shell_globals',
+  },
+  {
+    up: migration_20260818_045512_f10_homepage_composition.up,
+    down: migration_20260818_045512_f10_homepage_composition.down,
+    name: '20260818_045512_f10_homepage_composition'
   },
 ];

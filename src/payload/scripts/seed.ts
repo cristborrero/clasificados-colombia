@@ -123,9 +123,77 @@ export async function seedEditorial(payload: Payload): Promise<void> {
   })
 }
 
+/**
+ * Globals the frontend shell reads (F8).
+ *
+ * A fresh install has no `navigation` document, and the header is written to
+ * survive that — it renders the logo and nothing else. But "renders nothing"
+ * and "renders the wrong thing" look identical in a test, so the seed puts real
+ * links in place and the E2E asserts against them.
+ *
+ * `breaking-news` is seeded switched off. A demo emergency banner shipping
+ * enabled is exactly the failure the mandatory `expiresAt` exists to prevent.
+ */
+export async function seedGlobals(payload: Payload): Promise<void> {
+  assertNotProduction()
+
+  const category = await payload.find({
+    collection: 'categories',
+    where: { slug: { equals: 'demo-politica' } },
+    limit: 1,
+    overrideAccess: true,
+  })
+
+  const categoryId = category.docs[0]?.id
+
+  await payload.updateGlobal({
+    slug: 'site-settings',
+    overrideAccess: true,
+    data: {
+      siteName: 'Clasificados Colombia',
+      siteDescription: 'Investigamos. Informamos. No callamos.',
+      contact: {
+        email: 'redaccion@clasificadoscolombia.test',
+        address: 'Bogotá, Colombia',
+      },
+    },
+  })
+
+  await payload.updateGlobal({
+    slug: 'navigation',
+    overrideAccess: true,
+    data: {
+      primary: categoryId
+        ? [{ label: 'DEMO · Política', linkType: 'internal', category: categoryId }]
+        : [],
+      secondary: [{ label: 'Quiénes somos', linkType: 'external', url: '/quienes-somos' }],
+      footer: [
+        {
+          title: 'El medio',
+          links: [{ label: 'Quiénes somos', linkType: 'external', url: '/quienes-somos' }],
+        },
+      ],
+      social: [{ platform: 'Bluesky', url: 'https://bsky.app' }],
+    },
+  })
+
+  await payload.updateGlobal({
+    slug: 'breaking-news',
+    overrideAccess: true,
+    data: {
+      enabled: false,
+      severity: 'breaking',
+      headline: 'DEMO · Titular de última hora',
+      startsAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    },
+  })
+}
+
 export async function seedAll(payload: Payload): Promise<void> {
   await seedUsers(payload)
   await seedEditorial(payload)
+  await seedGlobals(payload)
 }
 
 /** Fixtures the E2E suite depends on existing. */
@@ -157,5 +225,15 @@ export async function verifySeed(payload: Payload): Promise<void> {
     if (found.totalDocs === 0) {
       throw new Error(`Seed incompleto: falta ${collection}/${slug}.`)
     }
+  }
+
+  const navigation = (await payload.findGlobal({
+    slug: 'navigation',
+    depth: 0,
+    overrideAccess: true,
+  })) as { primary?: unknown[] | null }
+
+  if (!navigation.primary || navigation.primary.length === 0) {
+    throw new Error('Seed incompleto: la navegación principal quedó vacía.')
   }
 }

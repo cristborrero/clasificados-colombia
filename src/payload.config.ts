@@ -24,6 +24,10 @@ import { People } from './payload/collections/People'
 import { Redirects } from './payload/collections/Redirects'
 import { Sources } from './payload/collections/Sources'
 import { Users } from './payload/collections/Users'
+import { BreakingNews } from './payload/globals/BreakingNews'
+import { Homepage } from './payload/globals/Homepage'
+import { Navigation } from './payload/globals/Navigation'
+import { SiteSettings } from './payload/globals/SiteSettings'
 import { VideoStories } from './payload/collections/VideoStories'
 
 const filename = fileURLToPath(import.meta.url)
@@ -65,7 +69,7 @@ export default buildConfig({
     InvestigationTeams,
   ],
 
-  globals: [],
+  globals: [SiteSettings, Navigation, Homepage, BreakingNews],
 
   editor: lexicalEditor(),
 

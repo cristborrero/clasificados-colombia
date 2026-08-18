@@ -1,8 +1,9 @@
 import { BlocksFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import type { CollectionConfig } from 'payload'
 
-import { editorialStaffOnly, getUser, hasRole, isActive } from '@/payload/access/helpers'
+import { canUpdateEditorialContent, getUser, hasRole, isActive } from '@/payload/access/helpers'
 import { editorialBlocks } from '@/payload/blocks/editorial'
+import { ownershipFields } from '@/payload/fields/ownership'
 import { publicationFields } from '@/payload/fields/publication'
 import { seoFields } from '@/payload/fields/seo'
 import { slugField } from '@/payload/fields/slug'
@@ -52,12 +53,12 @@ export const Articles: CollectionConfig = {
       ]),
 
     /*
-     * SCOPE: ownership and assignment refine this in a later slice — PRD Nº7
-     * §48 requires role + ownership + assignment + status, and the ownership
-     * fields do not exist yet. Restricting to editorial staff now is the
-     * deny-by-default reading: too narrow is recoverable, too wide is not.
+     * PRD Nº7 §48: role + ownership + assignment + status, not role alone.
+     * Senior editorial roles edit anything; a reporter or contributor edits
+     * only their own or assigned drafts, and stops being able to once the
+     * piece is published (PRD Nº5 §13).
      */
-    update: editorialStaffOnly,
+    update: canUpdateEditorialContent,
 
     // PRD Nº5 §15: published content is archived, not deleted.
     delete: ({ req }) => hasRole(getUser(req), ['administrator', 'editor_in_chief']),
@@ -206,18 +207,47 @@ export const Articles: CollectionConfig = {
           label: 'Contenido relacionado',
           filterOptions: ({ id }) => (id ? { id: { not_equals: id } } : true),
         },
+        {
+          name: 'people',
+          type: 'relationship',
+          relationTo: 'people',
+          hasMany: true,
+          label: 'Personas mencionadas',
+          admin: {
+            description:
+              'Relacionar a alguien aquí no implica imputación. El contexto va en el texto.',
+          },
+        },
+        {
+          name: 'organizations',
+          type: 'relationship',
+          relationTo: 'organizations',
+          hasMany: true,
+          label: 'Organizaciones mencionadas',
+        },
+        {
+          name: 'sources',
+          type: 'relationship',
+          relationTo: 'sources',
+          hasMany: true,
+          label: 'Fuentes',
+          admin: {
+            description:
+              'Base documental. Las fuentes internas no se muestran al público (ver visibilidad en Fuentes).',
+          },
+        },
       ],
     },
 
+    ...ownershipFields(),
     workflowFields(),
     publicationFields(),
     seoFields(),
 
     /*
-     * Deferred, with the phase that unblocks each:
-     *   people[] / organizations[]  → F4 later slice
-     *   sources[] / evidence[]      → F6, once those collections exist
-     *   corrections                 → F17
+     * Still deferred, with the phase that unblocks each:
+     *   evidence[]   → F6, once the Evidence Vault exists
+     *   corrections  → F17
      */
   ],
 }

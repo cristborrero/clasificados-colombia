@@ -2,6 +2,7 @@ import * as migration_20260817_145533_initial_editorial_schema from './20260817_
 import * as migration_20260817_182831_users_editorial_roles from './20260817_182831_users_editorial_roles';
 import * as migration_20260817_220553_taxonomy_authors_categories_topics from './20260817_220553_taxonomy_authors_categories_topics';
 import * as migration_20260817_222327_articles_media_redirects from './20260817_222327_articles_media_redirects';
+import * as migration_20260818_005628_entities_and_content_types from './20260818_005628_entities_and_content_types';
 
 export const migrations = [
   {
@@ -22,6 +23,11 @@ export const migrations = [
   {
     up: migration_20260817_222327_articles_media_redirects.up,
     down: migration_20260817_222327_articles_media_redirects.down,
-    name: '20260817_222327_articles_media_redirects'
+    name: '20260817_222327_articles_media_redirects',
+  },
+  {
+    up: migration_20260818_005628_entities_and_content_types.up,
+    down: migration_20260818_005628_entities_and_content_types.down,
+    name: '20260818_005628_entities_and_content_types'
   },
 ];

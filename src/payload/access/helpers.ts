@@ -176,6 +176,37 @@ export const editorialStaffOnly: Access = ({ req }) =>
     'photo_editor',
   ])
 
+/**
+ * Update access for editorial content (PRD Nº7 §48, PRD Nº5 §13).
+ *
+ * "Basado en role + ownership + assignment + status. No solo rol."
+ *
+ * Senior editorial roles edit anything. Everyone else edits only what they
+ * created or were assigned — and, crucially, only while it is still a draft:
+ * PRD Nº5 §13 stops a reporter editing their own piece once it is published,
+ * because a published article is a public record, not a personal document.
+ *
+ * Returns a filter, so unauthorised rows are never loaded (PRD Nº7 §106).
+ */
+export const canUpdateEditorialContent: Access = ({ req }) => {
+  const user = getUser(req)
+
+  if (!isActive(user)) return false
+
+  if (hasRole(user, ['administrator', 'editor_in_chief', 'investigative_editor', 'editor'])) {
+    return true
+  }
+
+  const ownedOrAssigned: Where[] = [
+    { createdBy: { equals: user!.id } },
+    { assignedEditor: { equals: user!.id } },
+  ]
+
+  const notYetPublic: Where = { _status: { not_equals: 'published' } }
+
+  return { and: [{ or: ownedOrAssigned }, notYetPublic] } satisfies Where
+}
+
 /* ── Field-level access ────────────────────────────────────────────────────*/
 
 /**

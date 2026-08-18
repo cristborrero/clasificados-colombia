@@ -9,11 +9,17 @@ import sharp from 'sharp'
 import { serverEnv } from './env'
 import { Authors } from './payload/collections/Authors'
 import { Categories } from './payload/collections/Categories'
+import { DataStories } from './payload/collections/DataStories'
 import { Topics } from './payload/collections/Topics'
 import { Articles } from './payload/collections/Articles'
 import { Media } from './payload/collections/Media'
+import { Opinions } from './payload/collections/Opinions'
+import { Organizations } from './payload/collections/Organizations'
+import { People } from './payload/collections/People'
 import { Redirects } from './payload/collections/Redirects'
+import { Sources } from './payload/collections/Sources'
 import { Users } from './payload/collections/Users'
+import { VideoStories } from './payload/collections/VideoStories'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -33,7 +39,21 @@ export default buildConfig({
    * Order shapes the admin sidebar within each group. Newsroom reference data
    * before the content that points at it (PRD Nº7 §123).
    */
-  collections: [Users, Authors, Categories, Topics, Media, Articles, Redirects],
+  collections: [
+    Users,
+    Authors,
+    Categories,
+    Topics,
+    People,
+    Organizations,
+    Media,
+    Articles,
+    Opinions,
+    DataStories,
+    VideoStories,
+    Sources,
+    Redirects,
+  ],
 
   globals: [],
 

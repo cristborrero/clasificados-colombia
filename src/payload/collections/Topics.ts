@@ -65,6 +65,14 @@ export const Topics: CollectionConfig = {
     },
 
     {
+      name: 'image',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Imagen',
+      admin: { description: 'Encabeza la página del tema.' },
+    },
+
+    {
       name: 'active',
       type: 'checkbox',
       defaultValue: true,

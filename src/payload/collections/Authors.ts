@@ -141,13 +141,18 @@ export const Authors: CollectionConfig = {
       },
     },
 
-    seoFields(),
+    {
+      name: 'portrait',
+      type: 'upload',
+      relationTo: 'media',
+      label: 'Retrato',
+      admin: {
+        description:
+          'Fondo neutro y encuadre consistente (PRD Nº10 §101). Aparece en la firma y en la página de autor.',
+      },
+    },
 
-    /*
-     * `portrait` (relationship to Media) is deferred until the Media collection
-     * exists. PRD Nº7 §12 lists it and PRD Nº10 §101-§102 specify how author
-     * portraits are cropped and sized.
-     */
+    seoFields(),
   ],
 }
 

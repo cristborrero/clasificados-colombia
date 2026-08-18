@@ -1,11 +1,78 @@
 import { withPayload } from '@payloadcms/next/withPayload'
 
 /**
- * Security headers per PRD Nº4 §54.
- * CSP is intentionally NOT set here yet: PRD Nº4 §55 requires an allowlist
- * designed against real integrations and tested against real functionality.
- * It lands in F19 (Docker & Compose) once the integration surface is known.
+ * Content Security Policy (PRD Master §51, CLAUDE.md §57).
+ *
+ * Built as an allowlist against the integrations this site actually has, which
+ * PRD Nº4 §55 required before writing one. That surface is now known and it is
+ * small — which is itself a result of earlier decisions: social embeds render
+ * as links rather than as third-party frames, and share controls are plain
+ * intent links, so there is no Twitter, Meta or TikTok script to allow.
+ *
+ * Two policies, not one. The public site gets the strict version; the Payload
+ * admin gets a looser one because it is a bundled application that legitimately
+ * needs blob workers and inline styles, and locking it to the public policy
+ * breaks the CMS without making the public site any safer.
+ *
+ * `'unsafe-inline'` on script-src is the honest compromise here. Next injects
+ * inline bootstrap scripts, and the nonce-based alternative requires threading
+ * a nonce through middleware into every response — which disables static
+ * optimisation and, on a Payload-in-Next setup, fights the admin bundle. The
+ * mitigation that matters more is `object-src 'none'`, `base-uri 'self'` and
+ * `frame-ancestors 'none'`, which close the injection routes that actually get
+ * used.
  */
+const mediaHost = (() => {
+  const raw = process.env.S3_PUBLIC_URL ?? process.env.MINIO_ENDPOINT
+  if (!raw) return ''
+
+  try {
+    return new URL(raw).origin
+  } catch {
+    return ''
+  }
+})()
+
+const publicCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob:${mediaHost ? ` ${mediaHost}` : ''}`,
+  "font-src 'self'",
+  "connect-src 'self'",
+  // YouTube is the only third party allowed to frame anything, and only
+  // through the domain that sets no tracking cookie until playback starts.
+  "frame-src https://www.youtube-nocookie.com https://challenges.cloudflare.com",
+  "media-src 'self' https:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  'upgrade-insecure-requests',
+].join('; ')
+
+/**
+ * Admin policy.
+ *
+ * `blob:` for scripts and workers because the Lexical editor and the media
+ * library create them; `data:` for images because the admin previews uploads
+ * before they exist on a server.
+ */
+const adminCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob:${mediaHost ? ` ${mediaHost}` : ''}`,
+  "font-src 'self' data:",
+  "connect-src 'self' blob:",
+  "worker-src 'self' blob:",
+  "media-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
@@ -14,6 +81,14 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
   },
+  /*
+   * HSTS. Only meaningful behind TLS, and the proxy terminates it — but sending
+   * it from the application means the header survives a proxy reconfiguration
+   * that forgets it. Two years, subdomains included, without `preload`:
+   * preloading is effectively irreversible and is the site owner's decision,
+   * not a default.
+   */
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
 ]
 
 /** @type {import('next').NextConfig} */
@@ -21,8 +96,8 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   /*
-   * Standalone output is what the Docker multistage image in F19 needs, but it
-   * is not compatible with `next start` — Next prints a warning and expects
+   * Standalone output is what the Docker multistage image needs, but it is not
+   * compatible with `next start` — Next prints a warning and expects
    * `node .next/standalone/server.js` instead.
    *
    * Leaving it always on meant the local production server and the E2E suite
@@ -32,7 +107,28 @@ const nextConfig = {
    */
   ...(process.env.BUILD_STANDALONE === 'true' ? { output: 'standalone' } : {}),
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }]
+    return [
+      /*
+       * Order alone is not enough to separate these.
+       *
+       * `/:path*` also matches `/admin`, both rules fire, and the one that
+       * lands is the last — so the admin was served the public policy and the
+       * Lexical editor lost its blob workers. The negative lookahead is what
+       * actually keeps them apart; the ordering below is just for reading.
+       */
+      {
+        source: '/admin',
+        headers: [...securityHeaders, { key: 'Content-Security-Policy', value: adminCsp }],
+      },
+      {
+        source: '/admin/:path*',
+        headers: [...securityHeaders, { key: 'Content-Security-Policy', value: adminCsp }],
+      },
+      {
+        source: '/((?!admin).*)',
+        headers: [...securityHeaders, { key: 'Content-Security-Policy', value: publicCsp }],
+      },
+    ]
   },
 }
 

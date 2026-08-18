@@ -1,0 +1,33 @@
+# Everything the image does not need. Keeping this tight is not tidiness: the
+# build context is uploaded to the daemon on every build, and on a repository
+# that lives on an external drive that transfer is the slowest part.
+
+node_modules
+.next
+.git
+.github
+
+# Never in the image. `.env` in a build context is one `COPY . .` away from
+# being baked into a layer that anyone who pulls the image can read.
+.env
+.env.*
+!.env.example
+
+.playwright-browsers
+test-results
+playwright-report
+e2e
+
+# Local services and their data
+docker-compose.dev.yml
+media
+
+# Docs and scratch
+docs
+*.md
+!README.md
+
+# Editor and OS noise
+.DS_Store
+.vscode
+.idea

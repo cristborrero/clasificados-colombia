@@ -1,0 +1,154 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Clasificados Colombia — production stack
+#
+# Written for the server this actually deploys to, which already has a working
+# convention and six domains running on it:
+#
+#     LiteSpeed (CyberPanel) :80/:443   terminates TLS
+#        └─ vhost reverse proxy → 127.0.0.1:<port>
+#             └─ container (deployed by Coolify)
+#
+# Coolify's own proxy is disabled there on purpose — LiteSpeed owns 80 and 443.
+# So this stack publishes exactly one port, bound to loopback, and nothing else
+# is reachable from outside the host.
+#
+# CLAUDE.md §59: Postgres and Meilisearch are never published to the internet.
+# They have no `ports:` at all here — not a bound port, none. Services talk to
+# each other over the internal network by name.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: clasificados
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?falta el dominio canónico}
+      DATABASE_URL: postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?}
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?}
+      MEILI_INDEXER_KEY: ${MEILI_INDEXER_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:?}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?}
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-}
+    ports:
+      # Loopback only. The reverse proxy is on the same host; exposing this on
+      # 0.0.0.0 would publish the application beside the proxy rather than
+      # behind it, and every security header the proxy adds becomes optional.
+      - '127.0.0.1:${APP_PORT:-3020}:3000'
+    volumes:
+      - media:/app/media
+    networks:
+      - internal
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Schema migrations. Not a long-running service — it runs once and exits.
+  #
+  # Behind a profile so `docker compose up` never starts it: migrations are an
+  # explicit deploy step, ordered backup → migrate → deploy → health → smoke.
+  #
+  #     docker compose --profile tools run --rm migrate
+  #
+  # Uses the `migrator` target because the runtime image is Next's standalone
+  # output and does not carry Payload's CLI.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    profiles: ['tools']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?}
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?}
+    networks:
+      - internal
+
+  postgres:
+    # Pinned. `latest` on a database is how a minor upgrade becomes an outage
+    # nobody scheduled.
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: ${POSTGRES_DB:?}
+      # Deterministic collation, so index ordering does not depend on the host.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.24
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?}
+      # Analytics off: this index holds editorial content, and a search engine
+      # phoning home about a newsroom's queries is not a default worth keeping.
+      MEILI_NO_ANALYTICS: 'true'
+    volumes:
+      - meili:/meili_data
+    networks:
+      - internal
+    healthcheck:
+      test: ['CMD', 'meilisearch', '--help']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  internal:
+    # Not `internal: true` — the app needs outbound access for Turnstile
+    # verification. Inbound is closed by there being no published ports.
+    driver: bridge
+
+volumes:
+  # Named, never anonymous: an anonymous volume is a database that disappears
+  # the first time someone runs `docker compose down -v` on the wrong stack.
+  #
+  # The `_prod_` infix is not decoration. These names originally matched the
+  # ones in `docker-compose.dev.yml`, and the consequence showed up immediately:
+  # Meilisearch refused to start with `Resource temporarily unavailable` because
+  # two instances were fighting over one LMDB directory. The quieter half of
+  # that bug is worse — the production stack would have attached to the
+  # development database and looked like it was working.
+  postgres:
+    name: clasificados_prod_postgres
+  meili:
+    name: clasificados_prod_meili
+  media:
+    name: clasificados_prod_media

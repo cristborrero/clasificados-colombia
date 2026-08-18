@@ -80,7 +80,11 @@ export interface Config {
     'data-stories': DataStory;
     'video-stories': VideoStory;
     sources: Source;
+    evidence: Evidence;
     redirects: Redirect;
+    'audit-events': AuditEvent;
+    'evidence-access-grants': EvidenceAccessGrant;
+    'investigation-teams': InvestigationTeam;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -101,7 +105,11 @@ export interface Config {
     'data-stories': DataStoriesSelect<false> | DataStoriesSelect<true>;
     'video-stories': VideoStoriesSelect<false> | VideoStoriesSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
+    evidence: EvidenceSelect<false> | EvidenceSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
+    'audit-events': AuditEventsSelect<false> | AuditEventsSelect<true>;
+    'evidence-access-grants': EvidenceAccessGrantsSelect<false> | EvidenceAccessGrantsSelect<true>;
+    'investigation-teams': InvestigationTeamsSelect<false> | InvestigationTeamsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1315,6 +1323,54 @@ export interface VideoStory {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Metadatos de evidencia. El archivo vive en MinIO y solo se alcanza mediante autorización auditada.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "evidence".
+ */
+export interface Evidence {
+  id: number;
+  /**
+   * Descripción del documento. No incluir nombres de fuentes reservadas (PRD Nº5 §122).
+   */
+  title: string;
+  description?: string | null;
+  /**
+   * Reservada por defecto. Bajar la clasificación es una operación sensible que exige doble aprobación (PRD Nº5 §50).
+   */
+  classification: 'public' | 'internal' | 'restricted';
+  /**
+   * Solo el material aprobado puede servirse públicamente (PRD Nº7 §70).
+   */
+  status: 'pending' | 'verified' | 'approved' | 'quarantined' | 'archived';
+  /**
+   * Se deriva de la clasificación. No editable (PRD Nº7 §69).
+   */
+  bucket?: string | null;
+  /**
+   * Identificador aleatorio en MinIO. Nunca se entrega al navegador.
+   */
+  objectKey?: string | null;
+  mimeType?: string | null;
+  size?: number | null;
+  /**
+   * Permite verificar que el archivo almacenado es el registrado (PRD Nº5 §58-§59). No sustituye una firma digital.
+   */
+  checksum?: string | null;
+  /**
+   * Da acceso al equipo de esa investigación (necesidad de conocer).
+   */
+  relatedInvestigation?: (number | null) | Investigation;
+  retention?: string | null;
+  /**
+   * Suspende cualquier eliminación automática. Activarlo o quitarlo requiere autoridad elevada (PRD Nº5 §62).
+   */
+  legalHold?: boolean | null;
+  uploadedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Redirecciones permanentes. Se evalúan antes de devolver un 404.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1343,6 +1399,108 @@ export interface Redirect {
    * Marca las que generó el sistema al cambiar un slug publicado.
    */
   automatic?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Registro append-only. No se puede editar ni borrar, tampoco por un administrador.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-events".
+ */
+export interface AuditEvent {
+  id: number;
+  timestamp: string;
+  action:
+    | 'login_success'
+    | 'login_failure'
+    | 'user_created'
+    | 'user_disabled'
+    | 'role_changed'
+    | 'content_published'
+    | 'content_unpublished'
+    | 'content_deleted'
+    | 'evidence_uploaded'
+    | 'evidence_downloaded'
+    | 'evidence_access_denied'
+    | 'classification_changed'
+    | 'access_granted'
+    | 'access_revoked'
+    | 'legal_hold_changed'
+    | 'settings_changed';
+  /**
+   * Identificador del usuario. Vacío cuando la acción fue anónima.
+   */
+  actorId?: string | null;
+  /**
+   * El rol en el momento del hecho. Se guarda literal y no por relación: si después cambia, el registro debe seguir diciendo qué autoridad se ejerció entonces.
+   */
+  actorRole?: string | null;
+  resourceType?: string | null;
+  resourceId?: string | null;
+  /**
+   * PRD Nº5 §115: un intento denegado también se registra. Los accesos rechazados son la señal temprana.
+   */
+  result: 'allowed' | 'denied';
+  /**
+   * Correlaciona el evento con los logs técnicos (PRD Nº4 §83).
+   */
+  requestId?: string | null;
+  /**
+   * Contexto adicional. NUNCA secretos, tokens, URLs presignadas ni contenido de documentos (PRD Nº5 §55).
+   */
+  metadata?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Autorizaciones puntuales sobre evidencia reservada. Para retirar acceso, registrar la revocación — no borrar.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "evidence-access-grants".
+ */
+export interface EvidenceAccessGrant {
+  id: number;
+  user: number | User;
+  evidence: number | Evidence;
+  grantedBy?: (number | null) | User;
+  /**
+   * Por qué esta persona necesita este documento. Obligatorio.
+   */
+  reason: string;
+  /**
+   * Recomendado. Un acceso sin vencimiento es un acceso que nadie recuerda.
+   */
+  expiresAt?: string | null;
+  revokedAt?: string | null;
+  revokedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Equipos con necesidad de conocer. Desactivar al cerrar la investigación.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "investigation-teams".
+ */
+export interface InvestigationTeam {
+  id: number;
+  name: string;
+  investigation: number | Investigation;
+  members: (number | User)[];
+  lead?: (number | null) | User;
+  /**
+   * Al desactivar, el equipo deja de dar acceso a evidencia reservada.
+   */
+  active?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1423,8 +1581,24 @@ export interface PayloadLockedDocument {
         value: number | Source;
       } | null)
     | ({
+        relationTo: 'evidence';
+        value: number | Evidence;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: number | Redirect;
+      } | null)
+    | ({
+        relationTo: 'audit-events';
+        value: number | AuditEvent;
+      } | null)
+    | ({
+        relationTo: 'evidence-access-grants';
+        value: number | EvidenceAccessGrant;
+      } | null)
+    | ({
+        relationTo: 'investigation-teams';
+        value: number | InvestigationTeam;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -2053,6 +2227,27 @@ export interface SourcesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "evidence_select".
+ */
+export interface EvidenceSelect<T extends boolean = true> {
+  title?: T;
+  description?: T;
+  classification?: T;
+  status?: T;
+  bucket?: T;
+  objectKey?: T;
+  mimeType?: T;
+  size?: T;
+  checksum?: T;
+  relatedInvestigation?: T;
+  retention?: T;
+  legalHold?: T;
+  uploadedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects_select".
  */
 export interface RedirectsSelect<T extends boolean = true> {
@@ -2062,6 +2257,51 @@ export interface RedirectsSelect<T extends boolean = true> {
   reason?: T;
   active?: T;
   automatic?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-events_select".
+ */
+export interface AuditEventsSelect<T extends boolean = true> {
+  timestamp?: T;
+  action?: T;
+  actorId?: T;
+  actorRole?: T;
+  resourceType?: T;
+  resourceId?: T;
+  result?: T;
+  requestId?: T;
+  metadata?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "evidence-access-grants_select".
+ */
+export interface EvidenceAccessGrantsSelect<T extends boolean = true> {
+  user?: T;
+  evidence?: T;
+  grantedBy?: T;
+  reason?: T;
+  expiresAt?: T;
+  revokedAt?: T;
+  revokedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "investigation-teams_select".
+ */
+export interface InvestigationTeamsSelect<T extends boolean = true> {
+  name?: T;
+  investigation?: T;
+  members?: T;
+  lead?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
 }

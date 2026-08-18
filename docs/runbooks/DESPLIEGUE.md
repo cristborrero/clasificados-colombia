@@ -6,15 +6,17 @@ sigue en vez de pelearla.
 
 ## El servidor
 
-```txt
-31.220.72.170   ·   mail.cloudkart.com.co   ·   Ubuntu 24.04
-6 núcleos · 11 GB RAM · 96 GB disco
-```
+VPS de Contabo con Ubuntu 24.04, 6 núcleos y 11 GB de RAM.
 
-**No es un servidor dedicado.** Aloja también `cloudkart.com.co`,
-`mesolabpro.com.co`, `agent.leveloneagency.co.uk`, correo (`vmail`, `spamd`),
-n8n y cuatro aplicaciones más desplegadas con Coolify. Todo lo que se haga acá
-puede afectar a terceros.
+**No es un servidor dedicado.** Aloja también sitios, correo y aplicaciones de
+otros proyectos. Todo lo que se haga acá puede afectar a terceros, así que
+ningún cambio de puertos, proxy o certificados es rutinario.
+
+> **Los datos concretos —IP, credenciales, dominios vecinos, puertos ocupados—
+> viven en `/etc/clasificados/INFRAESTRUCTURA.md` en el propio servidor, no en
+> este repositorio.** Este repositorio es público: publicar acá el mapa de una
+> máquina que aloja producción de terceros sería exponer información que no es
+> nuestra.
 
 ## La convención que ya existe
 
@@ -29,8 +31,9 @@ Coolify **no** tiene Traefik ni Caddy levantados: su proxy está desactivado
 porque LiteSpeed es dueño de los puertos 80 y 443. Cada aplicación se publica en
 un puerto de loopback y CyberPanel la expone.
 
-Puertos ya tomados por otras apps: `3001`, `3010`, `3050`, `5678`, `8010`.
-Este proyecto usa **`3020`** (`APP_PORT`).
+Otras aplicaciones ya ocupan varios puertos de loopback; la lista está en el
+documento de infraestructura del servidor. Este proyecto usa **`3020`**
+(`APP_PORT`).
 
 > No cambies esto por «lo que dice el PRD». Levantar Traefik en 80/443 tumba
 > los seis dominios que ya sirve LiteSpeed.
@@ -141,8 +144,8 @@ Y reiniciar LiteSpeed:
 systemctl restart lsws
 ```
 
-Copiar el patrón exacto de un vhost que ya funcione —por ejemplo
-`n8n.cloudkart.com.co`— en vez de escribirlo de memoria.
+Copiar el patrón exacto de un vhost que ya funcione en ese servidor, en vez de
+escribirlo de memoria.
 
 ### 4 · Contenido inicial
 

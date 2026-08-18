@@ -37,8 +37,8 @@ Este proyecto usa **`3020`** (`APP_PORT`).
 
 ## Antes de desplegar
 
-1. **Dominio canónico.** Sigue sin definirse (gap G-07). Hace falta para
-   `NEXT_PUBLIC_SERVER_URL`, para los canonical de SEO y para el certificado.
+1. **Dominio canónico:** `https://clasificadoscolombia.co` — decidido y en
+   producción desde 2026-08-18.
 2. **Claves de Turnstile** del dominio real. Con las de prueba el formulario de
    denuncias acepta cualquier cosa; sin ninguna, rechaza todo.
 3. **Memoria.** Comprobar que hay margen antes de construir:
@@ -166,6 +166,43 @@ curl -s localhost:3020/api/health/ready
 > vez termina con el build muerto por OOM (`exit code 137`). En el servidor no
 > aplica: Coolify construye con la versión anterior corriendo y ahí hay margen
 > de sobra.
+
+## Estado actual (2026-08-18)
+
+Desplegado y verificado en `https://clasificadoscolombia.co`:
+
+```txt
+/                200      /api/health/live    200
+/admin           200      /api/health/ready   200
+/denunciar       200      TLS                 válido
+/buscar          200      CSP · HSTS          presentes
+```
+
+Los secretos viven en `/etc/clasificados/env.production` (`600`), **fuera** de
+`/opt/clasificados` — un `rsync --delete` los borró la primera vez por estar
+dentro del directorio sincronizado.
+
+La base de producción está vacía a propósito: no se siembra contenido DEMO en
+producción. La portada muestra su estado vacío hasta que la redacción publique.
+
+### Cloudflare
+
+```txt
+clasificadoscolombia.co       SIN proxy (nube gris) → directo al origen
+www.clasificadoscolombia.co   CON proxy (nube naranja)
+```
+
+Recomendado: activar el proxy también en el ápex, que es el dominio canónico y
+hoy no pasa por el WAF. Y decidir una redirección entre ápex y `www`, o quedan
+dos rutas al mismo sitio.
+
+### Pendiente antes de anunciar
+
+**Claves reales de Turnstile.** Hoy están las de prueba de Cloudflare, que
+siempre pasan: el formulario de `/denunciar` funciona pero **no tiene
+protección real contra spam**. Se cambian en
+`/etc/clasificados/env.production` y hace falta reconstruir, porque
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY` se hornea en el bundle.
 
 ## Verificación posterior
 

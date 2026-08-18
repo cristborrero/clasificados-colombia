@@ -63,15 +63,22 @@ services:
       retries: 3
       start_period: 60s
 
-  # Schema migrations. Not a long-running service — it runs once and exits.
+  # Maintenance container: migrations and reindexing. Runs once and exits.
   #
-  # Behind a profile so `docker compose up` never starts it: migrations are an
-  # explicit deploy step, ordered backup → migrate → deploy → health → smoke.
+  # Behind a profile so `docker compose up` never starts it — these are explicit
+  # deploy steps, ordered backup → migrate → deploy → health → smoke.
   #
   #     docker compose --profile tools run --rm migrate
+  #     docker compose --profile tools run --rm --entrypoint node migrate \
+  #       node_modules/payload/bin.js run src/search/reindex.ts
   #
   # Uses the `migrator` target because the runtime image is Next's standalone
   # output and does not carry Payload's CLI.
+  #
+  # It carries the Meilisearch variables too, and that is not padding: the first
+  # deploy ran the reindex here and it failed with "Meilisearch no está
+  # configurado", because this service had only the database environment. The
+  # maintenance container needs whatever the maintenance tasks talk to.
   migrate:
     build:
       context: .
@@ -86,6 +93,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
       PAYLOAD_SECRET: ${PAYLOAD_SECRET:?}
       NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?}
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?}
+      MEILI_INDEXER_KEY: ${MEILI_INDEXER_KEY:-}
     networks:
       - internal
 

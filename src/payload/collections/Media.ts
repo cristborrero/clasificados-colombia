@@ -16,6 +16,15 @@ import {
 import { findMediaReferences } from '@/payload/upload/mediaReferences'
 
 /**
+ * Marks a write whose bytes came from this library rather than from an editor.
+ *
+ * Only `media:regenerate` sets it. Normalisation and hashing are for what
+ * arrives from outside; applying them to our own stored output is not a
+ * safeguard, it is drift.
+ */
+export type UploadProcessingContext = { skipUploadProcessing?: boolean }
+
+/**
  * Media — public editorial assets (PRD Nº10 §4).
  *
  * Media is editorial imagery — photographs, illustrations, posters. Documents
@@ -109,9 +118,20 @@ export const Media: CollectionConfig = {
      * including, for a photograph taken at a source's home, its coordinates.
      */
     beforeOperation: [
-      async ({ args, operation, req }) => {
+      async ({ args, context, operation, req }) => {
         if (operation !== 'create' && operation !== 'update') return args
         if (!req.file?.data || !req.file.mimetype) return args
+
+        /*
+         * `media:regenerate` re-uploads the stored original to rebuild
+         * derivatives. Those bytes have already been through here, and running
+         * them through again would recompress the JPEG a little further on
+         * every run and — worse — recompute the checksum from the processed
+         * file, so the fingerprint that identifies an asset would change every
+         * time maintenance ran and duplicate detection would quietly stop
+         * working. See `UploadProcessingContext`.
+         */
+        if ((context as UploadProcessingContext)?.skipUploadProcessing) return args
 
         const original = Buffer.from(req.file.data)
         const { data, normalised, reason } = await normaliseImage(original, req.file.mimetype)

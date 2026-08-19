@@ -9,6 +9,8 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { serverEnv } from './env'
+import { getUser, hasRole } from './payload/access/helpers'
+import { syncSearchTask } from './payload/jobs/tasks/syncSearch'
 import { AuditEvents } from './payload/collections/AuditEvents'
 import { Authors } from './payload/collections/Authors'
 import { Categories } from './payload/collections/Categories'
@@ -89,6 +91,15 @@ export default buildConfig({
     meta: {
       titleSuffix: '· Clasificados Colombia',
     },
+    components: {
+      /*
+       * Failed background work, where the newsroom will see it. A dead
+       * `syncSearch` means a published piece is missing from search, and the
+       * person who notices that is an editor, not whoever reads server logs.
+       * Renders nothing when the queue is healthy.
+       */
+      beforeDashboard: ['@/payload/components/SearchHealth#SearchHealth'],
+    },
   },
 
   /**
@@ -146,12 +157,89 @@ export default buildConfig({
     Sources,
     EvidenceDocuments,
     Redirects,
-  Corrections,
+    Corrections,
     AuditEvents,
     Tips,
   ],
 
   globals: [SiteSettings, Navigation, Homepage, BreakingNews],
+
+  /**
+   * Background work (CLAUDE.md §56, PRD Nº7 §168, F18).
+   *
+   * The classification the PRD asks for is expressed by where work lives, not
+   * by a label on it. Anything that must abort the operation — workflow
+   * authorisation, the status contract, the rights check — runs inline in
+   * `beforeChange` and throws. Anything derived — the search index, cache
+   * hints, notifications — is queued here and can fail, retry and be reported
+   * without an editor ever seeing it.
+   *
+   * `autoRun` polls this process. That is appropriate precisely because this is
+   * not serverless: one long-lived Node process owns both the CMS and the
+   * queue, which is the same "three containers you can reason about" the
+   * architecture is built around. On a serverless platform this would have to
+   * become an external scheduler hitting the run endpoint.
+   */
+  jobs: {
+    tasks: [syncSearchTask],
+
+    /*
+     * Failed jobs are kept. Deleting on completion would also delete the record
+     * of what went wrong, and "jobs that die are recorded and alerted, not lost
+     * in silence" is the point of having a queue at all.
+     */
+    deleteJobOnComplete: false,
+
+    autoRun: [
+      {
+        /*
+         * Six fields: every five seconds. A newsroom publishing a story expects
+         * it to be searchable in seconds, not minutes — and polling every
+         * second would be a query per second for the entire life of the process
+         * to serve a queue that is empty almost all of the time.
+         */
+        cron: '*/5 * * * * *',
+        limit: 20,
+        queue: 'default',
+      },
+    ],
+
+    /*
+     * Only staff may drive the queue by hand. The jobs themselves run as the
+     * process, not as a user; this governs the admin and REST surfaces.
+     */
+    access: {
+      run: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
+      queue: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
+      cancel: ({ req }) => hasRole(getUser(req), ['admin']),
+    },
+
+    /**
+     * The queue itself is not readable by everyone with an account.
+     *
+     * Payload's default lets any authenticated user list `payload-jobs`, and an
+     * author could — verified against the running API, not assumed. A job row
+     * carries the collection and id of whatever changed, so the queue is a live
+     * feed of which unpublished pieces exist and when they were touched. PRD
+     * Master §93 puts drafts and internal notes outside what a reader may learn
+     * of; an author reading the roster of every editor's work in progress is
+     * the same leak wearing a different name.
+     */
+    jobsCollectionOverrides: ({ defaultJobsCollection }) => ({
+      ...defaultJobsCollection,
+      admin: {
+        ...defaultJobsCollection.admin,
+        group: 'OPERATIONS',
+      },
+      access: {
+        ...defaultJobsCollection.access,
+        read: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
+        create: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
+        update: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
+        delete: ({ req }) => hasRole(getUser(req), ['admin']),
+      },
+    }),
+  },
 
   editor: lexicalEditor(),
 

@@ -5,6 +5,96 @@ en el código.
 
 ---
 
+## 2026-08-19 · F18 · Cola de trabajos y UX de Admin
+
+**Crítico contra no crítico, expresado por dónde vive el trabajo**
+
+La clasificación que pide el PRD no es una etiqueta: lo que debe abortar la
+operación —autorización de workflow, contrato de estados, comprobación de
+derechos— corre en línea en `beforeChange` y lanza. Lo derivado —índice de
+búsqueda, pistas de caché, notificaciones— se encola y puede fallar, reintentar
+y reportarse sin que un editor lo vea.
+
+**De promesa suelta a cola durable**
+
+La sincronización con Meilisearch era una promesa desprendida con `catch`. Eso
+cumplía la regla que importa —publicar no espera al buscador— pero la cumplía
+olvidando: un envío fallido se registraba y desaparecía, y el índice quedaba mal
+hasta que alguien reindexara entero.
+
+Ahora el hook escribe un job y vuelve. La fila se escribe en el mismo `req`, así
+que se confirma con el cambio editorial o con nada: una publicación revertida no
+puede dejar atrás un job que indexaría una versión que nadie publicó.
+
+**El guardián de versión**
+
+PRD Nº9 §89 describe el fallo con precisión: publicar v5, actualizar v6, y el
+job de v5 terminando último sobrescribe v6 en el índice. Por eso el documento
+**no viaja en el job**: viaja la versión que tenía al encolarse. La tarea
+relee el documento y, si ya avanzó, no escribe nada.
+
+Verificado contra el servidor: una publicación encola cuatro jobs —creación, dos
+pasos de workflow y publicación— y el resultado es un `upserted` y tres
+`superseded`. El guardián no es teórico.
+
+**Un agujero de seguridad que encontró la prueba**
+
+`/api/payload-jobs` respondía **200 a un `author`**. Un registro de la cola
+lleva la colección y el id de lo que cambió, así que la cola es una lista en
+vivo de qué piezas sin publicar existen y cuándo las tocaron. PRD Master §93
+deja los borradores fuera de lo que un lector puede llegar a saber; un autor
+leyendo el trabajo en curso de toda la redacción es la misma fuga con otro
+nombre. La colección se restringe ahora a admin y editor.
+
+**Recursión de hooks, y un defecto de F15 que cerró**
+
+`media:regenerate` reprocesaba el original en cada pasada: recomprimía el JPEG
+un poco más y **recalculaba la huella a partir del archivo ya procesado**, así
+que el identificador de contenido de cada imagen cambiaba cada vez que corría el
+mantenimiento y la detección de duplicados dejaba de funcionar en silencio.
+Ahora esa escritura viaja con `context: { skipUploadProcessing: true }` —
+normalizar y hashear son para lo que llega de fuera, no para nuestra propia
+salida.
+
+**Admin**
+
+- `PublicationChecklist`, junto a Guardar/Publicar en los cinco tipos que se
+  publican. Reutiliza `getPublishBlockers`, la misma función pura que llama el
+  guardián del servidor: una segunda lista de reglas escrita para la interfaz
+  derivaría, y derivaría en la dirección que menos se nota —el panel diciendo
+  «listo» para algo que el backend después rechaza—. La licencia de la imagen se
+  le pregunta al servidor, porque el formulario solo tiene el id.
+- `SearchHealth`, en el escritorio. No dibuja nada cuando la cola está sana: un
+  panel que siempre muestra un estado enseña a no leerlo.
+- `pnpm jobs:health` para el mismo dato desde la terminal, con salida distinta
+  de cero si algo agotó sus reintentos.
+
+**Lo que no se implementó, y por qué**
+
+- **`EvidenceClassificationWarning`.** El plan lo pide para avisar antes de
+  publicar una investigación con evidencia `internal` o `restricted`. Esa
+  clasificación multinivel se retiró en la simplificación del 2026-08-18: hoy un
+  documento publicado es público y uno que no puede serlo no se sube. No queda
+  nada de qué advertir.
+- **`SEOPreview` y `WorkflowPanel`.** Sin equivalente en el DoD y con menos valor
+  que lo anterior. El primero duplica lo que ya muestra el propio buscador; el
+  segundo, lo que el checklist y el campo de estado ya dicen.
+- **Notificaciones.** No hay destinatario definido —ni canal ni política— y una
+  tarea que envía correos a nadie es infraestructura sin uso.
+
+**Estado verificado**
+
+```txt
+typecheck  limpio
+lint       limpio
+unit       321 tests
+e2e        226 pasan · 3 nuevos de F18 · 40 saltados a propósito
+migración  base vacía → 4 migraciones → correcto
+build      limpio
+```
+
+---
+
 ## 2026-08-19 · F17 · Redirects, correcciones y estados HTTP
 
 **Los redirects se escribían y nadie los leía**

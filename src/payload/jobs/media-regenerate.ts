@@ -76,6 +76,13 @@ for (const asset of assets.docs) {
       data: {},
       filePath,
       overrideAccess: true,
+      /*
+       * These bytes are ours and already processed. Without this the original
+       * is recompressed on every run and its checksum is recomputed from the
+       * processed file, so the fingerprint that identifies an asset would drift
+       * every time this command ran.
+       */
+      context: { skipUploadProcessing: true },
     })
 
     rebuilt += 1

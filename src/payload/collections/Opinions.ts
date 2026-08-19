@@ -46,6 +46,14 @@ export const Opinions: CollectionConfig = {
   },
 
   admin: {
+    /*
+     * Shown beside Save/Publish. The server refuses a publish that is not
+     * ready either way; this is so the editor learns it before pressing the
+     * button rather than from the error afterwards.
+     */
+    components: {
+      edit: { beforeDocumentControls: ['@/payload/components/PublicationChecklist#PublicationChecklist'] },
+    },
     useAsTitle: 'title',
     defaultColumns: ['title', 'author', 'workflow'],
     group: 'EDITORIAL',

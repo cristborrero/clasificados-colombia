@@ -76,6 +76,19 @@ export const serverEnvSchema = z.object({
    * `src/lib/antiabuse/turnstile.ts` for why that is the safer direction.
    */
   TURNSTILE_SECRET_KEY: optionalString(),
+
+  /*
+   * Indexación, bloqueada por defecto.
+   *
+   * Un sitio con material de muestra no puede rastrearse: esas piezas quedarían
+   * indexadas bajo esta cabecera, y un resultado de búsqueda que atribuya a este
+   * medio algo que nunca publicó es peor que un sitio vacío.
+   *
+   * Variable de servidor, no `NEXT_PUBLIC_`. Las públicas se hornean en el build
+   * — activar la indexación exigiría recompilar y desplegar de nuevo. Así basta
+   * cambiarla y reiniciar, que es lo que hace falta el día del lanzamiento.
+   */
+  ALLOW_INDEXING: optionalString(),
 })
 
 export const publicEnvSchema = z.object({

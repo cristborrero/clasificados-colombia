@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 import { absoluteUrl } from '@/lib/routes'
+import { indexingAllowed } from '@/lib/seo/indexing'
 
 /**
  * robots.txt (PRD SEO §19).
@@ -26,7 +27,27 @@ import { absoluteUrl } from '@/lib/routes'
  * It also does not need `force-dynamic`: the canonical domain is a build
  * argument, so the origin is already fixed when the image is built.
  */
+/**
+ * Generado por petición, no en el build.
+ *
+ * Su contenido depende de `ALLOW_INDEXING`, que se lee en ejecución para que
+ * activar la indexación el día del lanzamiento sea cambiar una variable y
+ * reiniciar, no recompilar. Prerenderizado, quedaría congelado el valor que
+ * hubiera durante la compilación — que es exactamente cómo el sitemap terminó
+ * publicando un mapa de una sola página.
+ */
+export const dynamic = 'force-dynamic'
+
 export default function robots(): MetadataRoute.Robots {
+  /*
+   * While the site carries DEMO content, nothing is crawlable. This is the
+   * polite half of the answer; the metadata `noindex` is the half that actually
+   * keeps a page out of an index once a crawler has it.
+   */
+  if (!indexingAllowed()) {
+    return { rules: [{ userAgent: '*', disallow: '/' }] }
+  }
+
   return {
     rules: [
       {

@@ -146,6 +146,10 @@ test.describe('F15 media pipeline', () => {
       },
     })
 
+    // Comprobada antes de usarse: sin esto un fallo de subida se manifiesta
+    // como «cannot read properties of undefined», que no dice nada.
+    expect(upload.status(), await upload.text()).toBe(201)
+
     const { doc: media } = (await upload.json()) as { doc: { id: number } }
 
     const { category, author } = await editorialContext(request, editor)
@@ -192,6 +196,10 @@ test.describe('F15 media pipeline', () => {
         file: { name: 'sin-licencia.jpg', mimeType: 'image/jpeg', buffer: await photograph() },
       },
     })
+
+    // Comprobada antes de usarse: sin esto un fallo de subida se manifiesta
+    // como «cannot read properties of undefined», que no dice nada.
+    expect(upload.status(), await upload.text()).toBe(201)
 
     const { doc: media } = (await upload.json()) as { doc: { id: number } }
 

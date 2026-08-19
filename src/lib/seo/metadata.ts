@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { absoluteUrl } from '@/lib/routes'
+import { indexingAllowed } from './indexing'
 
 /**
  * Page metadata (PRD SEO §6-§9, §41-§49).
@@ -48,6 +49,13 @@ const INDEXABLE: Metadata['robots'] = {
 const NOT_INDEXABLE: Metadata['robots'] = { index: false, follow: true }
 
 export function buildPageMetadata(input: PageMetaInput): Metadata {
+  /*
+   * A deployment that may not be indexed overrides every per-page decision.
+   * Otherwise an article marked indexable would be indexable on the staging
+   * site too, which is where the placeholder content lives.
+   */
+  const indexable = indexingAllowed() && !input.noindex
+
   const url = absoluteUrl(input.path)
   const description = input.description ?? undefined
 
@@ -62,7 +70,7 @@ export function buildPageMetadata(input: PageMetaInput): Metadata {
     // §9: the canonical is a path, never a URL carrying query parameters.
     alternates: { canonical: url },
 
-    robots: input.noindex ? NOT_INDEXABLE : INDEXABLE,
+    robots: indexable ? INDEXABLE : NOT_INDEXABLE,
 
     openGraph: {
       type: input.type ?? 'website',

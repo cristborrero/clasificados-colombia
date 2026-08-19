@@ -115,6 +115,13 @@ export default defineConfig({
     env: {
       PORT: String(port),
       NEXT_PUBLIC_SERVER_URL: baseURL,
+      /*
+       * La suite comprueba SEO real —canonical, JSON-LD, sitemaps,
+       * `max-image-preview`— y con la indexación bloqueada no habría nada que
+       * comprobar. El bloqueo por defecto es para los despliegues que llevan
+       * material de muestra, no para las pruebas de la maquinaria.
+       */
+      ALLOW_INDEXING: 'true',
     },
   },
 

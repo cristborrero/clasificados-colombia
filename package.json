@@ -35,6 +35,7 @@
     "media:regenerate": "payload run src/payload/jobs/media-regenerate.ts",
     "media:rights": "payload run src/payload/jobs/media-rights-audit.ts",
     "jobs:health": "payload run src/payload/jobs/jobs-health.ts",
+    "seed:vitrina": "payload run src/payload/scripts/seed-vitrina.ts",
     "services:up": "docker compose -f docker-compose.dev.yml up -d",
     "services:down": "docker compose -f docker-compose.dev.yml down",
     "services:reset": "docker compose -f docker-compose.dev.yml down -v"

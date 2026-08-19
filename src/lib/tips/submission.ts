@@ -89,7 +89,7 @@ export function parseTipSubmission(input: unknown): TipParseResult {
         : field === 'description'
           ? 'Contanos qué ocurrió, con al menos veinte caracteres.'
           : field === 'contactEmail'
-            ? 'Ese correo no parece válido. Podés dejarlo vacío.'
+            ? 'Ese correo no parece válido. Puedes dejarlo vacío.'
             : 'Revisá este campo.'
   }
 

@@ -75,7 +75,7 @@ export function PublicationChecklist() {
           id: heroKey,
           blocker:
             asset?.license === 'unknown'
-              ? `La imagen principal («${asset.alt ?? 'sin descripción'}») tiene licencia desconocida. Registrala en la imagen antes de publicar.`
+              ? `La imagen principal («${asset.alt ?? 'sin descripción'}») tiene licencia desconocida. Regístrala en la imagen antes de publicar.`
               : null,
         })
       })

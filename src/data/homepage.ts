@@ -162,7 +162,7 @@ async function resolveBand(block: Block, heroSlug: string | null): Promise<Homep
     case 'newsletter':
       return {
         kind: 'newsletter',
-        title: title ?? 'Recibí nuestras investigaciones',
+        title: title ?? 'Recibe nuestras investigaciones',
         description: asString(block.description),
         ctaLabel: asString(block.ctaLabel) ?? 'Suscribirme',
       }

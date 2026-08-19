@@ -34,7 +34,7 @@ if (existentes.totalDocs > 0) {
 }
 
 if (!password) {
-  payload.logger.error('Falta EDITOR_PASSWORD. Pasala por entorno, nunca por argumento.')
+  payload.logger.error('Falta EDITOR_PASSWORD. Pásala por entorno, nunca por argumento.')
   process.exit(1)
 }
 

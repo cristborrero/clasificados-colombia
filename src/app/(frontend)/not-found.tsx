@@ -63,7 +63,7 @@ export default async function NotFound() {
 
           <p className="mt-4 max-w-prose font-[family-name:var(--font-sans)] text-lg text-[color:var(--color-text-muted)]">
             Puede que la dirección esté mal escrita, que el enlace haya quedado viejo o que el
-            contenido se haya retirado. Buscá lo que necesitás o empezá por la{' '}
+            contenido se haya retirado. Busca lo que necesitas o empieza por la{' '}
             <Link href={homePath()} className="underline underline-offset-4">
               portada
             </Link>

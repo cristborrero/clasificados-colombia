@@ -19,7 +19,7 @@ import { getSiteSettings } from '@/data/site'
  */
 export const metadata: Metadata = {
   title: 'Denunciar',
-  description: 'Enviá información a la redacción de Clasificados Colombia.',
+  description: 'Envía información a la redacción de Clasificados Colombia.',
   robots: { index: false, follow: true },
 }
 

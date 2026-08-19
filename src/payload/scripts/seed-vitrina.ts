@@ -313,7 +313,7 @@ async function main(): Promise<void> {
   if (!editor) {
     payload.logger.error(
       'No hay ninguna cuenta de editor activa, y la vitrina se publica como editor. ' +
-        'Creá una desde el panel (Usuarios → rol «editor») y volvé a correr esto.',
+        'Crea una desde el panel (Usuarios → rol «editor») y vuelve a ejecutar esto.',
     )
     process.exit(1)
   }
@@ -482,21 +482,65 @@ async function main(): Promise<void> {
    * Una banda sin contenido devuelve `null` y no se dibuja, así que se pueden
    * declarar todas: aparecen solas el día que haya investigaciones u opinión.
    */
-  const navegacion = await payload.findGlobal({ slug: 'navigation', overrideAccess: true })
+  const navegacion = (await payload.findGlobal({
+    slug: 'navigation',
+    overrideAccess: true,
+  })) as { primary?: unknown[]; footer?: unknown[]; social?: unknown[] }
 
-  if (!(navegacion as { primary?: unknown[] })?.primary?.length) {
-    await payload.updateGlobal({
-      slug: 'navigation',
-      overrideAccess: true,
-      data: {
-        primary: SECCIONES.map((s) => ({
-          label: s.name,
-          linkType: 'internal',
-          category: seccionIds.get(s.slug),
-        })),
-      } as never,
-    })
-    payload.logger.info('Navegación configurada.')
+  /*
+   * Cada parte se comprueba por separado.
+   *
+   * Antes las tres colgaban de si `primary` estaba vacío, y eso significaba que
+   * un sitio con menú ya puesto nunca recibía el pie — que es exactamente lo
+   * que pasaba en producción. Un guardián que agrupa cosas independientes no
+   * protege: esconde.
+   */
+  const enlaceSeccion = (s: Seccion) => ({
+    label: s.name,
+    linkType: 'internal',
+    category: seccionIds.get(s.slug),
+  })
+
+  const parche: Record<string, unknown> = {}
+
+  if (!navegacion?.primary?.length) {
+    parche.primary = SECCIONES.map(enlaceSeccion)
+  }
+
+  if (!navegacion?.footer?.length) {
+    parche.footer = [
+      { title: 'Secciones', links: SECCIONES.map(enlaceSeccion) },
+      {
+        title: 'El medio',
+        links: [
+          { label: 'Quiénes somos', linkType: 'external', url: '/quienes-somos' },
+          { label: 'Código ético', linkType: 'external', url: '/codigo-etico' },
+          { label: 'Cómo trabajamos', linkType: 'external', url: '/como-trabajamos' },
+          { label: 'Contacto', linkType: 'external', url: '/contacto' },
+        ],
+      },
+      {
+        title: 'Participa',
+        links: [
+          { label: 'Enviar una denuncia', linkType: 'external', url: '/denunciar' },
+          { label: 'Buscar en el archivo', linkType: 'external', url: '/buscar' },
+        ],
+      },
+    ]
+  }
+
+  if (!navegacion?.social?.length) {
+    parche.social = [
+      { platform: 'X', url: 'https://x.com/' },
+      { platform: 'Instagram', url: 'https://instagram.com/' },
+      { platform: 'YouTube', url: 'https://youtube.com/' },
+      { platform: 'Facebook', url: 'https://facebook.com/' },
+    ]
+  }
+
+  if (Object.keys(parche).length > 0) {
+    await payload.updateGlobal({ slug: 'navigation', overrideAccess: true, data: parche as never })
+    payload.logger.info(`Navegación actualizada: ${Object.keys(parche).join(', ')}.`)
   }
 
   const ajustes = await payload.findGlobal({ slug: 'site-settings', overrideAccess: true })
@@ -513,9 +557,41 @@ async function main(): Promise<void> {
     payload.logger.info('Ajustes del sitio configurados.')
   }
 
-  const portada = await payload.findGlobal({ slug: 'homepage', overrideAccess: true })
+  const portada = (await payload.findGlobal({ slug: 'homepage', overrideAccess: true })) as {
+    bands?: { blockType?: string; title?: string }[]
+  }
 
-  if (!(portada as { bands?: unknown[] })?.bands?.length) {
+  /*
+   * Corrección puntual: las primeras versiones de este archivo escribieron el
+   * texto en rioplatense, y esto es un medio colombiano. Se reescribe solo si
+   * sigue diciendo lo de antes, para no pisar lo que haya cambiado la redacción.
+   *
+   * Cuando la redacción arme su propia portada, este bloque sobra.
+   */
+  const conVoseo = (portada.bands ?? []).some((b) => b.title?.startsWith('Recibí'))
+
+  if (conVoseo) {
+    await payload.updateGlobal({
+      slug: 'homepage',
+      overrideAccess: true,
+      data: {
+        bands: (portada.bands ?? []).map((b) =>
+          b.title?.startsWith('Recibí')
+            ? {
+                ...b,
+                title: 'Recibe nuestras investigaciones',
+                description:
+                  'Una entrega cuando publicamos algo que vale tu tiempo. Sin ruido y sin spam.',
+                ctaLabel: 'Suscribirme',
+              }
+            : b,
+        ),
+      } as never,
+    })
+    payload.logger.info('Texto de la portada corregido a español neutro.')
+  }
+
+  if (!portada?.bands?.length) {
     await payload.updateGlobal({
       slug: 'homepage',
       overrideAccess: true,
@@ -530,7 +606,7 @@ async function main(): Promise<void> {
           { blockType: 'video', title: 'Video', limit: 3 },
           {
             blockType: 'newsletter',
-            title: 'Recibí nuestras investigaciones',
+            title: 'Recibe nuestras investigaciones',
             description:
               'Una entrega cuando publicamos algo que vale tu tiempo. Sin ruido y sin spam.',
             ctaLabel: 'Suscribirme',
@@ -539,6 +615,34 @@ async function main(): Promise<void> {
       } as never,
     })
     payload.logger.info('Portada configurada: 8 bandas.')
+  }
+
+  /*
+   * La barra de última hora.
+   *
+   * Existe desde F8 con los cuatro estados que pide la guía visual —última
+   * hora, alerta, en desarrollo, confirmado— y estaba simplemente apagada.
+   * `expiresAt` es obligatoria a propósito (PRD Nº5 §26): una barra sin fecha
+   * de caducidad es una emergencia que sigue anunciándose una semana después.
+   */
+  const barra = await payload.findGlobal({ slug: 'breaking-news', overrideAccess: true })
+
+  if (!(barra as { headline?: string })?.headline) {
+    const ahora = Date.now()
+
+    await payload.updateGlobal({
+      slug: 'breaking-news',
+      overrideAccess: true,
+      data: {
+        enabled: true,
+        severity: 'breaking',
+        headline: 'DEMO · Material de muestra mientras se prepara el sitio',
+        description: 'Esta barra es parte de la vitrina de demostración.',
+        startsAt: new Date(ahora - 3_600_000).toISOString(),
+        expiresAt: new Date(ahora + 30 * 24 * 3_600_000).toISOString(),
+      } as never,
+    })
+    payload.logger.info('Barra de última hora activada.')
   }
 
   payload.logger.info(

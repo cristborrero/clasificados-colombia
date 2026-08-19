@@ -34,6 +34,8 @@ services:
         condition: service_healthy
       meilisearch:
         condition: service_started
+      migrate:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -96,7 +98,17 @@ services:
       context: .
       dockerfile: Dockerfile
       target: migrator
-    profiles: ['tools']
+    #
+    # Corre en CADA despliegue, no bajo un perfil manual.
+    #
+    # Estaba tras `profiles: ['tools']`, lo que significaba acordarse de
+    # ejecutarlo a mano después de cada deploy. El primer despliegue por Coolify
+    # levantó la aplicación contra una base sin tablas: no falló ruidosamente,
+    # simplemente sirvió un sitio vacío. Con `service_completed_successfully`
+    # abajo, la aplicación no arranca hasta que las migraciones terminan bien —
+    # y si fallan, el despliegue falla, que es la respuesta correcta.
+    restart: 'no'
+    command: ['pnpm', 'migrate']
     depends_on:
       postgres:
         condition: service_healthy

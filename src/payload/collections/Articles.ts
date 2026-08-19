@@ -11,6 +11,7 @@ import { workflowFields } from '@/payload/fields/workflow'
 import { enforceStatusContract } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
+import { articleRedirectPath } from '@/payload/hooks/redirects/paths'
 import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
 /**
@@ -75,7 +76,7 @@ export const Articles: CollectionConfig = {
   hooks: {
     afterDelete: [syncSearchAfterDelete('articles')],
     beforeChange: [enforceStatusContract, lockSlugOnPublish, recordFirstPublication],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/articulo/${slug}` }), syncSearchAfterChange('articles')],
+    afterChange: [createSlugRedirect({ buildPath: articleRedirectPath }), syncSearchAfterChange('articles')],
   },
 
   fields: [

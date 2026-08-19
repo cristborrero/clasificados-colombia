@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { redirectOrNotFound } from '@/lib/navigation/notFound'
 
 import { ArticleCard } from '@/components/articles/ArticleCard'
 import { Breadcrumbs } from '@/components/articles/Breadcrumbs'
@@ -46,7 +46,7 @@ export default async function TopicPage({ params }: Params) {
 
   const [topic, settings] = await Promise.all([getTopicBySlug(slug), getSiteSettings()])
 
-  if (!topic) notFound()
+  if (!topic) return redirectOrNotFound(topicPath(slug))
 
   return (
     <>

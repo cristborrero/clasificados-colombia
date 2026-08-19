@@ -87,6 +87,21 @@ export const searchPath = (query?: string): string =>
  * a value with or without a trailing slash produces the same canonical — a
  * duplicate that differs only by a slash is exactly what §9 is about.
  */
+/**
+ * Canonical form of a path, for comparing one against another.
+ *
+ * Both the `redirects` collection and the resolver that reads it need the same
+ * answer, or `/a`, `/a/` and `a` become three rows that each half-work. Defined
+ * here because it is route knowledge, and duplicated in two places it would
+ * drift on the first edge case somebody handles in only one of them.
+ */
+export function normalisePath(path: string): string {
+  const withoutQuery = path.trim().split('?')[0] ?? ''
+  const withLeadingSlash = withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`
+
+  return withLeadingSlash.length > 1 ? withLeadingSlash.replace(/\/+$/, '') : withLeadingSlash
+}
+
 export function siteOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3000'
 

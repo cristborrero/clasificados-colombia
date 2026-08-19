@@ -10,6 +10,7 @@ import { slugField } from '@/payload/fields/slug'
 import { workflowFields } from '@/payload/fields/workflow'
 import { createStatusContractHook } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
+import { investigationPath } from '@/lib/routes'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
 import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
@@ -89,7 +90,7 @@ export const Investigations: CollectionConfig = {
       lockSlugOnPublish,
       recordFirstPublication,
     ],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/investigacion/${slug}` }), syncSearchAfterChange('investigations')],
+    afterChange: [createSlugRedirect({ buildPath: investigationPath }), syncSearchAfterChange('investigations')],
   },
 
   fields: [

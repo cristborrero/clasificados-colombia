@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  RESERVED_SEGMENTS,
   absoluteUrl,
   articlePath,
   authorPath,
   categoryPath,
   investigationPath,
   isReservedSegment,
-  RESERVED_SEGMENTS,
+  normalisePath,
   searchPath,
   siteOrigin,
   topicPath,
@@ -102,5 +103,29 @@ describe('absolute URLs', () => {
     vi.stubEnv('NEXT_PUBLIC_SERVER_URL', 'https://clasificadoscolombia.co')
 
     expect(absoluteUrl('politica')).toBe('https://clasificadoscolombia.co/politica')
+  })
+})
+
+describe('normalisePath', () => {
+  it('treats the three ways of writing the same path as one', () => {
+    // Written one way in the redirect row and looked up another, a redirect
+    // silently never fires — which is why both sides call this.
+    expect(normalisePath('/politica/reforma')).toBe('/politica/reforma')
+    expect(normalisePath('politica/reforma')).toBe('/politica/reforma')
+    expect(normalisePath('/politica/reforma/')).toBe('/politica/reforma')
+    expect(normalisePath('  /politica/reforma  ')).toBe('/politica/reforma')
+  })
+
+  it('drops the query string, which is not part of the address', () => {
+    expect(normalisePath('/politica/reforma?utm_source=boletin')).toBe('/politica/reforma')
+  })
+
+  it('keeps the root as a single slash', () => {
+    expect(normalisePath('/')).toBe('/')
+    expect(normalisePath('')).toBe('/')
+  })
+
+  it('collapses a trail of slashes rather than leaving one behind', () => {
+    expect(normalisePath('/politica///')).toBe('/politica')
   })
 })

@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { redirectOrNotFound } from '@/lib/navigation/notFound'
 
 import { Breadcrumbs } from '@/components/articles/Breadcrumbs'
 import { Byline } from '@/components/articles/Byline'
 import { PublicationMeta } from '@/components/articles/PublicationMeta'
+import { CorrectionsNotice } from '@/components/articles/CorrectionsNotice'
 import { RelatedContent } from '@/components/articles/RelatedContent'
 import { ShareActions } from '@/components/articles/ShareActions'
 import { articlePath, categoryPath } from '@/lib/routes'
@@ -13,6 +14,7 @@ import { Container } from '@/components/layout/Container'
 import { EditorialImage } from '@/components/media/EditorialImage'
 import { CardEyebrow } from '@/components/articles/parts/CardEyebrow'
 import { getArticleBySlug } from '@/data/article'
+import { getCorrectionsFor } from '@/data/corrections'
 import { getSiteSettings } from '@/data/site'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { buildPageMetadata } from '@/lib/seo/metadata'
@@ -67,13 +69,16 @@ export default async function ArticlePage({ params }: Params) {
   const [article, settings] = await Promise.all([getArticleBySlug(articulo), getSiteSettings()])
 
   /*
-   * `notFound()` covers both "no such article" and "not published". The data
+   * One answer covers both "no such article" and "not published". The data
    * layer queries with `overrideAccess: false`, so a draft never arrives here
    * and the two cases are indistinguishable from the outside — which is the
    * point: an unpublished investigation must not be discoverable by the
    * difference between a 404 and a 403.
+   *
+   * `redirectOrNotFound` consults the redirect table first, so a slug that
+   * changed after publication still resolves instead of losing the old URL.
    */
-  if (!article) notFound()
+  if (!article) return redirectOrNotFound(articlePath(categoria, articulo))
 
   /*
    * The category in the path has to match the article's own, or the same piece
@@ -81,10 +86,17 @@ export default async function ArticlePage({ params }: Params) {
    * exists to prevent. A mismatch is a 404 here; a genuine re-filing writes a
    * redirect through the Redirects collection.
    */
-  if (article.category && article.category.slug !== categoria) notFound()
+  if (article.category && article.category.slug !== categoria)
+    return redirectOrNotFound(articlePath(categoria, articulo))
 
   const path = articlePath(article.category?.slug, article.slug)
   const shareUrl = path
+
+  /*
+   * Fetched after the article, not alongside it: the id to query by is the
+   * article's, and there is nothing to look up if the piece does not exist.
+   */
+  const corrections = await getCorrectionsFor('articles', article.id)
 
   /*
    * Structured data is generated from the content, never written by an editor
@@ -177,6 +189,13 @@ export default async function ArticlePage({ params }: Params) {
 
       <Container width="reading" className="pb-16">
         <RichText data={article.body} />
+
+        {/*
+          After the body, inside the reading column. A correction belongs to the
+          piece, not to the page furniture around it, and putting it out at
+          editorial width would read as a site-wide notice.
+        */}
+        <CorrectionsNotice corrections={corrections} className="mt-12" />
       </Container>
 
       <Container width="editorial" className="pb-24">

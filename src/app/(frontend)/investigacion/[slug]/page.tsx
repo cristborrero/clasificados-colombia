@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { redirectOrNotFound } from '@/lib/navigation/notFound'
 
 import { Breadcrumbs } from '@/components/articles/Breadcrumbs'
 import { ShareActions } from '@/components/articles/ShareActions'
@@ -64,7 +64,7 @@ export default async function InvestigationPage({ params }: Params) {
 
   // Reached with `overrideAccess: false`, so an unpublished investigation is
   // simply absent — the page never has to decide whether it may show a draft.
-  if (!investigation) notFound()
+  if (!investigation) return redirectOrNotFound(investigationPath(slug))
 
   return (
     <article>

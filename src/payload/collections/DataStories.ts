@@ -10,6 +10,7 @@ import { slugField } from '@/payload/fields/slug'
 import { workflowFields } from '@/payload/fields/workflow'
 import { createStatusContractHook } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
+import { dataStoryPath } from '@/lib/routes'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
 import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
@@ -57,7 +58,7 @@ export const DataStories: CollectionConfig = {
       lockSlugOnPublish,
       recordFirstPublication,
     ],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/datos/${slug}` }), syncSearchAfterChange('data-stories')],
+    afterChange: [createSlugRedirect({ buildPath: dataStoryPath }), syncSearchAfterChange('data-stories')],
   },
 
   fields: [

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { notFound } from 'next/navigation'
+import { redirectOrNotFound } from '@/lib/navigation/notFound'
 
 import { ArticleCard } from '@/components/articles/ArticleCard'
 import { LatestNewsList } from '@/components/articles/LatestNewsList'
@@ -46,7 +46,7 @@ export default async function AuthorPage({ params }: Params) {
   const { slug } = await params
   const [author, settings] = await Promise.all([getAuthorBySlug(slug), getSiteSettings()])
 
-  if (!author) notFound()
+  if (!author) return redirectOrNotFound(authorPath(slug))
 
   return (
     <>

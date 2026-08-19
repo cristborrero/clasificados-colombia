@@ -12,6 +12,7 @@ import { serverEnv } from './env'
 import { AuditEvents } from './payload/collections/AuditEvents'
 import { Authors } from './payload/collections/Authors'
 import { Categories } from './payload/collections/Categories'
+import { Corrections } from './payload/collections/Corrections'
 import { DataStories } from './payload/collections/DataStories'
 import { EvidenceDocuments } from './payload/collections/EvidenceDocuments'
 import { Tips } from './payload/collections/Tips'
@@ -145,6 +146,7 @@ export default buildConfig({
     Sources,
     EvidenceDocuments,
     Redirects,
+  Corrections,
     AuditEvents,
     Tips,
   ],

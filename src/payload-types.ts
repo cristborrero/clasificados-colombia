@@ -82,6 +82,7 @@ export interface Config {
     sources: Source;
     'evidence-documents': EvidenceDocument;
     redirects: Redirect;
+    corrections: Correction;
     'audit-events': AuditEvent;
     tips: Tip;
     'payload-kv': PayloadKv;
@@ -106,6 +107,7 @@ export interface Config {
     sources: SourcesSelect<false> | SourcesSelect<true>;
     'evidence-documents': EvidenceDocumentsSelect<false> | EvidenceDocumentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
+    corrections: CorrectionsSelect<false> | CorrectionsSelect<true>;
     'audit-events': AuditEventsSelect<false> | AuditEventsSelect<true>;
     tips: TipsSelect<false> | TipsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -1423,6 +1425,50 @@ export interface Redirect {
   createdAt: string;
 }
 /**
+ * Correcciones públicas. No modifican el texto original: se muestran junto a él.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "corrections".
+ */
+export interface Correction {
+  id: number;
+  /**
+   * La pieza a la que corresponde. Se muestra dentro de ella.
+   */
+  about:
+    | {
+        relationTo: 'articles';
+        value: number | Article;
+      }
+    | {
+        relationTo: 'investigations';
+        value: number | Investigation;
+      }
+    | {
+        relationTo: 'opinions';
+        value: number | Opinion;
+      }
+    | {
+        relationTo: 'data-stories';
+        value: number | DataStory;
+      }
+    | {
+        relationTo: 'video-stories';
+        value: number | VideoStory;
+      };
+  type: 'correction' | 'clarification' | 'update' | 'editor_note';
+  /**
+   * Qué decía antes, qué dice ahora y por qué cambió. Concreto: «Se corrigió la cifra de 3.200 a 3.020 millones», no «se corrigieron errores».
+   */
+  summary: string;
+  /**
+   * Cuándo se emitió. El lector necesita saber si es anterior a cuando leyó.
+   */
+  issuedAt: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Registro append-only. No se puede editar ni borrar, tampoco por un administrador.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1592,6 +1638,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'redirects';
         value: number | Redirect;
+      } | null)
+    | ({
+        relationTo: 'corrections';
+        value: number | Correction;
       } | null)
     | ({
         relationTo: 'audit-events';
@@ -2286,6 +2336,18 @@ export interface RedirectsSelect<T extends boolean = true> {
   reason?: T;
   active?: T;
   automatic?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "corrections_select".
+ */
+export interface CorrectionsSelect<T extends boolean = true> {
+  about?: T;
+  type?: T;
+  summary?: T;
+  issuedAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

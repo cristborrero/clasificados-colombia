@@ -5,6 +5,115 @@ en el código.
 
 ---
 
+## 2026-08-19 · F17 · Redirects, correcciones y estados HTTP
+
+**Los redirects se escribían y nadie los leía**
+
+`createSlugRedirect` venía guardando una fila cada vez que cambiaba el slug de
+una pieza publicada, desde F4. Ninguna página consultaba esa tabla, así que la
+URL anterior devolvía 404 igual. Una fila que nadie consulta no es un redirect:
+es una nota sobre uno.
+
+La resolución ocurre camino del 404, no en middleware. Así la consulta no cuesta
+nada en las peticiones que sí encuentran su página —casi todas— y solo se paga
+donde de todas formas había que resolver algo. La alternativa era una consulta a
+la base delante de cada petición del sitio para servir el puñado que la necesita.
+
+**Dos defectos que esto destapó**
+
+1. **El redirect de artículos apuntaba a una URL que no existe.** Construía
+   `/articulo/${slug}`, forma que F16 retiró al mover los artículos a
+   `/[categoria]/[articulo]`. Estaba mal en los dos extremos y no reportaba
+   nada. El constructor recibe ahora el documento y resuelve la sección; si no
+   puede, no escribe redirect — una fila hacia `/undefined/slug` es peor que
+   ninguna, porque parece deliberada.
+2. **La normalización de rutas estaba duplicada**: una copia en el hook de la
+   colección y otra en el resolutor. Dos definiciones de «la forma canónica de
+   esta ruta» es una más de las que pueden mantenerse de acuerdo, y una fila
+   escrita con una regla y buscada con la otra es un redirect que sencillamente
+   nunca dispara. Vive en `src/lib/routes.ts`, que ya es la fuente de verdad de
+   las URL.
+
+**Correcciones**
+
+Colección propia, no un array en cada tipo de contenido: los cinco tipos
+llevarían una copia del mismo campo, y un índice de correcciones —todas las que
+ha emitido el medio, en un sitio— es práctica estándar en una publicación seria
+e imposible de construir con los datos repartidos en cinco tablas.
+
+Cuatro tipos, y no son intercambiables: llamar «aclaración» a un error de dato
+es la forma más antigua de aparentar que se corrige algo sin hacerlo. Solo la
+corrección se marca en rojo — gastarlo en una actualización, donde nada estaba
+mal, lo convertiría en «algo cambió» en vez de «nos equivocamos».
+
+El texto original no se toca. Lo que se publica es el registro, junto a lo que
+corrige.
+
+Borrar una corrección borra la constancia de un error, que es justo lo que la
+colección existe para impedir: solo admin, y la forma prevista de retractarse es
+emitir otra.
+
+**404 editorial**
+
+Quien llega ahí llega defraudado. La página por defecto de Next le dice que la
+ruta no existe, lo cual es cierto e inútil. Esta asume que venía buscando algo y
+ofrece las tres salidas: búsqueda, últimas noticias e investigaciones. Las dos
+listas se piden con `catch`: si la base es la razón por la que el lector está
+ahí, una lista vacía es mejor respuesta que un error dentro de un error.
+
+Lleva dos etiquetas `robots`, a propósito. El segmento dinámico declara una para
+las URL que no resuelven, y la 404 otra para las que no encajan en ningún
+segmento; ninguna cubre el caso de la otra.
+
+**Un defecto de F16 que salió aquí: el sitemap se horneaba en el build**
+
+`sitemap.ts` declaraba `export const revalidate = 3600`, y eso hace que Next lo
+prerenderice durante la compilación y sirva esa copia la primera hora después de
+cada despliegue. La imagen de producción se construye sin base de datos, así que
+lo que horneaba era un sitemap con la portada y nada más: una invitación a
+rastrear un sitio de una sola página, publicada en cada redespliegue.
+
+Es exactamente el fallo del que ya avisa el layout del frontend —el build no
+sabe qué contendrá la base—. Ahora es `force-dynamic`. Comprobado que la ruta
+sigue emitiéndose: con `robots.ts` el mismo cambio hizo que Next no la generara
+en absoluto, y el síntoma fue un 404 que parecía específico de robots.
+
+**Los tests de WebKit no fallaban por el código**
+
+Ocho de doce pruebas de `article.spec` en mobile-safari agotaban los 90 s, de
+forma reproducible, sobre una página que el servidor entrega en 30 ms. Medido:
+la primera navegación de un WebKit en frío tarda ~25 s en esta máquina —los
+binarios del navegador viven en el mismo disco externo— y 256 ms con la caché
+caliente. Con cuatro workers arrancando a la vez, la primera tanda siempre se
+pasaba del límite.
+
+El proyecto `mobile-safari` tiene ahora 180 s. Subir el techo en vez de bajar los
+workers mantiene la suite en cuatro minutos en lugar de ocho; se paga con un
+informe más lento ante un cuelgue real, que es lo barato de los dos.
+
+**Lo que no se implementó, y por qué**
+
+- **410 Gone.** El plan lo menciona. Devolverlo desde un componente de página no
+  es posible en el App Router: `notFound()` da 404 y no hay forma soportada de
+  cambiarlo. Requeriría middleware, que este proyecto no tiene. La diferencia
+  frente al 404 es que Google desindexa antes; no está en el DoD.
+- **Rutas `/opinion`, `/datos` y `/video`.** `src/lib/routes.ts` las declara,
+  pero esas páginas no existen todavía — hueco anterior a F17, no una regresión.
+  Sus redirects automáticos apuntarán a un 404 mientras siga así.
+
+**Estado verificado**
+
+```txt
+typecheck  limpio
+lint       limpio
+unit       321 tests
+e2e        223 pasan · 5 nuevos de F17 · 37 saltados a propósito
+migración  base vacía → 3 migraciones → correcto
+build      limpio
+```
+
+---
+
 ## 2026-08-19 · F15 · Media Pipeline
 
 F4 dejó el modelo de metadatos —derechos, crédito, licencia, origen sintético—

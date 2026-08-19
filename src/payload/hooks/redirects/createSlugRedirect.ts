@@ -1,4 +1,8 @@
-import type { CollectionAfterChangeHook, CollectionBeforeChangeHook } from 'payload'
+import type {
+  CollectionAfterChangeHook,
+  CollectionBeforeChangeHook,
+  PayloadRequest,
+} from 'payload'
 
 /**
  * Keeps published URLs alive when a slug changes (PRD SEO §15, PRD Nº7 §24).
@@ -42,10 +46,20 @@ export type SlugRedirectOptions = {
    * Builds the public path for a slug.
    *
    * Passed in rather than derived, because the same slug means different URLs
-   * per collection — `/articulo/x` and `/investigacion/x` — and this hook has
+   * per collection — `/politica/x` and `/investigacion/x` — and this hook has
    * no business knowing the route table.
+   *
+   * It receives the document too, and may be async. An article's URL contains
+   * its category, which is not derivable from the slug: a builder that ignored
+   * the document would write a redirect from a URL shape the site does not
+   * serve, to another one it does not serve either — a redirect that is wrong
+   * at both ends and reports no error.
    */
-  buildPath: (slug: string) => string
+  buildPath: (
+    slug: string,
+    doc: Record<string, unknown>,
+    req: PayloadRequest,
+  ) => Promise<string> | string
 }
 
 /**
@@ -75,8 +89,19 @@ export function createSlugRedirect({ buildPath }: SlugRedirectOptions): Collecti
     // changed twice before first publication never had an audience.
     if (!previous?.slugLocked) return doc
 
-    const from = buildPath(previousSlug)
-    const to = buildPath(currentSlug)
+    const [from, to] = await Promise.all([
+      buildPath(previousSlug, previousDoc as Record<string, unknown>, req),
+      buildPath(currentSlug, doc as Record<string, unknown>, req),
+    ])
+
+    /*
+     * A builder that cannot resolve a path says so by returning an empty
+     * string, and no redirect is written. Recording one from `/` or to `/` is
+     * worse than recording none: the first shadows the homepage, the second
+     * sends a reader looking for one article to the front page as if that were
+     * the same thing.
+     */
+    if (!from || !to || from === to) return doc
 
     try {
       const existing = await req.payload.find({

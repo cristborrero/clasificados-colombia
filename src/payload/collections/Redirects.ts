@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
+import { normalisePath } from '@/lib/routes'
 import { adminOnly, editorialStaffOnly } from '@/payload/access/helpers'
 
 /**
@@ -53,14 +54,13 @@ export const Redirects: CollectionConfig = {
           ({ value }) => {
             if (typeof value !== 'string') return value
 
-            // Normalise so that `/a`, `/a/` and `a` cannot become three rows
-            // that each half-work.
-            const path = value.trim().split('?')[0] ?? ''
-            const withLeadingSlash = path.startsWith('/') ? path : `/${path}`
-
-            return withLeadingSlash.length > 1
-              ? withLeadingSlash.replace(/\/+$/, '')
-              : withLeadingSlash
+            /*
+             * The same function the resolver uses. Two implementations of "the
+             * canonical form of this path" is one more than can stay in
+             * agreement — and a row written under one rule and looked up under
+             * the other is a redirect that silently never fires.
+             */
+            return normalisePath(value)
           },
         ],
       },

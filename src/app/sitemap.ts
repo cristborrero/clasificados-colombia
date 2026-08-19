@@ -29,7 +29,22 @@ import {
  * Lives in `src/app/` for the same reason as robots.ts: inside the `(frontend)`
  * group the sibling `[categoria]` route matches these paths first.
  */
-export const revalidate = 3600
+
+/**
+ * Generated per request, never at build time.
+ *
+ * With `revalidate` alone Next prerenders this during the build and serves that
+ * copy for the first hour after every deploy. The production image is built
+ * without a database, so what it baked was a sitemap containing the homepage
+ * and nothing else — an invitation to crawl a site of one page, published every
+ * time the site is redeployed.
+ *
+ * This is the same failure the frontend layout carries a note about: the build
+ * does not know what the database will hold. Caching belongs at the edge, in
+ * front of the application, where it can be invalidated by something that knows
+ * when content changed.
+ */
+export const dynamic = 'force-dynamic'
 
 /** Cap per collection. Google accepts 50,000 URLs; this is well inside it. */
 const LIMIT = 5_000

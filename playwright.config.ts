@@ -122,6 +122,22 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     // Mobile is a first-class target, not an afterthought (PRD Master §44),
     // and PRD Nº8 §166 lists current iOS Safari as a support target.
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
+    {
+      name: 'mobile-safari',
+      use: { ...devices['iPhone 14'] },
+      /*
+       * More headroom than chromium, and measured rather than guessed. A cold
+       * WebKit on this machine takes ~25 s to complete its first navigation —
+       * the browser binaries live on the same external drive as everything else
+       * — against 256 ms once the page cache is warm. With four workers all
+       * starting cold at once, the first wave of tests reliably passed 90 s and
+       * failed on a page the server renders in 30 ms.
+       *
+       * Raising the ceiling rather than lowering the worker count keeps the
+       * suite at four minutes instead of eight. It costs a slower report on a
+       * genuine hang, which is the cheaper of the two.
+       */
+      timeout: 180_000,
+    },
   ],
 })

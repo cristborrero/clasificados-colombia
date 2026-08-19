@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { redirectOrNotFound } from '@/lib/navigation/notFound'
 
 import { ArticleCardFeatured } from '@/components/articles/ArticleCardFeatured'
 import { LatestNewsList } from '@/components/articles/LatestNewsList'
@@ -55,7 +55,7 @@ export default async function CategoryPage({ params }: Params) {
     getSiteSettings(),
   ])
 
-  if (!category) notFound()
+  if (!category) return redirectOrNotFound(categoryPath(categoria))
 
   return (
     <>

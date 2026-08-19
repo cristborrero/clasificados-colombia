@@ -10,6 +10,7 @@ import { slugField } from '@/payload/fields/slug'
 import { workflowFields } from '@/payload/fields/workflow'
 import { enforceStatusContract } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
+import { opinionPath } from '@/lib/routes'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
 import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
 
@@ -56,7 +57,7 @@ export const Opinions: CollectionConfig = {
   hooks: {
     afterDelete: [syncSearchAfterDelete('opinions')],
     beforeChange: [enforceStatusContract, lockSlugOnPublish, recordFirstPublication],
-    afterChange: [createSlugRedirect({ buildPath: (slug) => `/opinion/${slug}` }), syncSearchAfterChange('opinions')],
+    afterChange: [createSlugRedirect({ buildPath: opinionPath }), syncSearchAfterChange('opinions')],
   },
 
   fields: [

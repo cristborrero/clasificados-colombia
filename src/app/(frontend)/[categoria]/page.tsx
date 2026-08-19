@@ -5,12 +5,15 @@ import { notFound } from 'next/navigation'
 import { ArticleCardFeatured } from '@/components/articles/ArticleCardFeatured'
 import { LatestNewsList } from '@/components/articles/LatestNewsList'
 import { Breadcrumbs } from '@/components/articles/Breadcrumbs'
-import { categoryPath } from '@/components/articles/types'
 import { Lead, HeadlineXL } from '@/components/editorial/Typography'
 import { Container } from '@/components/layout/Container'
 import { SectionHeader } from '@/components/layout/SectionHeader'
 import { getCategoryBySlug } from '@/data/profiles'
 import { getSiteSettings } from '@/data/site'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { categoryPath } from '@/lib/routes'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { breadcrumbJsonLd } from '@/lib/seo/structuredData'
 
 /**
  * Section page (PRD Nº8 §90, PRD SEO §57).
@@ -23,26 +26,46 @@ import { getSiteSettings } from '@/data/site'
  * page with no editorial content of its own is a thin page, and a search engine
  * treats it accordingly.
  */
-type Params = { params: Promise<{ slug: string }> }
+type Params = { params: Promise<{ categoria: string }> }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { slug } = await params
-  const category = await getCategoryBySlug(slug)
+  const { categoria } = await params
+  const category = await getCategoryBySlug(categoria)
 
-  if (!category) return { title: 'Sección no encontrada' }
+  if (!category) return { title: 'Sección no encontrada', robots: { index: false } }
 
-  return { title: category.name, description: category.description ?? undefined }
+  return buildPageMetadata({
+    title: category.name,
+    description: category.description,
+    path: categoryPath(category.slug),
+  })
 }
 
 export default async function CategoryPage({ params }: Params) {
-  const { slug } = await params
+  const { categoria } = await params
 
-  const [category, settings] = await Promise.all([getCategoryBySlug(slug), getSiteSettings()])
+  /*
+   * The hub lives at the root (PRD SEO §57), so this route also receives paths
+   * that are not categories at all. `getCategoryBySlug` returning null is the
+   * 404 for those — a reserved segment never reaches here, because Next
+   * resolves static routes like /buscar before this dynamic one.
+   */
+  const [category, settings] = await Promise.all([
+    getCategoryBySlug(categoria),
+    getSiteSettings(),
+  ])
 
   if (!category) notFound()
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: settings.siteName, path: '/' },
+          { name: category.name },
+        ])}
+      />
+
       <Container width="editorial" className="py-12">
         <Breadcrumbs
           items={[{ label: settings.siteName, href: '/' }, { label: category.name }]}

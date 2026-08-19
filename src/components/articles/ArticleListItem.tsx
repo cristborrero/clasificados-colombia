@@ -28,7 +28,7 @@ export function ArticleListItem({
   as: Component = 'li',
   className,
 }: ArticleListItemProps) {
-  const href = articlePath(article.slug)
+  const href = articlePath(article.category?.slug, article.slug)
   const formatted = formatEditorialDate(article.publishedAt)
   const dateTime = toDateTimeAttribute(article.publishedAt)
 

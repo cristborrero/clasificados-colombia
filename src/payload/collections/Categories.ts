@@ -50,7 +50,8 @@ export const Categories: CollectionConfig = {
       label: 'Nombre',
     },
 
-    ...slugField({ sourceField: 'name' }),
+    // The hub lives at the root, so its slug must not shadow a real page.
+    ...slugField({ sourceField: 'name', rejectReserved: true }),
 
     {
       name: 'description',

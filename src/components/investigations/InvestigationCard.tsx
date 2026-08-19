@@ -4,6 +4,7 @@ import { CardMeta } from '@/components/articles/parts/CardMeta'
 import { CardTitle } from '@/components/articles/parts/CardTitle'
 import { CardEyebrow } from '@/components/articles/parts/CardEyebrow'
 import { cn } from '@/components/ui/cn'
+import { investigationPath } from '@/lib/routes'
 
 /**
  * Investigation card (PRD Nº8 §53).
@@ -35,8 +36,7 @@ export type InvestigationCardProps = {
   className?: string
 }
 
-/** Investigations live under their own prefix (PRD Nº8 §76). */
-export const investigationPath = (slug: string): string => `/investigacion/${slug}`
+export { investigationPath } from '@/lib/routes'
 
 export function InvestigationCard({
   investigation,

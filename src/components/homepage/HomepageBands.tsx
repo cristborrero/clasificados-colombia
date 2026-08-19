@@ -138,7 +138,11 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
             return (
               <Container key={key} width="editorial" as="section" className="py-12">
                 <HomepageHero
-                  href={isInvestigation ? investigationPath(item.slug) : articlePath(item.slug)}
+                  href={
+                    isInvestigation
+                      ? investigationPath(item.slug)
+                      : articlePath(item.category?.slug, item.slug)
+                  }
                   eyebrow={
                     isInvestigation ? 'Investigación' : (item.category?.name ?? 'Última hora')
                   }

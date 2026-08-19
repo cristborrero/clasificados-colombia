@@ -15,6 +15,10 @@ import { MethodologySection } from '@/components/investigations/MethodologySecti
 import { Container } from '@/components/layout/Container'
 import { getInvestigationBySlug } from '@/data/investigation'
 import { getSiteSettings } from '@/data/site'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { investigationPath } from '@/lib/routes'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { breadcrumbJsonLd, newsArticleJsonLd } from '@/lib/seo/structuredData'
 
 /**
  * Investigation template (PRD Nº8 §76-§88).
@@ -35,12 +39,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params
   const investigation = await getInvestigationBySlug(slug)
 
-  if (!investigation) return { title: 'Contenido no encontrado' }
+  if (!investigation) return { title: 'Contenido no encontrado', robots: { index: false } }
 
-  return {
+  return buildPageMetadata({
     title: investigation.title,
-    description: investigation.summary ?? undefined,
-  }
+    description: investigation.summary,
+    path: investigationPath(investigation.slug),
+    image: investigation.hero.image,
+    publishedAt: investigation.publishedAt,
+    modifiedAt: investigation.updatedAt,
+    authors: investigation.authors.map((author) => author.name),
+    section: 'Investigación',
+    type: 'article',
+  })
 }
 
 export default async function InvestigationPage({ params }: Params) {
@@ -57,6 +68,31 @@ export default async function InvestigationPage({ params }: Params) {
 
   return (
     <article>
+      {/* `ReportageNewsArticle`, not `NewsArticle`: this is reported work
+          rather than a report of an event (PRD SEO §59). */}
+      <JsonLd
+        data={newsArticleJsonLd({
+          headline: investigation.title,
+          description: investigation.summary,
+          path: investigationPath(investigation.slug),
+          datePublished: investigation.publishedAt,
+          dateModified: investigation.updatedAt,
+          authors: investigation.authors,
+          image: investigation.hero.image ? { url: investigation.hero.image.url } : null,
+          section: 'Investigación',
+          organizationName: settings.siteName,
+          isInvestigation: true,
+        })}
+      />
+
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: settings.siteName, path: '/' },
+          { name: 'Investigaciones', path: '/investigaciones' },
+          { name: investigation.title },
+        ])}
+      />
+
       <InvestigationHero
         title={investigation.title}
         summary={investigation.summary}

@@ -1,5 +1,6 @@
 import { DataFigure, Dek } from '@/components/editorial/Typography'
 import { cn } from '@/components/ui/cn'
+import { dataStoryPath } from '@/lib/routes'
 
 import { CardEyebrow } from './parts/CardEyebrow'
 import { CardMeta } from './parts/CardMeta'
@@ -33,7 +34,7 @@ export type DataCardProps = {
   className?: string
 }
 
-export const dataStoryPath = (slug: string): string => `/datos/${slug}`
+export { dataStoryPath } from '@/lib/routes'
 
 export function DataCard({ story, headingLevel = 'h3', className }: DataCardProps) {
   const href = dataStoryPath(story.slug)

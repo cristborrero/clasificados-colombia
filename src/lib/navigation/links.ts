@@ -1,3 +1,5 @@
+import { categoryPath } from '@/lib/routes'
+
 /**
  * Navigation link resolution (PRD Nº7 §83, PRD Nº8 §28).
  *
@@ -9,7 +11,7 @@
  * typed URLs so a link follows its document through a slug change instead of
  * quietly 404ing. But a relationship can also be *unpopulated* (depth 0) or
  * point at a deleted category, and a link rendered from that resolves to
- * `/seccion/undefined`. So an unresolvable link is dropped, not rendered
+ * `/undefined`. So an unresolvable link is dropped, not rendered
  * broken.
  */
 
@@ -33,8 +35,13 @@ export type ResolvedLink = {
   external: boolean
 }
 
-/** Section pages live at /seccion/<slug> (PRD Nº8 §33). */
-export const sectionPath = (slug: string): string => `/seccion/${slug}`
+/*
+ * Section hubs live at the root (PRD SEO §57). The path comes from
+ * `src/lib/routes.ts`, which is the one place that decides what a public URL
+ * looks like — re-exported under the name this module already used so callers
+ * do not have to care that the decision moved.
+ */
+export const sectionPath = categoryPath
 
 /**
  * Protocols allowed for a hand-typed URL.

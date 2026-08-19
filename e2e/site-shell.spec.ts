@@ -57,7 +57,7 @@ test.describe('F8 site shell', () => {
 
     await expect(nav.getByRole('link', { name: 'DEMO · Política' })).toHaveAttribute(
       'href',
-      '/seccion/demo-politica',
+      '/demo-politica',
     )
   })
 

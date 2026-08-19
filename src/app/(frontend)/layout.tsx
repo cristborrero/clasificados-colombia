@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
 import React from 'react'
 
+import { JsonLd } from '@/components/seo/JsonLd'
 import { SiteFooter } from '@/components/navigation/SiteFooter'
 import { SiteHeader } from '@/components/navigation/SiteHeader'
+import { getSiteSettings } from '@/data/site'
+import { siteOrigin } from '@/lib/routes'
+import { organizationJsonLd } from '@/lib/seo/structuredData'
 import { fontVariables } from '@/styles/fonts'
 
 import '@/styles/globals.css'
@@ -38,6 +42,13 @@ import '@/styles/globals.css'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
+  /*
+   * `metadataBase` is what lets every page give Next a path and get an absolute
+   * URL back. Without it, Open Graph images resolve relative to whatever host
+   * served the page — which works in development and silently breaks the first
+   * time a crawler fetches from anywhere else.
+   */
+  metadataBase: new URL(siteOrigin()),
   title: {
     default: 'Clasificados Colombia',
     template: '%s · Clasificados Colombia',
@@ -56,10 +67,26 @@ export const metadata: Metadata = {
  * Keeping them out of the page components means no page has to remember to
  * fetch navigation, and no page can forget.
  */
-export default function FrontendLayout({ children }: { children: React.ReactNode }) {
+export default async function FrontendLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSiteSettings()
+
+  /*
+   * The publisher, emitted once for the whole site (PRD SEO §35-§37). Every
+   * article references it by `@id` rather than repeating it — a copied
+   * organisation is one that can disagree with itself.
+   */
+  const organisation = organizationJsonLd({
+    name: settings.siteName,
+    description: settings.siteDescription,
+    email: settings.contact.email,
+    phone: settings.contact.phone,
+  })
+
   return (
     <html lang="es-CO" className={fontVariables}>
       <body className="flex min-h-dvh flex-col bg-[var(--color-surface)] text-[color:var(--color-text)]">
+        <JsonLd data={organisation} />
+
         <SiteHeader />
 
         <main id="contenido" className="flex-1">

@@ -35,6 +35,20 @@ export type ArticleView = {
   body: unknown
   wordCount: number | null
   related: EditorialSummary[]
+  /**
+   * Editor-supplied SEO overrides (PRD SEO §50).
+   *
+   * Every one is optional and every one falls back to the content itself, so a
+   * piece that nobody optimised is still correctly marked up. §51 is the reason
+   * these are overrides rather than the source: the default must be generated,
+   * or half the archive ends up with no metadata at all.
+   */
+  seo: {
+    metaTitle: string | null
+    metaDescription: string | null
+    canonical: string | null
+    noIndex: boolean
+  }
 }
 
 function toAuthor(value: unknown): ArticleAuthor | null {
@@ -119,6 +133,12 @@ export async function getArticleBySlug(slug: string): Promise<ArticleView | null
       image: heroImage,
       caption: asString(hero?.captionOverride) ?? asString(heroRecord?.caption),
       credit: asString(heroRecord?.credit),
+    },
+    seo: {
+      metaTitle: asString(asRecord(doc.seo as never)?.metaTitle),
+      metaDescription: asString(asRecord(doc.seo as never)?.metaDescription),
+      canonical: asString(asRecord(doc.seo as never)?.canonical),
+      noIndex: asRecord(doc.seo as never)?.noIndex === true,
     },
     body: doc.body ?? null,
     wordCount: countWords(doc.body) || null,

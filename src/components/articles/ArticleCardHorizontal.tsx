@@ -28,7 +28,7 @@ export function ArticleCardHorizontal({
   showDek = true,
   className,
 }: ArticleCardHorizontalProps) {
-  const href = articlePath(article.slug)
+  const href = articlePath(article.category?.slug, article.slug)
 
   return (
     <article className={cn('group flex flex-col gap-4 sm:flex-row sm:items-start', className)}>

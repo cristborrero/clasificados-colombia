@@ -48,7 +48,24 @@ const publicCsp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  'upgrade-insecure-requests',
+  /*
+   * `upgrade-insecure-requests` is deliberately absent.
+   *
+   * Its job is to rewrite hardcoded `http://` subresource URLs to `https://`,
+   * and this application emits none: every asset reference is relative and
+   * same-origin, `default-src 'self'` already forbids loading anything from
+   * another origin over any scheme, and HSTS below is what actually guarantees
+   * the browser never speaks plain HTTP to this host.
+   *
+   * What it did do was break every deployment that is not behind TLS —
+   * including the whole test suite. `headers()` is evaluated during `next build`
+   * and baked into `routes-manifest.json`, so the policy cannot be relaxed per
+   * environment at start-up; the E2E server is served over plain HTTP and the
+   * directive turned each subresource request into an `https://localhost` one
+   * that died on TLS. Chromium hides this by exempting loopback as a
+   * trustworthy origin, WebKit does not, so it surfaced only in mobile-safari
+   * and looked like a layout overflow on every page at once.
+   */
 ].join('; ')
 
 /**

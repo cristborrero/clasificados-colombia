@@ -1,7 +1,11 @@
+import type { Metadata } from 'next'
+
 import { HomepageBands } from '@/components/homepage/HomepageBands'
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { Container } from '@/components/layout/Container'
 import { getHomepage } from '@/data/homepage'
+import { getSiteSettings } from '@/data/site'
+import { buildPageMetadata } from '@/lib/seo/metadata'
 
 /**
  * The front page (PRD Nº8 §37, DoD F10).
@@ -16,6 +20,16 @@ import { getHomepage } from '@/data/homepage'
  * the page is about that one article, and the heading would change every time
  * the newsroom changes its lead.
  */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings()
+
+  return buildPageMetadata({
+    title: settings.siteName,
+    description: settings.siteDescription,
+    path: '/',
+  })
+}
+
 export default async function HomePage() {
   const bands = await getHomepage()
 

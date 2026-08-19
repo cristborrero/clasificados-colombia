@@ -10,6 +10,10 @@ import { Container } from '@/components/layout/Container'
 import { SectionHeader } from '@/components/layout/SectionHeader'
 import { getTopicBySlug } from '@/data/profiles'
 import { getSiteSettings } from '@/data/site'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { topicPath } from '@/lib/routes'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { breadcrumbJsonLd } from '@/lib/seo/structuredData'
 
 /**
  * Topic page (PRD Nº8 §91).
@@ -28,9 +32,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params
   const topic = await getTopicBySlug(slug)
 
-  if (!topic) return { title: 'Tema no encontrado' }
+  if (!topic) return { title: 'Tema no encontrado', robots: { index: false } }
 
-  return { title: topic.name, description: topic.description ?? undefined }
+  return buildPageMetadata({
+    title: topic.name,
+    description: topic.description,
+    path: topicPath(topic.slug),
+  })
 }
 
 export default async function TopicPage({ params }: Params) {
@@ -42,6 +50,14 @@ export default async function TopicPage({ params }: Params) {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: settings.siteName, path: '/' },
+          { name: 'Temas' },
+          { name: topic.name },
+        ])}
+      />
+
       <Container width="editorial" className="py-12">
         <Breadcrumbs
           items={[{ label: settings.siteName, href: '/' }, { label: topic.name }]}

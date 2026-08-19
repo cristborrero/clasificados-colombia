@@ -1,5 +1,7 @@
 import type { Field } from 'payload'
 
+import { isReservedSegment } from '@/lib/routes'
+
 /**
  * Slug normalisation (PRD SEO §14, PRD Nº7 §22-§24).
  *
@@ -31,6 +33,13 @@ export function slugify(input: string): string {
 export type SlugFieldOptions = {
   /** Field the slug is generated from. Defaults to `title`. */
   sourceField?: string
+  /**
+   * Refuse slugs that collide with a top-level route.
+   *
+   * Only for collections whose slug becomes a root path — categories today.
+   * An article slug lives under its category and cannot shadow anything.
+   */
+  rejectReserved?: boolean
 }
 
 /**
@@ -42,7 +51,10 @@ export type SlugFieldOptions = {
  * URLs. Freezing makes the change deliberate rather than a side effect of
  * someone fixing a typo in the headline.
  */
-export function slugField({ sourceField = 'title' }: SlugFieldOptions = {}): Field[] {
+export function slugField({
+  sourceField = 'title',
+  rejectReserved = false,
+}: SlugFieldOptions = {}): Field[] {
   return [
     {
       name: 'slug',
@@ -51,6 +63,23 @@ export function slugField({ sourceField = 'title' }: SlugFieldOptions = {}): Fie
       unique: true,
       index: true,
       label: 'Slug',
+      /*
+       * `rejectReserved` is for slugs that become a top-level path — category
+       * hubs live at the root (PRD SEO §57), so their slug competes with every
+       * real page. Next resolves static routes first, so a category called
+       * `buscar` would simply never render: no error, no warning, just a hub
+       * nobody can reach. Refusing it at save time is the only moment the
+       * person responsible can still fix it.
+       */
+      validate: rejectReserved
+        ? (value: unknown) => {
+            if (typeof value !== 'string' || value.length === 0) return true
+
+            return isReservedSegment(value)
+              ? `«${value}» ya es una ruta del sitio. Elegí otro slug.`
+              : true
+          }
+        : undefined,
       admin: {
         position: 'sidebar',
         description:

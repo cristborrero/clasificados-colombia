@@ -21,7 +21,9 @@ export type CardArticle = {
 /** Compile-time proof that the data layer satisfies what the cards need. */
 export type _CardArticleMatchesData = EditorialSummary extends CardArticle ? true : never
 
-/** Articles live at the site root (PRD SEO §14: short, permanent URLs). */
-export const articlePath = (slug: string): string => `/${slug}`
-
-export const categoryPath = (slug: string): string => `/seccion/${slug}`
+/*
+ * Paths come from `src/lib/routes.ts`, which is the single place that decides
+ * what a public URL looks like. Re-exported here so the card components keep
+ * one import, not because this file owns the decision.
+ */
+export { articlePath, categoryPath } from '@/lib/routes'

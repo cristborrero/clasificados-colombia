@@ -67,7 +67,7 @@ describe('resolveNavLink', () => {
   })
 
   it('treats a missing linkType as internal', () => {
-    expect(resolveNavLink({ label: 'Datos', category: { slug: 'datos' } })?.href).toBe('/seccion/datos')
+    expect(resolveNavLink({ label: 'Datos', category: { slug: 'datos' } })?.href).toBe('/datos')
   })
 
   it('drops a link whose category was deleted or never populated', () => {

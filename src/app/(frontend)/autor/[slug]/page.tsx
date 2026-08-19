@@ -9,6 +9,11 @@ import { InvestigationCard } from '@/components/investigations/InvestigationCard
 import { Container } from '@/components/layout/Container'
 import { SectionHeader } from '@/components/layout/SectionHeader'
 import { getAuthorBySlug } from '@/data/profiles'
+import { getSiteSettings } from '@/data/site'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { authorPath } from '@/lib/routes'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { personJsonLd } from '@/lib/seo/structuredData'
 
 /**
  * Author page (PRD Nº8 §89, PRD SEO §31).
@@ -27,22 +32,37 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params
   const author = await getAuthorBySlug(slug)
 
-  if (!author) return { title: 'Autor no encontrado' }
+  if (!author) return { title: 'Autor no encontrado', robots: { index: false } }
 
-  return {
+  return buildPageMetadata({
     title: author.name,
-    description: author.bio ?? author.jobTitle ?? undefined,
-  }
+    description: author.bio ?? author.jobTitle,
+    path: authorPath(author.slug),
+    image: author.portrait,
+  })
 }
 
 export default async function AuthorPage({ params }: Params) {
   const { slug } = await params
-  const author = await getAuthorBySlug(slug)
+  const [author, settings] = await Promise.all([getAuthorBySlug(slug), getSiteSettings()])
 
   if (!author) notFound()
 
   return (
     <>
+      {/* PRD SEO §33-§34: a real profile, tied to the publisher. This is the
+          page that makes a byline traceable. */}
+      <JsonLd
+        data={personJsonLd({
+          name: author.name,
+          slug: author.slug,
+          jobTitle: author.jobTitle,
+          bio: author.bio,
+          image: author.portrait?.url,
+          organizationName: settings.siteName,
+        })}
+      />
+
       <Container width="article" className="py-16">
         <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
           {author.portrait ? (

@@ -122,7 +122,7 @@ test.describe('F13 author, section and topic pages', () => {
 
   test('the section page is a page, not a flat list', async ({ page }) => {
     // PRD Nº8 §90: intro, a promoted story, then the stream.
-    await page.goto('/seccion/demo-politica')
+    await page.goto('/demo-politica')
 
     await expect(page.getByRole('heading', { level: 1 })).toContainText('DEMO · Política')
     await expect(page.getByText('Sección de prueba')).toBeVisible()
@@ -137,7 +137,7 @@ test.describe('F13 author, section and topic pages', () => {
   })
 
   test('an unknown author, section or topic is a 404', async ({ page }) => {
-    for (const path of ['/autor/nadie', '/seccion/ninguna', '/tema/ninguno']) {
+    for (const path of ['/autor/nadie', '/ninguna-seccion', '/tema/ninguno']) {
       const response = await page.goto(path)
 
       expect(response?.status(), path).toBe(404)
@@ -147,7 +147,7 @@ test.describe('F13 author, section and topic pages', () => {
   test('these pages render without horizontal overflow at 360px', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 780 })
 
-    for (const path of [INVESTIGATION, '/autor/demo-periodista', '/seccion/demo-politica']) {
+    for (const path of [INVESTIGATION, '/autor/demo-periodista', '/demo-politica']) {
       await page.goto(path)
 
       const overflow = await page.evaluate(

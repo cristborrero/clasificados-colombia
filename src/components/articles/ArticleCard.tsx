@@ -34,7 +34,7 @@ export function ArticleCard({
   priority = false,
   className,
 }: ArticleCardProps) {
-  const href = articlePath(article.slug)
+  const href = articlePath(article.category?.slug, article.slug)
 
   return (
     <article className={cn('group flex flex-col gap-3', className)}>

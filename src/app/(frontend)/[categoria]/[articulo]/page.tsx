@@ -6,7 +6,7 @@ import { Byline } from '@/components/articles/Byline'
 import { PublicationMeta } from '@/components/articles/PublicationMeta'
 import { RelatedContent } from '@/components/articles/RelatedContent'
 import { ShareActions } from '@/components/articles/ShareActions'
-import { categoryPath } from '@/components/articles/types'
+import { articlePath, categoryPath } from '@/lib/routes'
 import { RichText } from '@/components/editorial/RichText'
 import { Dek, HeadlineXL } from '@/components/editorial/Typography'
 import { Container } from '@/components/layout/Container'
@@ -14,6 +14,9 @@ import { EditorialImage } from '@/components/media/EditorialImage'
 import { CardEyebrow } from '@/components/articles/parts/CardEyebrow'
 import { getArticleBySlug } from '@/data/article'
 import { getSiteSettings } from '@/data/site'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { breadcrumbJsonLd, newsArticleJsonLd } from '@/lib/seo/structuredData'
 
 /**
  * Article template (PRD Nº8 §57-§75).
@@ -31,24 +34,37 @@ import { getSiteSettings } from '@/data/site'
  * The full metadata layer — canonical, Open Graph, JSON-LD — is F16. What is
  * here is the title and description a page needs to be shareable at all.
  */
-type Params = { params: Promise<{ slug: string }> }
+type Params = { params: Promise<{ categoria: string; articulo: string }> }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { slug } = await params
-  const article = await getArticleBySlug(slug)
+  const { articulo } = await params
+  const article = await getArticleBySlug(articulo)
 
-  if (!article) return { title: 'Contenido no encontrado' }
+  if (!article) return { title: 'Contenido no encontrado', robots: { index: false } }
 
-  return {
-    title: article.title,
-    description: article.dek ?? undefined,
-  }
+  return buildPageMetadata({
+    /*
+     * The SEO title may differ from the headline — an editor writes for the
+     * search result there — but the headline is the fallback, never a generated
+     * variation of it (PRD SEO §7).
+     */
+    title: article.seo.metaTitle ?? article.title,
+    description: article.seo.metaDescription ?? article.dek,
+    path: articlePath(article.category?.slug, article.slug),
+    image: article.hero.image,
+    noindex: article.seo.noIndex,
+    publishedAt: article.publishedAt,
+    modifiedAt: article.updatedAt,
+    authors: article.authors.map((author) => author.name),
+    section: article.category?.name,
+    type: 'article',
+  })
 }
 
 export default async function ArticlePage({ params }: Params) {
-  const { slug } = await params
+  const { categoria, articulo } = await params
 
-  const [article, settings] = await Promise.all([getArticleBySlug(slug), getSiteSettings()])
+  const [article, settings] = await Promise.all([getArticleBySlug(articulo), getSiteSettings()])
 
   /*
    * `notFound()` covers both "no such article" and "not published". The data
@@ -59,10 +75,47 @@ export default async function ArticlePage({ params }: Params) {
    */
   if (!article) notFound()
 
-  const shareUrl = `/${article.slug}`
+  /*
+   * The category in the path has to match the article's own, or the same piece
+   * would be reachable at every category — duplicate content that PRD SEO §9
+   * exists to prevent. A mismatch is a 404 here; a genuine re-filing writes a
+   * redirect through the Redirects collection.
+   */
+  if (article.category && article.category.slug !== categoria) notFound()
+
+  const path = articlePath(article.category?.slug, article.slug)
+  const shareUrl = path
+
+  /*
+   * Structured data is generated from the content, never written by an editor
+   * (PRD SEO §51). Hand-typed JSON-LD drifts from the page the moment either
+   * changes, and the drift is invisible — it surfaces only as a rich result
+   * that quietly stops appearing.
+   */
+  const articleLd = newsArticleJsonLd({
+    headline: article.title,
+    description: article.dek,
+    path,
+    datePublished: article.publishedAt,
+    dateModified: article.updatedAt,
+    authors: article.authors,
+    image: article.hero.image ? { url: article.hero.image.url } : null,
+    section: article.category?.name,
+    keywords: article.topics.map((topic) => topic.name),
+    organizationName: settings.siteName,
+  })
+
+  const trail = breadcrumbJsonLd([
+    { name: settings.siteName, path: '/' },
+    ...(article.category ? [{ name: article.category.name, path: categoryPath(article.category.slug) }] : []),
+    { name: article.title },
+  ])
 
   return (
     <article>
+      <JsonLd data={articleLd} />
+      <JsonLd data={trail} />
+
       <Container width="article" className="pt-8 pb-6">
         <Breadcrumbs
           items={[

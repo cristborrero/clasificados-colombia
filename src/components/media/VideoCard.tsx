@@ -5,6 +5,7 @@ import { CardMedia } from '@/components/articles/parts/CardMedia'
 import { CardMeta } from '@/components/articles/parts/CardMeta'
 import { CardTitle } from '@/components/articles/parts/CardTitle'
 import { cn } from '@/components/ui/cn'
+import { videoPath } from '@/lib/routes'
 
 /**
  * Video card (PRD Nº8 §56).
@@ -36,7 +37,7 @@ export type VideoCardProps = {
   className?: string
 }
 
-export const videoPath = (slug: string): string => `/video/${slug}`
+export { videoPath } from '@/lib/routes'
 
 export function VideoCard({ video, headingLevel = 'h3', className }: VideoCardProps) {
   const href = videoPath(video.slug)

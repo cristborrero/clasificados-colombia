@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test'
  * exercised here rather than only inspected. A converter that silently renders
  * nothing looks exactly like an article with no body.
  */
-const ARTICLE = '/demo-nota-1'
+const ARTICLE = '/demo-politica/demo-nota-1'
 
 test.describe('F11 article template', () => {
   test('the headline is the page h1, and the only one', async ({ page }) => {

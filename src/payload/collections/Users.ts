@@ -128,13 +128,20 @@ export const Users: CollectionConfig = {
      *
      * `AuthenticationError` maps to 401 with the same body a failed password
      * produces, so from outside the two cases are indistinguishable.
+     *
+     * It is constructed with `req.t` — the same translator the login operation
+     * itself uses — and not bare. Bare, it resolves through a different path and
+     * answered in Spanish while a genuine wrong password answered in English:
+     * two identical 401s whose bodies differed, which is exactly the
+     * enumeration signal this hook exists to deny. Sharing the translator makes
+     * the two bodies identical whatever language is negotiated.
      */
     beforeLogin: [
-      ({ user }) => {
+      ({ req, user }) => {
         const status = (user as { status?: UserStatus }).status
 
         if (!status || !canAuthenticate(status)) {
-          throw new AuthenticationError()
+          throw new AuthenticationError(req.t)
         }
 
         return user

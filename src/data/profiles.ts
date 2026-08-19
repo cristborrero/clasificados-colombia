@@ -208,3 +208,45 @@ export async function getTopicBySlug(slug: string): Promise<TopicProfile | null>
     investigations,
   }
 }
+
+/**
+ * Every publicly visible category.
+ *
+ * Used by the sitemap and by anything that needs the full section list.
+ * `overrideAccess: false` keeps retired categories (`active = false`) out of it,
+ * which is the same rule the hubs themselves follow — a sitemap is an
+ * invitation, and inviting a crawler to a retired section is how a dead page
+ * gets indexed.
+ */
+export async function getCategories(limit = 100): Promise<CategorySummary[]> {
+  const payload = await getPayloadClient()
+
+  try {
+    const result = await payload.find({
+      collection: 'categories',
+      depth: 0,
+      limit,
+      sort: 'order',
+      overrideAccess: false,
+    })
+
+    return result.docs.flatMap((doc) => {
+      const record = doc as unknown as Record<string, unknown>
+      const name = asString(record.name)
+      const slug = asString(record.slug)
+
+      return name && slug
+        ? [{ id: record.id as string | number, name, slug, description: asString(record.description) }]
+        : []
+    })
+  } catch {
+    return []
+  }
+}
+
+export type CategorySummary = {
+  id: string | number
+  name: string
+  slug: string
+  description: string | null
+}

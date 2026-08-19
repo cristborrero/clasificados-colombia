@@ -3,6 +3,7 @@ import Link from 'next/link'
 
 import { Metadata } from '@/components/editorial/Typography'
 import { cn } from '@/components/ui/cn'
+import { opinionPath } from '@/lib/routes'
 import { formatEditorialDate, toDateTimeAttribute } from '@/lib/format/date'
 
 import { CardEyebrow } from './parts/CardEyebrow'
@@ -38,7 +39,7 @@ export type OpinionCardProps = {
   className?: string
 }
 
-export const opinionPath = (slug: string): string => `/opinion/${slug}`
+export { opinionPath } from '@/lib/routes'
 
 export function OpinionCard({ opinion, headingLevel = 'h3', className }: OpinionCardProps) {
   const href = opinionPath(opinion.slug)

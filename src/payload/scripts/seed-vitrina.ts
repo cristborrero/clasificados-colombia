@@ -430,6 +430,8 @@ async function main(): Promise<void> {
   /* ── Piezas ─────────────────────────────────────────────────────────── */
   let creadas = 0
 
+  let corregidas = 0
+
   for (const pieza of PIEZAS) {
     const existente = await payload.find({
       collection: 'articles',
@@ -438,7 +440,31 @@ async function main(): Promise<void> {
       overrideAccess: true,
     })
 
-    if (existente.totalDocs > 0) continue
+    const yaEsta = existente.docs[0]
+
+    if (yaEsta) {
+      /*
+       * Corrige la bajada de una pieza que ya existe.
+       *
+       * Las primeras versiones pegaban el aviso completo dentro de la bajada, y
+       * eso convertía cada sumario en cuatro líneas que rompían la retícula de
+       * la portada. Saltar las piezas existentes dejaba el texto viejo en
+       * producción para siempre: un sembrado idempotente que nunca corrige es
+       * un sembrado que congela sus propios errores.
+       */
+      if (yaEsta.dek !== pieza.bajada) {
+        await payload.update({
+          collection: 'articles',
+          id: yaEsta.id,
+          data: { dek: pieza.bajada },
+          overrideAccess: true,
+          user: editor,
+        })
+        corregidas += 1
+      }
+
+      continue
+    }
 
     const categoria = seccionIds.get(pieza.seccion)
     const imagen = fotoIds.get(pieza.foto) ?? [...fotoIds.values()][0]
@@ -654,7 +680,8 @@ async function main(): Promise<void> {
   }
 
   payload.logger.info(
-    `Vitrina lista: ${creadas} piezas nuevas, ${PIEZAS.length - creadas} ya existían. ` +
+    `Vitrina lista: ${creadas} piezas nuevas, ${PIEZAS.length - creadas} ya existían` +
+      `${corregidas > 0 ? ` (${corregidas} con la bajada corregida)` : ''}. ` +
       `${SECCIONES.length} secciones, ${fotoIds.size} fotos.`,
   )
 

@@ -470,6 +470,77 @@ async function main(): Promise<void> {
     creadas += 1
   }
 
+  /* ── La cara del sitio ──────────────────────────────────────────────── */
+
+  /*
+   * Sin esto la portada se ve como una instalación recién hecha, y no porque
+   * falte nada: `getHomepage` cae en `DEFAULT_BANDS` —la pieza más reciente y
+   * después el flujo— cuando el global `homepage` está vacío, y la cabecera no
+   * dibuja menú cuando `navigation` lo está. Las nueve bandas existen desde F10;
+   * lo que faltaba era decirle cuáles y en qué orden.
+   *
+   * Una banda sin contenido devuelve `null` y no se dibuja, así que se pueden
+   * declarar todas: aparecen solas el día que haya investigaciones u opinión.
+   */
+  const navegacion = await payload.findGlobal({ slug: 'navigation', overrideAccess: true })
+
+  if (!(navegacion as { primary?: unknown[] })?.primary?.length) {
+    await payload.updateGlobal({
+      slug: 'navigation',
+      overrideAccess: true,
+      data: {
+        primary: SECCIONES.map((s) => ({
+          label: s.name,
+          linkType: 'internal',
+          category: seccionIds.get(s.slug),
+        })),
+      } as never,
+    })
+    payload.logger.info('Navegación configurada.')
+  }
+
+  const ajustes = await payload.findGlobal({ slug: 'site-settings', overrideAccess: true })
+
+  if (!(ajustes as { siteName?: string })?.siteName) {
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      overrideAccess: true,
+      data: {
+        siteName: 'Clasificados Colombia',
+        siteDescription: 'Investigamos. Informamos. No callamos.',
+      } as never,
+    })
+    payload.logger.info('Ajustes del sitio configurados.')
+  }
+
+  const portada = await payload.findGlobal({ slug: 'homepage', overrideAccess: true })
+
+  if (!(portada as { bands?: unknown[] })?.bands?.length) {
+    await payload.updateGlobal({
+      slug: 'homepage',
+      overrideAccess: true,
+      data: {
+        bands: [
+          { blockType: 'hero' },
+          { blockType: 'secondary', title: 'También hoy', limit: 4, leadCount: 2 },
+          { blockType: 'investigations', title: 'Investigaciones', limit: 3 },
+          { blockType: 'latest', title: 'Últimas noticias', limit: 8 },
+          { blockType: 'opinion', title: 'Opinión', limit: 3 },
+          { blockType: 'data', title: 'Datos', limit: 3 },
+          { blockType: 'video', title: 'Video', limit: 3 },
+          {
+            blockType: 'newsletter',
+            title: 'Recibí nuestras investigaciones',
+            description:
+              'Una entrega cuando publicamos algo que vale tu tiempo. Sin ruido y sin spam.',
+            ctaLabel: 'Suscribirme',
+          },
+        ],
+      } as never,
+    })
+    payload.logger.info('Portada configurada: 8 bandas.')
+  }
+
   payload.logger.info(
     `Vitrina lista: ${creadas} piezas nuevas, ${PIEZAS.length - creadas} ya existían. ` +
       `${SECCIONES.length} secciones, ${fotoIds.size} fotos.`,

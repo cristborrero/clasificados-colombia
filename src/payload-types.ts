@@ -2733,6 +2733,14 @@ export interface Homepage {
             blockType: 'latest';
           }
         | {
+            investigationsTitle?: string | null;
+            analysisTitle?: string | null;
+            dataTitle?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'trio';
+          }
+        | {
             /**
              * Lo que se imprime en el SectionHeader. Vacío = sin encabezado.
              */
@@ -2963,6 +2971,15 @@ export interface HomepageSelect<T extends boolean = true> {
               title?: T;
               limit?: T;
               category?: T;
+              id?: T;
+              blockName?: T;
+            };
+        trio?:
+          | T
+          | {
+              investigationsTitle?: T;
+              analysisTitle?: T;
+              dataTitle?: T;
               id?: T;
               blockName?: T;
             };

@@ -6,7 +6,7 @@ import { HomepageHero } from '@/components/articles/HomepageHero'
 import { OpinionCard } from '@/components/articles/OpinionCard'
 import { SecondaryStoryGrid } from '@/components/articles/SecondaryStoryGrid'
 import { articlePath, categoryPath, type CardArticle } from '@/components/articles/types'
-import { Body, HeadlineMD } from '@/components/editorial/Typography'
+import { Body } from '@/components/editorial/Typography'
 import { InvestigationCard, investigationPath } from '@/components/investigations/InvestigationCard'
 import { Container } from '@/components/layout/Container'
 import { searchPath } from '@/lib/routes'
@@ -212,7 +212,16 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
                   ocho elementos» y sabe dónde está parado, cosa que una reja de
                   divs no le dice.
                 */}
-                <ol className="mt-6 grid list-none gap-8 p-0 sm:grid-cols-2 lg:grid-cols-4 lg:gap-[var(--gutter)]">
+                <ol
+                  /*
+                   * Identificada porque ya no es la única lista de la portada:
+                   * la banda de tres columnas trajo la suya. Las pruebas que
+                   * verifican el orden del flujo apuntan acá, no a «la primera
+                   * lista que aparezca».
+                   */
+                  data-band="latest"
+                  className="mt-6 grid list-none gap-8 p-0 sm:grid-cols-2 lg:grid-cols-4 lg:gap-[var(--gutter)]"
+                >
                   {band.items.map((item) => (
                     <li key={item.slug}>
                       <ArticleCard article={toCard(item)} showDek={false} />
@@ -235,38 +244,162 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
               </Container>
             )
 
-          case 'newsletter':
+          case 'trio': {
+            /*
+             * Tres columnas de igual ancho, con contenido de tres naturalezas
+             * distintas: investigaciones en lista, un análisis con fotografía y
+             * una cifra. Cada columna se apaga si no hay material de ese tipo,
+             * y la banda entera ya no llega si las tres están vacías — de eso
+             * se encarga el resolutor.
+             *
+             * En móvil se apilan en el orden en que están escritas, que es el
+             * orden de importancia editorial.
+             */
+            const { investigations, analysis, data } = band
+
+            return (
+              <Container key={key} width="editorial" as="section" className="py-12">
+                <div className="grid gap-10 lg:grid-cols-3 lg:gap-[var(--gutter)]">
+                  {investigations.items.length > 0 ? (
+                    <div className="flex flex-col gap-5">
+                      <SectionHeader title={investigations.title} as="h2" />
+
+                      <ol className="flex list-none flex-col gap-5 p-0">
+                        {investigations.items.map((item) => (
+                          <li key={item.slug}>
+                            <InvestigationCard
+                              investigation={{
+                                slug: item.slug,
+                                title: item.title,
+                                dek: item.dek,
+                                publishedAt: item.publishedAt,
+                                authors: item.authors,
+                              }}
+                              headingLevel="h3"
+                            />
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ) : null}
+
+                  {analysis.item ? (
+                    <div className="flex flex-col gap-5">
+                      <SectionHeader title={analysis.title} as="h2" />
+                      <ArticleCard article={toCard(analysis.item)} headingLevel="h3" />
+                    </div>
+                  ) : null}
+
+                  {data.item ? (
+                    <div className="flex flex-col gap-5">
+                      <SectionHeader title={data.title} as="h2" />
+                      <DataCard
+                        story={{
+                          slug: data.item.slug,
+                          title: data.item.title,
+                          dek: data.item.dek,
+                          publishedAt: data.item.publishedAt,
+                          authors: data.item.authors,
+                          figure: data.item.figure,
+                          figureContext: data.item.figureContext,
+                        }}
+                        headingLevel="h3"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </Container>
+            )
+          }
+
+          case 'newsletter': {
+            /*
+             * La banda oscura de cierre (guía visual §02).
+             *
+             * Tres cosas que un medio de investigación pide en el mismo sitio:
+             * que le manden material, que lo sigan y que lo lean por correo.
+             * Estaban en tres lugares distintos —o en ninguno— y la guía las
+             * junta al pie de la portada, que es donde el lector termina.
+             *
+             * La columna de denuncias va primera a propósito: es la única que
+             * pide algo al lector en vez de ofrecerle algo.
+             */
+            const titulo =
+              'text-label font-semibold uppercase tracking-[0.12em] text-[color:var(--color-text-inverse-muted)]'
+
             return (
               <section
                 key={key}
-                className="my-12 bg-[var(--color-surface-inverse)] text-[color:var(--color-text-inverse)]"
+                className="mt-16 bg-[var(--color-surface-inverse)] text-[color:var(--color-text-inverse)]"
               >
-                <Container width="reading" className="flex flex-col gap-4 py-14">
-                  <HeadlineMD as="h2">{band.title}</HeadlineMD>
+                <Container width="editorial" className="py-14">
+                  <div className="grid gap-10 lg:grid-cols-3 lg:gap-[var(--gutter)]">
+                    <div className="flex flex-col gap-3">
+                      <p className={titulo}>Denuncias ciudadanas</p>
 
-                  {band.description ? (
-                    <Body className="text-[color:var(--color-text-inverse-muted)]">
-                      {band.description}
-                    </Body>
-                  ) : null}
+                      <Body className="text-[color:var(--color-text-inverse-muted)]">
+                        Tu información puede cambiar la historia. Puedes enviarla de forma anónima.
+                      </Body>
 
-                  {/*
-                    A link to a real page, not an inline form. The newsletter
-                    provider is gap G-08 and undecided; a form posting nowhere
-                    collects addresses it cannot deliver to, which is worse than
-                    no form.
-                  */}
-                  <p>
-                    <Link
-                      href="/newsletter"
-                      className="font-[family-name:var(--font-sans)] font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
-                    >
-                      {band.ctaLabel}
-                    </Link>
-                  </p>
+                      <Link
+                        href="/denunciar"
+                        className="mt-1 inline-flex w-fit items-center gap-2 bg-[var(--color-accent)] px-5 py-3 text-label font-semibold tracking-[0.08em] text-[color:var(--color-white)] uppercase no-underline transition-colors hover:bg-[var(--color-red-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]"
+                      >
+                        Enviar denuncia
+                        <span aria-hidden>→</span>
+                      </Link>
+                    </div>
+
+                    {band.social.length > 0 ? (
+                      <div className="flex flex-col gap-3">
+                        <p className={titulo}>Síguenos</p>
+
+                        <ul className="flex list-none flex-wrap gap-x-5 gap-y-2 p-0">
+                          {band.social.map((red) => (
+                            <li key={red.platform}>
+                              <a
+                                href={red.url}
+                                target="_blank"
+                                rel="noreferrer noopener"
+                                className="font-[family-name:var(--font-sans)] underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]"
+                              >
+                                {red.platform}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-col gap-3">
+                      <p className={titulo}>{band.title}</p>
+
+                      {band.description ? (
+                        <Body className="text-[color:var(--color-text-inverse-muted)]">
+                          {band.description}
+                        </Body>
+                      ) : null}
+
+                      {/*
+                        Un enlace a una página, no un formulario aquí.
+                        El proveedor de boletines sigue sin decidirse (hueco
+                        G-08), y un formulario que no envía a ningún lado
+                        recoge direcciones a las que no puede escribir — peor
+                        que no tener formulario.
+                      */}
+                      <Link
+                        href="/newsletter"
+                        className="mt-1 inline-flex w-fit items-center gap-2 bg-[var(--color-accent)] px-5 py-3 text-label font-semibold tracking-[0.08em] text-[color:var(--color-white)] uppercase no-underline transition-colors hover:bg-[var(--color-red-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]"
+                      >
+                        {band.ctaLabel}
+                        <span aria-hidden>→</span>
+                      </Link>
+                    </div>
+                  </div>
                 </Container>
               </section>
             )
+          }
         }
       })}
     </>

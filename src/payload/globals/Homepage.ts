@@ -92,6 +92,42 @@ const LatestBlock: Block = {
   fields: sourceFields,
 }
 
+/**
+ * Las tres columnas de la guía visual §02.
+ *
+ * Una sola banda en vez de tres seguidas, porque lo que la guía compone es una
+ * fila: investigaciones a la izquierda, un análisis con fotografía al centro y
+ * una cifra a la derecha. Tres bandas sueltas apiladas dicen otra cosa —que son
+ * tres secciones independientes— y ocupan tres veces el alto.
+ *
+ * Cada columna se apaga sola si no hay contenido de ese tipo, y la banda entera
+ * desaparece si no queda ninguna.
+ */
+const TrioBlock: Block = {
+  slug: 'trio',
+  labels: { singular: 'Tres columnas', plural: 'Tres columnas' },
+  fields: [
+    {
+      name: 'investigationsTitle',
+      type: 'text',
+      defaultValue: 'Investigaciones',
+      label: 'Título de la primera columna',
+    },
+    {
+      name: 'analysisTitle',
+      type: 'text',
+      defaultValue: 'Análisis destacado',
+      label: 'Título de la segunda columna',
+    },
+    {
+      name: 'dataTitle',
+      type: 'text',
+      defaultValue: 'Datos clave',
+      label: 'Título de la tercera columna',
+    },
+  ],
+}
+
 const CollectionBandBlock = (slug: string, singular: string): Block => ({
   slug,
   labels: { singular, plural: singular },
@@ -151,6 +187,7 @@ export const Homepage: GlobalConfig = {
         HeroBlock,
         SecondaryBlock,
         LatestBlock,
+        TrioBlock,
         CollectionBandBlock('investigations', 'Investigaciones'),
         CollectionBandBlock('analysis', 'Análisis'),
         CollectionBandBlock('data', 'Datos'),

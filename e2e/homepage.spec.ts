@@ -69,7 +69,7 @@ test.describe('F10 homepage', () => {
   test('the latest stream is ordered newest first', async ({ page }) => {
     await page.goto('/')
 
-    const times = await page.locator('main ol time').evaluateAll((nodes) =>
+    const times = await page.locator('main ol[data-band="latest"] time').evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute('datetime')),
     )
 
@@ -83,7 +83,7 @@ test.describe('F10 homepage', () => {
     // PRD Nº8 §46 lists exactly those three. The image is optional.
     await page.goto('/')
 
-    const first = page.locator('main ol > li').first()
+    const first = page.locator('main ol[data-band="latest"] > li').first()
 
     await expect(first.locator('time')).toHaveCount(1)
     await expect(first).toContainText('Política')

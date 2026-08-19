@@ -51,11 +51,29 @@ export type CollectionBand = {
   cta: { label: string; href: string } | null
 }
 
+export type SocialLink = { platform: string; url: string }
+
 export type NewsletterBand = {
   kind: 'newsletter'
   title: string
   description: string | null
   ctaLabel: string
+  /** Las redes del medio, para la columna del medio de la banda oscura. */
+  social: SocialLink[]
+}
+
+/**
+ * La fila de tres columnas (guía visual §02).
+ *
+ * Cada columna llega vacía si no hay contenido de ese tipo, y la banda entera
+ * se omite si las tres lo están: un encabezado sin nada debajo se lee como un
+ * error, no como una sección en construcción.
+ */
+export type TrioBand = {
+  kind: 'trio'
+  investigations: { title: string; items: EditorialSummary[] }
+  analysis: { title: string; item: EditorialSummary | null }
+  data: { title: string; item: EditorialSummary | null }
 }
 
 export type HomepageBand =
@@ -64,6 +82,7 @@ export type HomepageBand =
   | LatestBand
   | CollectionBand
   | NewsletterBand
+  | TrioBand
 
 type Block = Record<string, unknown>
 
@@ -159,13 +178,51 @@ async function resolveBand(block: Block, heroSlug: string | null): Promise<Homep
       return items.length > 0 ? { kind: 'latest', title, items } : null
     }
 
-    case 'newsletter':
+    case 'trio': {
+      const [investigaciones, analisis, datos] = await Promise.all([
+        listPublished('investigations', { limit: 3 }),
+        listPublished('articles', { limit: 1, excludeSlug: heroSlug }),
+        listPublished('data-stories', { limit: 1 }),
+      ])
+
+      const vacia = investigaciones.length === 0 && analisis.length === 0 && datos.length === 0
+
+      return vacia
+        ? null
+        : {
+            kind: 'trio',
+            investigations: {
+              title: asString(block.investigationsTitle) ?? 'Investigaciones',
+              items: investigaciones,
+            },
+            analysis: {
+              title: asString(block.analysisTitle) ?? 'Análisis destacado',
+              item: analisis[0] ?? null,
+            },
+            data: {
+              title: asString(block.dataTitle) ?? 'Datos clave',
+              item: datos[0] ?? null,
+            },
+          }
+    }
+
+    case 'newsletter': {
+      /*
+       * Las redes viven en el global de navegación, no en la portada: son del
+       * medio, no de una banda. Se resuelven acá para que el componente siga
+       * siendo puro — un componente de servidor que se busca sus propios datos
+       * es un componente que no se puede probar sin base.
+       */
+      const nav = await readGlobal<{ social?: SocialLink[] | null }>('navigation')
+
       return {
         kind: 'newsletter',
         title: title ?? 'Recibe nuestras investigaciones',
         description: asString(block.description),
         ctaLabel: asString(block.ctaLabel) ?? 'Suscribirme',
+        social: (nav?.social ?? []).filter((s) => s?.platform && s?.url),
       }
+    }
 
     case 'investigations':
     case 'analysis':

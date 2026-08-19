@@ -504,6 +504,110 @@ async function main(): Promise<void> {
     creadas += 1
   }
 
+  /* ── Investigaciones y datos ────────────────────────────────────────── */
+
+  /*
+   * Dos investigaciones y una historia de datos, para que la banda de tres
+   * columnas tenga las tres. Sin esto se dibuja una sola columna y parece rota
+   * cuando en realidad está vacía.
+   *
+   * Las investigaciones pasan por el mismo guardián que cualquier otra: método
+   * documentado, verificación completa y firma. No nombran personas, así que la
+   * revisión legal queda como no requerida — que es lo que corresponde, no un
+   * atajo.
+   */
+  const INVESTIGACIONES = [
+    {
+      slug: 'demo-investigacion-contratos-emergencia',
+      titulo: 'DEMO · Los contratos de emergencia que nadie publicó',
+      bajada: 'Ocho meses revisando adjudicaciones directas en tres departamentos.',
+      foto: 'capitolio',
+    },
+    {
+      slug: 'demo-investigacion-reconstruccion',
+      titulo: 'DEMO · Quién reconstruye, y con qué reglas',
+      bajada: 'Los contratos que se firman después de una emergencia y quién los vigila.',
+      foto: 'pereira',
+    },
+  ]
+
+  for (const [i, inv] of INVESTIGACIONES.entries()) {
+    const existe = await payload.find({
+      collection: 'investigations',
+      where: { slug: { equals: inv.slug } },
+      limit: 1,
+      overrideAccess: true,
+    })
+
+    if (existe.totalDocs > 0) continue
+
+    await payload.create({
+      collection: 'investigations',
+      overrideAccess: true,
+      user: editor,
+      data: {
+        title: inv.titulo,
+        slug: inv.slug,
+        dek: inv.bajada,
+        authors: [autor.id],
+        hero: { image: fotoIds.get(inv.foto) },
+        methodology:
+          'CONTENIDO DE MUESTRA. Este texto ocupa el lugar de la nota metodológica que acompaña a una investigación real.',
+        publication: { publishedAt: new Date(Date.now() - (30 + i * 12) * 3_600_000).toISOString() },
+        workflow: {
+          editorialStatus: 'published',
+          factCheckStatus: 'verified',
+          legalStatus: 'not_required',
+        },
+        seo: { noIndex: true },
+        _status: 'published',
+      } as never,
+    })
+
+    payload.logger.info(`Investigación creada: ${inv.slug}`)
+  }
+
+  const datosSlug = 'demo-datos-contratos-con-hallazgos'
+  const datosExiste = await payload.find({
+    collection: 'data-stories',
+    where: { slug: { equals: datosSlug } },
+    limit: 1,
+    overrideAccess: true,
+  })
+
+  if (datosExiste.totalDocs === 0) {
+    await payload.create({
+      collection: 'data-stories',
+      overrideAccess: true,
+      user: editor,
+      data: {
+        title: 'DEMO · Los contratos revisados y lo que muestran',
+        slug: datosSlug,
+        dek: 'Una cifra de muestra para la columna de datos.',
+        authors: [autor.id],
+        headlineFigure: '78%',
+        headlineFigureContext: 'de los contratos revisados presentan hallazgos',
+        /*
+         * Una pieza de datos también exige método documentado antes de
+         * publicarse, igual que una investigación: una cifra sin explicación de
+         * cómo se obtuvo es una afirmación, no un dato.
+         */
+        methodology:
+          'CONTENIDO DE MUESTRA. Aquí iría la explicación de cómo se obtuvo la cifra y sobre qué universo se calculó.',
+        publication: { publishedAt: new Date(Date.now() - 40 * 3_600_000).toISOString() },
+        workflow: {
+          editorialStatus: 'published',
+          factCheckStatus: 'verified',
+          legalStatus: 'not_required',
+        },
+        seo: { noIndex: true },
+        _status: 'published',
+      } as never,
+    })
+
+    payload.logger.info('Historia de datos creada.')
+  }
+
   /* ── La cara del sitio ──────────────────────────────────────────────── */
 
   /*
@@ -625,7 +729,18 @@ async function main(): Promise<void> {
     payload.logger.info('Texto de la portada corregido a español neutro.')
   }
 
-  if (!portada?.bands?.length) {
+  /*
+   * Se reescribe también cuando falta la banda de tres columnas.
+   *
+   * El orden anterior se sembró antes de que existiera, y un guardián que solo
+   * mira si hay *alguna* banda deja la portada vieja para siempre. Mientras la
+   * portada sea de muestra, actualizarla es lo correcto; cuando la redacción
+   * arme la suya, esta condición deja de cumplirse sola porque tendrá su propio
+   * arreglo con la banda incluida.
+   */
+  const sinTrio = !(portada?.bands ?? []).some((b) => b.blockType === 'trio')
+
+  if (!portada?.bands?.length || sinTrio) {
     await payload.updateGlobal({
       slug: 'homepage',
       overrideAccess: true,
@@ -633,10 +748,9 @@ async function main(): Promise<void> {
         bands: [
           { blockType: 'hero' },
           { blockType: 'secondary', title: 'También hoy', limit: 4, leadCount: 2 },
-          { blockType: 'investigations', title: 'Investigaciones', limit: 3 },
+          { blockType: 'trio' },
           { blockType: 'latest', title: 'Últimas noticias', limit: 8 },
           { blockType: 'opinion', title: 'Opinión', limit: 3 },
-          { blockType: 'data', title: 'Datos', limit: 3 },
           { blockType: 'video', title: 'Video', limit: 3 },
           {
             blockType: 'newsletter',
@@ -648,7 +762,7 @@ async function main(): Promise<void> {
         ],
       } as never,
     })
-    payload.logger.info('Portada configurada: 8 bandas.')
+    payload.logger.info('Portada configurada.')
   }
 
   /*

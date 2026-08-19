@@ -90,10 +90,25 @@ test.describe('F8 site shell', () => {
   test('external social links carry noopener', async ({ page }) => {
     await page.goto('/')
 
+    /*
+     * Todos, no el primero.
+     *
+     * Las redes aparecen en dos sitios —el pie y la banda de cierre de la
+     * portada— porque la guía visual las pone en ambos. Afirmar sobre «el
+     * enlace llamado Bluesky» dejaba de funcionar en cuanto hubo dos, y
+     * quedarse con el primero habría dejado el otro sin comprobar: basta que
+     * uno se abra sin `noopener` para que la página de destino pueda tocar la
+     * nuestra.
+     */
     const social = page.getByRole('link', { name: 'Bluesky' })
+    const total = await social.count()
 
-    await expect(social).toHaveAttribute('target', '_blank')
-    await expect(social).toHaveAttribute('rel', /noopener/)
+    expect(total, 'debería haber al menos un enlace de red').toBeGreaterThan(0)
+
+    for (let i = 0; i < total; i += 1) {
+      await expect(social.nth(i)).toHaveAttribute('target', '_blank')
+      await expect(social.nth(i)).toHaveAttribute('rel', /noopener/)
+    }
   })
 
   test('the mobile menu opens, traps focus and closes on Escape', async ({ page }) => {

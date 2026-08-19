@@ -34,6 +34,14 @@ import { getPayload } from 'payload'
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURES = path.join(dirname, 'fixtures/vitrina')
 
+/*
+ * El aviso va al pie del cuerpo, no en la bajada.
+ *
+ * Pegarlo en la bajada convertía cada sumario en un párrafo de cuatro líneas y
+ * rompía la retícula de la portada: una bajada larga empuja la tarjeta hacia
+ * abajo y deja la fila desalineada. El DEMO del titular ya avisa a quien mira;
+ * el aviso completo espera a quien entra a leer.
+ */
 const AVISO =
   'CONTENIDO DE MUESTRA. Resumen de información pública, publicado como material de relleno mientras se prepara el sitio. No es una pieza periodística de Clasificados Colombia.'
 
@@ -442,7 +450,7 @@ async function main(): Promise<void> {
       data: {
         title: pieza.titulo,
         slug: pieza.slug,
-        dek: `${pieza.bajada} — ${AVISO}`,
+        dek: pieza.bajada,
         body: cuerpoLexical(pieza.cuerpo) as never,
         category: categoria as never,
         authors: [autor.id] as never,

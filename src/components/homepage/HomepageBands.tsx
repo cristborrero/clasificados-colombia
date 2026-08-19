@@ -3,13 +3,13 @@ import Link from 'next/link'
 import { ArticleCard } from '@/components/articles/ArticleCard'
 import { DataCard } from '@/components/articles/DataCard'
 import { HomepageHero } from '@/components/articles/HomepageHero'
-import { LatestNewsList } from '@/components/articles/LatestNewsList'
 import { OpinionCard } from '@/components/articles/OpinionCard'
 import { SecondaryStoryGrid } from '@/components/articles/SecondaryStoryGrid'
 import { articlePath, categoryPath, type CardArticle } from '@/components/articles/types'
 import { Body, HeadlineMD } from '@/components/editorial/Typography'
 import { InvestigationCard, investigationPath } from '@/components/investigations/InvestigationCard'
 import { Container } from '@/components/layout/Container'
+import { searchPath } from '@/lib/routes'
 import { SectionHeader } from '@/components/layout/SectionHeader'
 import { VideoCard } from '@/components/media/VideoCard'
 import { cn } from '@/components/ui/cn'
@@ -136,7 +136,12 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
             const isInvestigation = band.source === 'investigations'
 
             return (
-              <Container key={key} width="editorial" as="section" className="py-12">
+              /*
+                A sangre, no dentro del contenedor: el panel oscuro de la guía
+                visual llega a los bordes de la pantalla. El texto de adentro
+                sigue teniendo su propio margen.
+              */
+              <section key={key}>
                 <HomepageHero
                   href={
                     isInvestigation
@@ -156,8 +161,9 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
                   authors={item.authors}
                   image={item.image}
                   imageFirst={band.imageFirst}
+                  ctaLabel={isInvestigation ? 'Leer investigación' : 'Leer la nota'}
                 />
-              </Container>
+              </section>
             )
           }
 
@@ -173,10 +179,46 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
             )
 
           case 'latest':
+            /*
+             * Tarjetas con foto, no una lista de texto (guía visual §02).
+             *
+             * La lista se leía como un índice: fecha, sección, titular, y nada
+             * que mirar. En un medio visual la portada se recorre con los ojos
+             * antes que con la atención, y una banda sin imágenes se salta.
+             *
+             * Sin bajada a propósito: la guía muestra sección, titular y fecha.
+             * Agregar el sumario alarga cada tarjeta y rompe la fila.
+             */
             return (
               <Container key={key} width="editorial" as="section" className="py-12">
-                {band.title ? <SectionHeader title={band.title} /> : null}
-                <LatestNewsList articles={band.items.map(toCard)} />
+                {band.title ? (
+                  <SectionHeader
+                    title={band.title}
+                    action={
+                      <Link
+                        href={searchPath()}
+                        className="text-label font-semibold tracking-[0.08em] text-[color:var(--color-text-muted)] uppercase no-underline hover:text-[color:var(--color-accent)]"
+                      >
+                        Ver todas <span aria-hidden>→</span>
+                      </Link>
+                    }
+                  />
+                ) : null}
+
+                {/*
+                  Sigue siendo una lista ordenada aunque se dibuje como
+                  rejilla. Un flujo de noticias es una lista y su orden es
+                  información: un lector con lector de pantalla oye «lista de
+                  ocho elementos» y sabe dónde está parado, cosa que una reja de
+                  divs no le dice.
+                */}
+                <ol className="mt-6 grid list-none gap-8 p-0 sm:grid-cols-2 lg:grid-cols-4 lg:gap-[var(--gutter)]">
+                  {band.items.map((item) => (
+                    <li key={item.slug}>
+                      <ArticleCard article={toCard(item)} showDek={false} />
+                    </li>
+                  ))}
+                </ol>
               </Container>
             )
 

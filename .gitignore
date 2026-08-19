@@ -55,3 +55,6 @@ pnpm-debug.log*
 # Misc
 *.tsbuildinfo
 .turbo/
+
+# Configuración local de pnpm: rutas propias de cada máquina.
+.npmrc

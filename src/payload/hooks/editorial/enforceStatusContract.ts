@@ -19,12 +19,13 @@ import {
  * that an invalid transition must be rejected "incluso vía REST", and PRD Nº5
  * §4 is the general rule: the UI may hide, the backend must deny.
  *
- * Four checks, in order of how expensive they are to get wrong:
+ * Five checks, in order of how expensive they are to get wrong:
  *
  *   1. the ADR-001 invariant between `editorialStatus` and `_status`
  *   2. the transition is one the workflow allows
  *   3. the actor holds a role permitted to publish
  *   4. the publication preconditions are satisfied
+ *   5. the lead image has a licence somebody established
  */
 
 type WorkflowShape = {
@@ -40,6 +41,7 @@ type EditorialDoc = {
   methodology?: unknown
   people?: unknown
   relations?: { people?: unknown }
+  [field: string]: unknown
 }
 
 export type StatusContractOptions = {
@@ -50,6 +52,12 @@ export type StatusContractOptions = {
    * be explicitly approved rather than marked as not required.
    */
   enforceLegalReviewWhenNamingPeople?: boolean
+  /**
+   * Paths to the lead image, checked for cleared rights before publishing
+   * (PRD Nº10 §119, F15 DoD). Dotted, because the shape differs: `hero.image`
+   * sits inside a group on most pieces, `poster` is a plain upload on video.
+   */
+  heroFields?: string[]
 }
 
 /**
@@ -66,7 +74,7 @@ function resolve<T>(incoming: T | undefined, stored: T | undefined): T | undefin
 export function createStatusContractHook(
   options: StatusContractOptions = {},
 ): CollectionBeforeChangeHook {
-  return ({ data, originalDoc, operation, req }) => {
+  return async ({ data, originalDoc, operation, req }) => {
     const incoming = data as EditorialDoc
     const stored = (originalDoc ?? undefined) as EditorialDoc | undefined
 
@@ -137,6 +145,32 @@ export function createStatusContractHook(
         ),
     })
 
+    /*
+     * 5 — image rights.
+     *
+     * PRD Nº10 §119: a picture whose licence nobody established must not be
+     * published. This is not paperwork — the exposure is a rights claim against
+     * the newsroom, and "it was on the internet" is not a licence.
+     *
+     * There is deliberately no override switch. An override would put the one
+     * decision that has to be made by a person into a checkbox, and the way to
+     * publish a photograph whose rights are unclear is to establish them and
+     * record the licence on the asset.
+     */
+    const unclearedRights = await findUnclearedHero({
+      fields: options.heroFields ?? ['hero.image'],
+      incoming,
+      req,
+      stored,
+    })
+
+    if (unclearedRights) {
+      blockers.push({
+        field: 'hero',
+        message: `La imagen principal («${unclearedRights}») tiene licencia desconocida. Registra la licencia en la imagen antes de publicar.`,
+      })
+    }
+
     if (blockers.length > 0) {
       // Every blocker at once: an editor who fixes one problem should not be
       // told about the next one on the following attempt.
@@ -150,6 +184,65 @@ export function createStatusContractHook(
 
     return data
   }
+}
+
+/**
+ * Returns the label of the lead image when its licence is unknown.
+ *
+ * Reads the asset rather than trusting what the write carries: the licence
+ * lives on the media document, and a client sending a populated hero object
+ * could otherwise describe it however it liked.
+ */
+async function findUnclearedHero({
+  fields,
+  incoming,
+  req,
+  stored,
+}: {
+  fields: string[]
+  incoming: EditorialDoc
+  req: Parameters<CollectionBeforeChangeHook>[0]['req']
+  stored: EditorialDoc | undefined
+}): Promise<string | null> {
+  for (const field of fields) {
+    const value = resolve(readPath(incoming, field), readPath(stored, field))
+
+    const id =
+      typeof value === 'object' && value !== null
+        ? (value as { id?: number | string }).id
+        : (value as number | string | undefined)
+
+    if (id === undefined || id === null || id === '') continue
+
+    const asset = await req.payload.findByID({
+      collection: 'media',
+      id,
+      depth: 0,
+      overrideAccess: true,
+      // A missing asset is the reference guard's problem, not this one's.
+      disableErrors: true,
+    })
+
+    if (!asset) continue
+
+    if ((asset as { license?: string }).license === 'unknown') {
+      return (asset as { alt?: string }).alt ?? String(id)
+    }
+  }
+
+  return null
+}
+
+/** Reads a dotted path, returning undefined the moment the trail goes cold. */
+function readPath(source: unknown, path: string): unknown {
+  let current = source
+
+  for (const segment of path.split('.')) {
+    if (current === null || typeof current !== 'object') return undefined
+    current = (current as Record<string, unknown>)[segment]
+  }
+
+  return current
 }
 
 function hasAtLeastOne(value: unknown): boolean {

@@ -312,6 +312,10 @@ export interface Author {
 export interface Media {
   id: number;
   /**
+   * SHA-256 de los bytes originales. Sirve para detectar duplicados.
+   */
+  checksum?: string | null;
+  /**
    * Describe lo relevante de la imagen. No escribir «foto», «imagen» ni el nombre del medio (PRD Nº10 §6).
    */
   alt?: string | null;
@@ -401,6 +405,22 @@ export interface Media {
       filename?: string | null;
     };
     og?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    square?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    portrait?: {
       url?: string | null;
       width?: number | null;
       height?: number | null;
@@ -1799,6 +1819,7 @@ export interface OrganizationsSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  checksum?: T;
   alt?: T;
   decorative?: T;
   caption?: T;
@@ -1866,6 +1887,26 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
         og?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        square?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        portrait?:
           | T
           | {
               url?: T;

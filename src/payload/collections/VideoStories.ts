@@ -6,7 +6,7 @@ import { publicationFields } from '@/payload/fields/publication'
 import { seoFields } from '@/payload/fields/seo'
 import { slugField } from '@/payload/fields/slug'
 import { workflowFields } from '@/payload/fields/workflow'
-import { enforceStatusContract } from '@/payload/hooks/editorial/enforceStatusContract'
+import { createStatusContractHook } from '@/payload/hooks/editorial/enforceStatusContract'
 import { recordFirstPublication } from '@/payload/hooks/publication/recordFirstPublication'
 import { createSlugRedirect, lockSlugOnPublish } from '@/payload/hooks/redirects/createSlugRedirect'
 import { syncSearchAfterChange, syncSearchAfterDelete } from '@/payload/hooks/search/syncSearch'
@@ -50,7 +50,7 @@ export const VideoStories: CollectionConfig = {
 
   hooks: {
     afterDelete: [syncSearchAfterDelete('video-stories')],
-    beforeChange: [enforceStatusContract, lockSlugOnPublish, recordFirstPublication],
+    beforeChange: [createStatusContractHook({ heroFields: ['poster'] }), lockSlugOnPublish, recordFirstPublication],
     afterChange: [createSlugRedirect({ buildPath: (slug) => `/video/${slug}` }), syncSearchAfterChange('video-stories')],
   },
 

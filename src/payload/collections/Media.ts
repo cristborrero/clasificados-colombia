@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 
 import {
   adminFieldOnly,
@@ -8,6 +8,12 @@ import {
   getUser,
   hasRole,
 } from '@/payload/access/helpers'
+import {
+  ALLOWED_IMAGE_MIME_TYPES,
+  checksumOf,
+  normaliseImage,
+} from '@/payload/upload/imageNormalisation'
+import { findMediaReferences } from '@/payload/upload/mediaReferences'
 
 /**
  * Media — public editorial assets (PRD Nº10 §4).
@@ -22,10 +28,12 @@ import {
  * merging them would mean every photograph grows fields about issuing
  * institutions.
  *
- * SCOPE: F4 needs images that articles can point at. The full pipeline — AVIF
- * and WebP derivatives, EXIF stripping, hotspot cropping, duplicate detection,
- * regeneration — is F15. What is here is the metadata model, which is the part
- * that is expensive to add later because it means revisiting every asset.
+ * F15 completed the pipeline on top of the F4 metadata model: metadata
+ * stripping and sRGB conversion on upload, SVG refused outright, focal point
+ * cropping, content hashing for duplicates, and a delete guard that refuses to
+ * remove an asset something is displaying. Modern formats are negotiated per
+ * request by the image optimiser rather than stored twice — see the `images`
+ * block in `next.config.mjs`.
  */
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -37,10 +45,9 @@ export const Media: CollectionConfig = {
       hasRole(getUser(req), ['admin', 'editor', 'author']),
     update: editorialStaffOnly,
     /*
-     * PRD Nº10 §49-§51: an asset used by published content must not be
-     * deletable, and archiving is preferred over deletion. Reference checking
-     * arrives with the content that creates references; until then this is an
-     * administrator-only operation.
+     * PRD Nº10 §49-§51. Administrator-only, and even then refused for an asset
+     * something is displaying — see the `beforeDelete` hook, which is where the
+     * actual protection lives.
      */
     delete: adminOnly,
   },
@@ -55,11 +62,30 @@ export const Media: CollectionConfig = {
 
   upload: {
     staticDir: 'media',
-    mimeTypes: ['image/*'],
+    /*
+     * An explicit list, not `image/*`.
+     *
+     * The wildcard admitted `image/svg+xml`, and an SVG is a document that can
+     * carry script — served from this origin, where a CSP written around
+     * `'self'` is no defence. See `ALLOWED_IMAGE_MIME_TYPES`.
+     */
+    mimeTypes: [...ALLOWED_IMAGE_MIME_TYPES],
+
+    /*
+     * Editorial cropping (PRD Master §46). A hero crop that decapitates the
+     * subject is the normal outcome of centre-cropping a portrait into 2000×; a
+     * focal point lets the desk say where the picture actually is, once, and
+     * have every derivative respect it.
+     */
+    focalPoint: true,
+    crop: true,
+
     /*
      * Derivative sizes from PRD Nº10 §18-§25. Deliberately few: §26 warns
      * against generating forty sizes, and §18 requires each one to have a real
-     * use. `og` matches the 1200×630 that PRD SEO §48 specifies.
+     * use. `og` matches the 1200×630 that PRD SEO §48 specifies; `square` and
+     * `portrait` exist because cards and vertical formats otherwise crop a
+     * landscape derivative a second time.
      */
     imageSizes: [
       { name: 'thumbnail', width: 320, height: 180, position: 'centre' },
@@ -67,10 +93,112 @@ export const Media: CollectionConfig = {
       { name: 'article', width: 1400 },
       { name: 'hero', width: 2000 },
       { name: 'og', width: 1200, height: 630, position: 'centre' },
+      { name: 'square', width: 800, height: 800, position: 'centre' },
+      { name: 'portrait', width: 800, height: 1200, position: 'centre' },
+    ],
+  },
+
+  hooks: {
+    /*
+     * Normalise before anything is written (PRD Master §46-§48).
+     *
+     * `beforeOperation` is the only place that sees the uploaded bytes while
+     * they are still only bytes. By `beforeChange` Payload has already written
+     * the original and generated every derivative, so stripping there would
+     * leave the published original carrying whatever the camera wrote —
+     * including, for a photograph taken at a source's home, its coordinates.
+     */
+    beforeOperation: [
+      async ({ args, operation, req }) => {
+        if (operation !== 'create' && operation !== 'update') return args
+        if (!req.file?.data || !req.file.mimetype) return args
+
+        const original = Buffer.from(req.file.data)
+        const { data, normalised, reason } = await normaliseImage(original, req.file.mimetype)
+
+        if (!normalised) {
+          /*
+           * Logged rather than thrown. The file is still rejected by the mime
+           * allowlist if it is not an image at all; something sharp cannot read
+           * but the allowlist accepts is a broken upload, and a 500 during an
+           * upload tells the editor nothing they can act on.
+           */
+          req.payload.logger.warn(
+            { filename: req.file.name, reason },
+            'La imagen no pudo normalizarse; se guarda tal cual',
+          )
+        }
+
+        req.file.data = data
+        req.file.size = data.byteLength
+
+        /*
+         * The checksum is taken from the bytes as uploaded, not from the
+         * normalised output: hashing the output would tie the identity of an
+         * asset to the sharp version that processed it, so the same photograph
+         * re-uploaded after a dependency bump would look like a new one.
+         */
+        req.context.uploadChecksum = checksumOf(original)
+
+        return args
+      },
+    ],
+
+    beforeChange: [
+      ({ context, data }) => {
+        const checksum = context.uploadChecksum
+
+        return typeof checksum === 'string' ? { ...data, checksum } : data
+      },
+    ],
+
+    /*
+     * An asset in use cannot be hard-deleted (PRD Nº10 §49-§51, F15 DoD).
+     *
+     * Restricting the operation to administrators was never the protection —
+     * an administrator deleting a hero image breaks a published article just as
+     * thoroughly as anyone else would. The error names what is using it, because
+     * "cannot delete" without a list leaves the operator to guess.
+     */
+    beforeDelete: [
+      async ({ id, req }) => {
+        const references = await findMediaReferences(req.payload, id)
+
+        if (references.length === 0) return
+
+        const listed = references
+          .slice(0, 5)
+          .map((reference) => `${reference.collection}: ${reference.label}`)
+          .join('; ')
+
+        const rest = references.length > 5 ? ` y ${references.length - 5} más` : ''
+
+        throw new APIError(
+          `Esta imagen está en uso y no puede eliminarse (${listed}${rest}). Quítala de ese contenido primero.`,
+          400,
+        )
+      },
     ],
   },
 
   fields: [
+    {
+      /*
+       * Content hash of the uploaded bytes, for spotting an asset the library
+       * already holds. Indexed because the only useful query against it is an
+       * equality lookup at upload time.
+       */
+      name: 'checksum',
+      type: 'text',
+      index: true,
+      label: 'Huella del archivo',
+      admin: {
+        readOnly: true,
+        description: 'SHA-256 de los bytes originales. Sirve para detectar duplicados.',
+        position: 'sidebar',
+      },
+    },
+
     {
       name: 'alt',
       type: 'text',

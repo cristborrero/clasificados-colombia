@@ -33,6 +33,7 @@
     "migrate:fresh": "payload migrate:fresh",
     "search:reindex": "payload run src/search/reindex.ts",
     "media:regenerate": "payload run src/payload/jobs/media-regenerate.ts",
+    "media:rights": "payload run src/payload/jobs/media-rights-audit.ts",
     "services:up": "docker compose -f docker-compose.dev.yml up -d",
     "services:down": "docker compose -f docker-compose.dev.yml down",
     "services:reset": "docker compose -f docker-compose.dev.yml down -v"

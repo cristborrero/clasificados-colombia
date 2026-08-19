@@ -113,6 +113,20 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   /*
+   * Modern formats (PRD Master §47).
+   *
+   * Negotiated per request by the image optimiser rather than stored as extra
+   * derivatives. A stored AVIF and a stored WebP beside every size would double
+   * the library for no gain: the optimiser already picks by `Accept` and falls
+   * back to the original format on its own, so the alternative is more storage
+   * and a second thing to regenerate. Declared explicitly instead of inherited
+   * from the default so the choice is visible where the rest of the delivery
+   * configuration lives.
+   */
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+  /*
    * Standalone output is what the Docker multistage image needs, but it is not
    * compatible with `next start` — Next prints a warning and expects
    * `node .next/standalone/server.js` instead.

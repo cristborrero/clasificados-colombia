@@ -5,6 +5,119 @@ en el código.
 
 ---
 
+## 2026-08-19 · F15 · Media Pipeline
+
+F4 dejó el modelo de metadatos —derechos, crédito, licencia, origen sintético—
+porque es la parte cara de añadir después. F15 pone encima el procesamiento y
+las garantías.
+
+**Lo que entra y lo que no**
+
+- **SVG rechazado.** `mimeTypes` era `image/*`, que admite `image/svg+xml`. Un
+  SVG es un documento que puede llevar `<script>`, y se serviría desde nuestro
+  propio origen, donde una CSP construida sobre `'self'` no protege de nada. No
+  se sanea, se rechaza: sanear SVG es una carrera contra las diferencias entre
+  parsers, y aquí no hay nada que ganar — las marcas del sitio salen de
+  `public/brand/`.
+- **Formatos permitidos**: JPEG, PNG, WebP, AVIF, GIF, TIFF.
+
+**Metadatos y color**
+
+Los derivados ya salían limpios: Payload los pasa por sharp y sharp descarta
+metadatos salvo que se le pida conservarlos. El agujero era **el original**, que
+se guardaba tal cual y se sirve público. Una fotografía recién salida de un
+teléfono lleva las coordenadas GPS de donde se tomó, que para esta redacción
+puede ser la casa de una fuente.
+
+Ahora el original pasa por sharp en `beforeOperation` —el único punto que ve los
+bytes cuando todavía son solo bytes— con tres pasos: hornear la orientación EXIF
+en los píxeles (si no, al quitar el bloque la foto vertical queda tumbada para
+siempre), convertir a sRGB y descartar todo lo demás.
+
+**Huella y duplicados**
+
+SHA-256 de los bytes **tal como se subieron**, no del resultado normalizado:
+hashear la salida ataría la identidad de una imagen a la versión de sharp que la
+procesó, y la misma fotografía resubida tras actualizar una dependencia
+parecería otra distinta.
+
+**Borrado**
+
+Un asset que algo está mostrando no se borra. Restringirlo a administradores
+nunca fue la protección: un administrador que borra la imagen principal rompe un
+artículo publicado igual de bien que cualquiera.
+
+La comprobación tiene dos mitades porque Payload guarda las referencias en dos
+sitios. La imagen principal es una columna (`hero_image_id`), consultable. Una
+imagen soltada dentro del cuerpo vive en el `jsonb` de Lexical y **no genera fila
+de relación** — `articles_rels` no tiene columna `media_id`. Un guardián que
+mirara solo las columnas la daría por no usada. Se recorren ambas.
+
+Dos defectos que esto destapó, ambos silenciosos:
+
+1. El recorrido de campos solo miraba el primer nivel, y la imagen principal es
+   `hero.image`, dentro de un grupo. Es decir: no encontraba la imagen más usada
+   del sitio.
+2. Recorría también las colecciones internas de Payload.
+   `payload-locked-documents` tiene una relación polimórfica que incluye `media`,
+   y consultarla por id de imagen no es una consulta válida — salía como 500 en
+   un borrado corriente.
+
+**Derechos**
+
+Una imagen con licencia desconocida no puede publicarse (§119). Es la quinta
+comprobación del guardián de publicación, junto a fact-check, legal, metodología
+y autoría. Lee la licencia del asset, no lo que traiga la petición.
+
+**No hay interruptor de excepción**, y es deliberado: convertiría en una casilla
+la única decisión que tiene que tomar una persona. La forma de publicar una
+fotografía con derechos poco claros es establecerlos y registrarlos. Queda
+anotado por si la dirección prefiere lo contrario — el PRD contempla un override
+auditado y esto se aparta de esa letra.
+
+**Formatos modernos**
+
+AVIF y WebP se negocian por petición en el optimizador de imágenes, no se
+almacenan como derivados extra. Guardar un AVIF y un WebP junto a cada tamaño
+duplicaría la biblioteca sin ganar nada. Declarado explícitamente en
+`next.config.mjs` en vez de heredado del valor por defecto.
+
+**Comandos**
+
+```txt
+pnpm media:regenerate   reconstruye derivados desde los originales conservados
+pnpm media:rights       licencias vencidas y qué contenido publicado las usa
+```
+
+El segundo informa, no actúa: despublicar una historia porque venció la licencia
+de una foto es una decisión editorial, y un script que la tomara solo dejaría
+periodismo vivo fuera de línea de madrugada sin que nadie lo decidiera. La
+alerta en el Admin es F18.
+
+**Dos trampas de método, anotadas para no repetirlas**
+
+1. `pnpm test:e2e` **no compila**. Reutiliza el servidor existente, así que los
+   arreglos en `src/` no se estaban ejecutando: el mismo 500 se repetía mientras
+   la misma función, llamada desde el código fuente, funcionaba. Usar
+   `pnpm test:e2e:full` o compilar antes.
+2. **`sharp` no puede importarse dentro de un spec de Playwright.** Su
+   dependencia `semver` entra en un ciclo CJS/ESM que el cargador reporta como
+   "Unexpected module status 3" y mata la ejecución entera. La fixture con EXIF
+   se genera aparte y se versiona; el test comprueba el marcador APP1 por bytes.
+
+**Estado verificado**
+
+```txt
+typecheck  limpio
+lint       limpio
+unit       317 tests
+e2e        218 pasan · 4 nuevos de F15 contra la API
+migración  base vacía → 2 migraciones → correcto
+build      limpio
+```
+
+---
+
 ## 2026-08-19 · F16 · SEO, Google News y Discover
 
 **Qué se construyó**

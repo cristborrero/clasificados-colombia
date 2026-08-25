@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
+import { Container } from '@/components/layout/Container'
 import { cn } from '@/components/ui/cn'
 
 /**
@@ -106,69 +107,74 @@ export function HomepageHero({
         </>
       ) : null}
 
-      <div className="relative flex min-h-[inherit] flex-col justify-end gap-5 p-6 sm:p-10 lg:max-w-[62%] lg:p-14">
-        {eyebrowHref ? (
-          <Link
-            href={eyebrowHref}
-            className={cn(
-              'w-fit px-3 py-1.5 text-label font-semibold uppercase tracking-[0.12em] no-underline',
-              eyebrowTone === 'accent'
-                ? 'bg-[var(--color-accent)] text-[color:var(--color-white)]'
-                : 'bg-[var(--color-white)] text-[color:var(--color-ink)]',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]',
-            )}
-          >
-            {eyebrow}
-          </Link>
-        ) : (
-          <p
-            className={cn(
-              'w-fit px-3 py-1.5 text-label font-semibold uppercase tracking-[0.12em]',
-              eyebrowTone === 'accent'
-                ? 'bg-[var(--color-accent)] text-[color:var(--color-white)]'
-                : 'bg-[var(--color-white)] text-[color:var(--color-ink)]',
-            )}
-          >
-            {eyebrow}
-          </p>
-        )}
+      <Container
+        width="editorial"
+        className="relative flex min-h-[inherit] flex-col justify-end py-10 sm:py-14 lg:py-16"
+      >
+        <div className="flex max-w-[56ch] flex-col gap-5 lg:max-w-[62%]">
+          {eyebrowHref ? (
+            <Link
+              href={eyebrowHref}
+              className={cn(
+                'w-fit px-3 py-1.5 text-label font-semibold uppercase tracking-[0.12em] no-underline',
+                eyebrowTone === 'accent'
+                  ? 'bg-[var(--color-accent)] text-[color:var(--color-white)]'
+                  : 'bg-[var(--color-white)] text-[color:var(--color-ink)]',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]',
+              )}
+            >
+              {eyebrow}
+            </Link>
+          ) : (
+            <p
+              className={cn(
+                'w-fit px-3 py-1.5 text-label font-semibold uppercase tracking-[0.12em]',
+                eyebrowTone === 'accent'
+                  ? 'bg-[var(--color-accent)] text-[color:var(--color-white)]'
+                  : 'bg-[var(--color-white)] text-[color:var(--color-ink)]',
+              )}
+            >
+              {eyebrow}
+            </p>
+          )}
 
-        <h2 className="max-w-[20ch] font-[family-name:var(--font-editorial)] text-[clamp(2rem,5vw,3.75rem)] leading-[1.05] font-semibold text-balance text-[color:var(--color-white)]">
-          <Link
-            href={href}
-            className="no-underline hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-white)]"
-          >
-            {title}
-          </Link>
-        </h2>
+          <h2 className="max-w-[20ch] font-[family-name:var(--font-editorial)] text-[clamp(2rem,5vw,3.75rem)] leading-[1.05] font-semibold text-balance text-[color:var(--color-white)]">
+            <Link
+              href={href}
+              className="no-underline hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-white)]"
+            >
+              {title}
+            </Link>
+          </h2>
 
-        {dek ? (
-          <p className="max-w-[52ch] text-[length:var(--text-lead)] leading-relaxed text-[color:var(--color-gray-300)]">
-            {dek}
-          </p>
-        ) : null}
-
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-          <Link
-            href={href}
-            className={cn(
-              'inline-flex items-center gap-2 bg-[var(--color-accent)] px-5 py-3',
-              'text-label font-semibold tracking-[0.08em] text-[color:var(--color-white)] uppercase no-underline',
-              'transition-colors hover:bg-[var(--color-red-hover)]',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]',
-            )}
-          >
-            {ctaLabel}
-            <span aria-hidden>→</span>
-          </Link>
-
-          {(firma ?? fecha) ? (
-            <p className="text-metadata text-[color:var(--color-gray-300)]">
-              {[firma, fecha].filter(Boolean).join(' · ')}
+          {dek ? (
+            <p className="max-w-[52ch] text-[length:var(--text-lead)] leading-relaxed text-[color:var(--color-gray-300)]">
+              {dek}
             </p>
           ) : null}
+
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <Link
+              href={href}
+              className={cn(
+                'inline-flex items-center gap-2 bg-[var(--color-accent)] px-5 py-3',
+                'text-label font-semibold tracking-[0.08em] text-[color:var(--color-white)] uppercase no-underline',
+                'transition-colors hover:bg-[var(--color-red-hover)]',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-white)]',
+              )}
+            >
+              {ctaLabel}
+              <span aria-hidden>→</span>
+            </Link>
+
+            {(firma ?? fecha) ? (
+              <p className="text-metadata text-[color:var(--color-gray-300)]">
+                {[firma, fecha].filter(Boolean).join(' · ')}
+              </p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </Container>
     </article>
   )
 }

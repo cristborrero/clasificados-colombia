@@ -64,7 +64,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   if (rateLimited(client, now)) {
     return NextResponse.json(
-      { error: 'Demasiadas consultas. Intentá de nuevo en un momento.' },
+      { error: 'Demasiadas consultas. Intenta de nuevo en un momento.' },
       { status: 429, headers: { 'Retry-After': '60' } },
     )
   }

@@ -18,7 +18,7 @@ test.describe('F21 tips', () => {
   test('the page explains what happens and what is not stored', async ({ page }) => {
     await page.goto('/denunciar')
 
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Contanos qué está pasando')
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Cuéntanos qué está pasando')
     await expect(page.getByText(/Nada de lo que envíes se publica automáticamente/)).toBeVisible()
     await expect(page.getByText(/No los guardamos ocultos: no los guardamos/)).toBeVisible()
   })

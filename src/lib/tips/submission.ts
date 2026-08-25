@@ -85,12 +85,12 @@ export function parseTipSubmission(input: unknown): TipParseResult {
 
     errors[field] =
       field === 'title'
-        ? 'Escribí un título de al menos tres caracteres.'
+        ? 'Escribe un título de al menos tres caracteres.'
         : field === 'description'
-          ? 'Contanos qué ocurrió, con al menos veinte caracteres.'
+          ? 'Cuéntanos qué ocurrió, con al menos veinte caracteres.'
           : field === 'contactEmail'
             ? 'Ese correo no parece válido. Puedes dejarlo vacío.'
-            : 'Revisá este campo.'
+            : 'Revisa este campo.'
   }
 
   return { ok: false, errors }

@@ -103,7 +103,7 @@ describe('toBodyText', () => {
         children: [
           paragraph('cuerpo real'),
           { type: 'block', fields: { blockType: 'correctionNotice', text: 'se corrigió una cifra' } },
-          { type: 'block', fields: { blockType: 'embed', url: 'https://x.com/a/1', caption: 'mirá' } },
+          { type: 'block', fields: { blockType: 'embed', url: 'https://x.com/a/1', caption: 'mira' } },
         ],
       },
     })
@@ -111,7 +111,7 @@ describe('toBodyText', () => {
     expect(text).toContain('cuerpo real')
     expect(text).not.toContain('se corrigió')
     expect(text).not.toContain('x.com')
-    expect(text).not.toContain('mirá')
+    expect(text).not.toContain('mira')
   })
 
   it('returns an empty string for an absent body rather than throwing', () => {

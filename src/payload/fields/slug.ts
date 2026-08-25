@@ -76,7 +76,7 @@ export function slugField({
             if (typeof value !== 'string' || value.length === 0) return true
 
             return isReservedSegment(value)
-              ? `«${value}» ya es una ruta del sitio. Elegí otro slug.`
+              ? `«${value}» ya es una ruta del sitio. Elige otro slug.`
               : true
           }
         : undefined,

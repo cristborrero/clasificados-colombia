@@ -87,13 +87,13 @@ export default async function SearchPage({ searchParams }: Params) {
         ) : !outcome.query ? (
           <div className="py-8 text-center">
             <Body className="text-[color:var(--color-text-muted)]">
-              Escribí qué estás buscando para comenzar.
+              Escribe qué estás buscando para comenzar.
             </Body>
           </div>
         ) : outcome.results.length === 0 ? (
           <EmptyState
             title={`Sin resultados para «${outcome.query}»`}
-            message="Probá con menos palabras, o revisá los filtros de tipo y fecha."
+            message="Prueba con menos palabras, o revisa los filtros de tipo y fecha."
           />
         ) : (
           <>

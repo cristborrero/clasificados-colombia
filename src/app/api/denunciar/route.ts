@@ -53,7 +53,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!rate.allowed) {
     return NextResponse.json(
-      { ok: false, message: 'Recibimos varias denuncias desde esta conexión. Intentá más tarde.' },
+      { ok: false, message: 'Recibimos varias denuncias desde esta conexión. Intenta más tarde.' },
       { status: 429, headers: { 'Retry-After': String(rate.retryAfterSeconds) } },
     )
   }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       payloadBody = Object.fromEntries(await request.formData())
     }
   } catch {
-    return rejection(400, 'No pudimos leer el formulario. Intentá de nuevo.')
+    return rejection(400, 'No pudimos leer el formulario. Intenta de nuevo.')
   }
 
   const turnstile = await verifyTurnstile(
@@ -87,13 +87,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
      */
     console.warn(`[tips] Turnstile rechazó una denuncia: ${turnstile.reason}`)
 
-    return rejection(400, 'No pudimos verificar que sos una persona. Recargá la página e intentá otra vez.')
+    return rejection(400, 'No pudimos verificar que eres una persona. Recarga la página e intenta de nuevo.')
   }
 
   const parsed = parseTipSubmission(payloadBody)
 
   if (!parsed.ok) {
-    return rejection(422, 'Revisá los campos marcados.', { errors: parsed.errors })
+    return rejection(422, 'Revisa los campos marcados.', { errors: parsed.errors })
   }
 
   try {
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // query, and this is not the place to describe the database.
     console.error('[tips] No se pudo guardar una denuncia', error)
 
-    return rejection(500, 'No pudimos guardar tu denuncia. Intentá de nuevo en unos minutos.')
+    return rejection(500, 'No pudimos guardar tu denuncia. Intenta de nuevo en unos minutos.')
   }
 
   return NextResponse.json(

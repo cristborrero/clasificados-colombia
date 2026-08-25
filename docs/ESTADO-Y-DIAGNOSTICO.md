@@ -119,14 +119,14 @@ Documentación        24.185 líneas
 **Hay casi tanta documentación como código.** Y el modelo de datos tiene 18
 colecciones con 196 campos.
 
-Tenés razón en la intuición: un periódico digital no necesita 22.000 líneas de
+Tienes razón en la intuición: un periódico digital no necesita 22.000 líneas de
 especificación. Ya lo corregiste una vez —la simplificación del 18 de agosto
 quitó nueve roles, el Evidence Vault y el microservicio de denuncias— y fue la
 decisión correcta. Pero los PRD siguen mandando el plan por fases, y cada
 sección numerada genera un requisito, que genera código, que genera pruebas, que
 generan ciclos de diez minutos.
 
-**Dónde sí está justificado el peso.** Sos un medio de investigación en
+**Dónde sí está justificado el peso.** Es un medio de investigación en
 Colombia. Que una foto no publique las coordenadas de la casa de una fuente, que
 un borrador no sea visible, que no se pueda distinguir una cuenta deshabilitada
 de una contraseña mal escrita: eso no es "candado de la CIA", es lo mínimo
@@ -187,7 +187,7 @@ secretos documentada.
 
 1. **Override de derechos de imagen.** El PRD permite publicar con licencia
    desconocida mediante una excepción auditada. No la implementé: convierte en
-   una casilla la única decisión que tiene que tomar una persona. Si la querés,
+   una casilla la única decisión que tiene que tomar una persona. Si la quieres,
    se añade.
 2. **Los medios van a disco local**, no a MinIO. Con volumen persistente, así que
    es duradero, pero se aparta de lo que dice `CLAUDE.md` §24. Conviene decidirlo
@@ -199,7 +199,7 @@ secretos documentada.
 
 ## 5. Qué se arregla ya, sin pedirte nada
 
-Estas tres las hago ahora mismo si me decís que siga:
+Estas tres las hago ahora mismo si me dices que siga:
 
 1. **Dejar de borrar `.next` por defecto.** Solo cuando la caché quedó a medias
    por un build interrumpido. Ahorra entre 2 y 4 minutos por ciclo.
@@ -229,7 +229,7 @@ del trabajo especificado.
 
 ### La que más impacto tiene: dónde viven los artefactos de build
 
-Tenés una regla explícita —nada ocupa el disco interno sin que lo decidas vos— y
+Tienes una regla explícita —nada ocupa el disco interno sin que lo decidas tú— y
 por eso no lo he tocado. Pero es el cuello de botella medido:
 
 | Opción | Qué implica | Ganancia |
@@ -248,7 +248,7 @@ nada.
 
 - ¿Implemento el override de derechos de imagen, o se queda como está?
 - ¿Los medios se quedan en disco local, o los llevo a MinIO?
-- ¿Rotás la contraseña de CyberPanel?
+- ¿Rotas la contraseña de CyberPanel?
 
 ---
 
@@ -271,9 +271,9 @@ Lo que sí conviene rehacer es **la forma de trabajar en lo que queda**:
 - Medir antes de suponer. Las dos veces que adiviné en esta sesión, perdí más
   tiempo que investigando.
 
-Y **aflojar el flujo editorial** si querés: pasar de ocho estados a cuatro
+Y **aflojar el flujo editorial** si quieres: pasar de ocho estados a cuatro
 (borrador → revisión → aprobado → publicado) es un cambio contenido, no toca
-seguridad, y le quita ceremonia diaria a la redacción. Decime si lo querés y lo
+seguridad, y le quita ceremonia diaria a la redacción. Dime si lo quieres y lo
 propongo aparte.
 
 ---

@@ -34,20 +34,31 @@ trabajo**, no después de cada cambio.
 ### Reglas de velocidad, aprendidas a golpes
 
 - **`pnpm test:e2e` NO compila.** Reutiliza el servidor existente. Si tocaste
-  `src/`, compilá antes o vas a depurar el build viejo. `pnpm test:e2e:full`
+  `src/`, compila antes o vas a depurar el build viejo. `pnpm test:e2e:full`
   compila y prueba.
 - **No borres `.next` por costumbre.** Solo si un build quedó a medias.
-- **Verificá la forma real de una API antes de escribir la prueba que la usa.**
+- **Verifica la forma real de una API antes de escribir la prueba que la usa.**
   Tres veces me costó un ciclo entero: Payload quiere los campos en `_payload`
   del multipart; el endpoint de búsqueda devuelve `plainTitle`, no `title`;
   `login()` deja cookie y Payload la prefiere sobre la cabecera.
-- **Medí antes de suponer.** Las dos veces que adiviné, perdí más tiempo que
+- **Mide antes de suponer.** Las dos veces que adiviné, perdí más tiempo que
   investigando.
 - **`payload migrate` abre un prompt interactivo** cuando detecta cambios de
   desarrollo. Parece colgado; está esperando. Para validar migraciones desde
   cero: `pnpm migrate:fresh --force-accept-warning`.
 - **Los tipos de Payload se regeneran** con `pnpm generate:types` después de
   tocar una colección. `typecheck` pasa en verde con tipos viejos.
+
+---
+
+## Idioma y Tono del Producto (REGLA PERMANENTE Y ESTRICTA)
+
+**Español Neutro (Colombia / Internacional):**
+Todo texto visible en la interfaz, mensajes de error, textos de ayuda, formularios, validaciones, semillas de datos, pruebas y documentación técnica DEBE estar redactado exclusivamente en **español neutro** (tuteo estándar profesional).
+
+- **PROHIBIDO EL VOSEO RIOPLATENSE:** No usar bajo ninguna circunstancia formas verbales de voseo (ej. `escribí`, `contanos`, `tenés`, `probá`, `revisá`, `elegí`, `recargá`, `sos`, `vos`, `decilo`, `mirá`).
+- **USAR SIEMPRE FORMAS NEUTRAS:** Usar `escribe`, `cuéntanos`, `tienes`, `prueba`, `revisa`, `elige`, `recarga`, `eres`, `tú`, `dilo`, `mira`.
+- **Cero excepciones:** Aplica a todo código fuente, componentes React, rutas API, esquemas Zod, pruebas y documentación.
 
 ---
 

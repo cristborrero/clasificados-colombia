@@ -62,7 +62,7 @@ for (const job of failed.docs) {
 
 if (failed.totalDocs > 0) {
   payload.logger.error(
-    'Hay trabajos que agotaron sus reintentos. El índice de búsqueda puede estar desactualizado: revisá el error y, si hace falta, ejecutá `pnpm search:reindex`.',
+    'Hay trabajos que agotaron sus reintentos. El índice de búsqueda puede estar desactualizado: revisa el error y, si hace falta, ejecuta `pnpm search:reindex`.',
   )
 }
 

@@ -33,10 +33,10 @@ export default async function DenunciarPage() {
         className="mb-8"
       />
 
-      <HeadlineXL className="text-[length:var(--text-h2)]">Contanos qué está pasando</HeadlineXL>
+      <HeadlineXL className="text-[length:var(--text-h2)]">Cuéntanos qué está pasando</HeadlineXL>
 
       <Lead className="mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
-        Leemos todo lo que llega. Si tenés documentos, fechas o nombres concretos, decilo: es lo que
+        Leemos todo lo que llega. Si tienes documentos, fechas o nombres concretos, dilo: es lo que
         permite verificar.
       </Lead>
 
@@ -59,7 +59,7 @@ export default async function DenunciarPage() {
 
           <section>
             <HeadlineMD as="h2" className="text-[length:var(--text-lead)]">
-              Si elegís el anonimato
+              Si eliges el anonimato
             </HeadlineMD>
 
             <Body className="mt-2 text-[color:var(--color-text-muted)]">
@@ -76,7 +76,7 @@ export default async function DenunciarPage() {
 
             <Body className="mt-2 text-[color:var(--color-text-muted)]">
               Un formulario web deja rastro en tu conexión y en tu equipo, y eso no está bajo
-              nuestro control. Si tu situación es delicada, escribinos desde una red y un
+              nuestro control. Si tu situación es delicada, escríbenos desde una red y un
               dispositivo que no sean los de tu trabajo.
             </Body>
           </section>

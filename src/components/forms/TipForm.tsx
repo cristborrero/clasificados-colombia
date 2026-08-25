@@ -63,7 +63,7 @@ export function TipForm() {
       setErrors(result.errors ?? {})
     } catch {
       setState('error')
-      setMessage('No pudimos conectarnos. Revisá tu conexión e intentá de nuevo.')
+      setMessage('No pudimos conectarnos. Revisa tu conexión e intenta de nuevo.')
     }
   }
 

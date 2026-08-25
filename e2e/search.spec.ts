@@ -22,7 +22,7 @@ test.describe('F14 search', () => {
     // PRD Nº9 §42.
     await page.goto('/buscar')
 
-    await expect(page.getByText('Escribí qué estás buscando')).toBeVisible()
+    await expect(page.getByText('Escribe qué estás buscando')).toBeVisible()
     // Scoped to the results list: breadcrumbs are an <ol> too, and a
     // selector that matches them is a selector that fails for the wrong reason.
     await expect(page.getByRole('list', { name: 'Resultados' })).toHaveCount(0)

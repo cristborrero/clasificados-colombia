@@ -479,3 +479,17 @@ Dos defectos que costaron encontrar y conviene recordar:
    `:`, que rechaza — de forma asíncrona. La escritura devolvía 202, el comando
    informaba "11 indexados" y el índice quedaba vacío. Ahora toda escritura se
    confirma contra la cola de tareas.
+
+---
+
+## 2026-08-19 / 25 · F15–F22 (Pipeline de Medios, SEO, Jobs, Vitrina y QA de Lanzamiento)
+
+- **F15 (Pipeline de Medios):** Sanitización estricta de subidas vía Sharp (conversión forzada a sRGB, eliminación total de metadatos EXIF sensibles para protección de fuentes, rechazo categórico de SVGs ejecutables, hash SHA-256 contra duplicados y guardas contra borrado de imágenes vinculadas a artículos publicados).
+- **F16 (SEO & Metadatos):** Metadatos completos por sección, schema JSON-LD (`NewsArticle`, `Organization`), sitemaps dinámicos (`/sitemap.xml`, `/news-sitemap.xml`) y control de indexación vía `ALLOW_INDEXING`.
+- **F17 (Routing & Redirects):** Redirecciones automáticas al mutar slugs, resolución canónica, 404 periodístico con buscador integrado y registro de correcciones editoriales.
+- **F18 (Payload Jobs):** Cola durable y asíncrona para sincronización de búsqueda en Meilisearch, auditoría de derechos de autor y regeneración de derivados.
+- **F19–F21 (Infraestructura y Denuncias):** Docker Compose de producción para Coolify en VPS Contabo, webhook de CI/CD automático, canal de denuncias seguras (`/denunciar`) con Cloudflare Turnstile y SMTP vía Resend.
+- **F22 (QA & Go-Live Readiness):**
+  - Runbook de rotación de secretos y checklist de lanzamiento en `docs/runbooks/ROTACION-SECRETOS-Y-LANZAMIENTO.md`.
+  - Suite de validación de breakpoints (360px, 768px, 1024px, 1440px) y accesibilidad (landmarks, skip link, etiquetado de formularios) en `e2e/responsive-and-a11y.spec.ts`.
+  - Verificación estricta de no-fuga de borradores ni denuncias en búsqueda.

@@ -49,7 +49,7 @@ export function InvestigationHero({
 }: InvestigationHeroProps) {
   return (
     <header className={cn('bg-[var(--color-surface-inverse)]', className)}>
-      <Container width="article" className="py-16">
+      <Container width="wide" className="py-16">
         <p className="font-[family-name:var(--font-sans)] text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--letter-spacing)] text-[color:var(--color-accent)] uppercase">
           {eyebrow}
         </p>

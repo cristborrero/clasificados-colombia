@@ -58,7 +58,7 @@ export default async function TopicPage({ params }: Params) {
         ])}
       />
 
-      <Container width="editorial" className="py-12">
+      <Container width="wide" className="py-12">
         <Breadcrumbs
           items={[{ label: settings.siteName, href: '/' }, { label: topic.name }]}
           className="mb-8"
@@ -74,7 +74,7 @@ export default async function TopicPage({ params }: Params) {
       </Container>
 
       {topic.investigations.length > 0 ? (
-        <Container width="editorial" as="section" className="pb-12">
+        <Container width="wide" as="section" className="pb-12">
           <SectionHeader title="Investigaciones" />
 
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
@@ -95,7 +95,7 @@ export default async function TopicPage({ params }: Params) {
         </Container>
       ) : null}
 
-      <Container width="editorial" as="section" className="pb-24">
+      <Container width="wide" as="section" className="pb-24">
         <SectionHeader title="Cobertura" />
 
         {topic.articles.length > 0 ? (

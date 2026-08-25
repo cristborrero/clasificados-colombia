@@ -27,7 +27,7 @@ export default async function DenunciarPage() {
   const settings = await getSiteSettings()
 
   return (
-    <Container width="article" className="py-12">
+    <Container width="wide" className="py-12">
       <Breadcrumbs
         items={[{ label: settings.siteName, href: '/' }, { label: 'Denunciar' }]}
         className="mb-8"

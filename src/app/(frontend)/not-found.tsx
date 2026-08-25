@@ -50,7 +50,7 @@ export default async function NotFound() {
   ])
 
   return (
-    <Section spacing="lg" width="editorial">
+    <Section spacing="lg" width="wide">
       <Stack gap="lg">
         <header>
           <p className="font-[family-name:var(--font-sans)] text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">

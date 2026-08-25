@@ -58,7 +58,7 @@ export default async function SearchPage({ searchParams }: Params) {
   const [outcome, settings] = await Promise.all([runSearch(params), getSiteSettings()])
 
   return (
-    <Container width="article" className="py-12">
+    <Container width="wide" className="py-12">
       <Breadcrumbs
         items={[{ label: settings.siteName, href: '/' }, { label: 'Buscar' }]}
         className="mb-8"

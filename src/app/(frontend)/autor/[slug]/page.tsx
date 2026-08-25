@@ -63,7 +63,7 @@ export default async function AuthorPage({ params }: Params) {
         })}
       />
 
-      <Container width="article" className="py-16">
+      <Container width="wide" className="py-16">
         <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
           {author.portrait ? (
             <Image
@@ -109,7 +109,7 @@ export default async function AuthorPage({ params }: Params) {
       </Container>
 
       {author.investigations.length > 0 ? (
-        <Container width="editorial" as="section" className="pb-16">
+        <Container width="wide" as="section" className="pb-16">
           <SectionHeader title="Investigaciones" />
 
           <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
@@ -130,7 +130,7 @@ export default async function AuthorPage({ params }: Params) {
         </Container>
       ) : null}
 
-      <Container width="editorial" as="section" className="pb-24">
+      <Container width="wide" as="section" className="pb-24">
         <SectionHeader title="Publicaciones recientes" />
 
         {author.articles.length > 0 ? (

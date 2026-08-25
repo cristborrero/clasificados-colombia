@@ -104,7 +104,7 @@ export default async function InvestigationPage({ params }: Params) {
         credit={investigation.hero.credit}
       />
 
-      <Container width="article" className="pt-8">
+      <Container width="wide" className="pt-8">
         <Breadcrumbs
           items={[
             { label: settings.siteName, href: '/' },
@@ -120,12 +120,12 @@ export default async function InvestigationPage({ params }: Params) {
         />
       </Container>
 
-      <Container width="article">
+      <Container width="wide">
         <KeyFindings findings={investigation.keyFindings} />
       </Container>
 
       {investigation.chapters.length > 0 ? (
-        <Container width="editorial" className="my-16">
+        <Container width="wide" className="my-16">
           <div className="grid gap-12 lg:grid-cols-12">
             <div className="lg:col-span-3">
               <InvestigationContents chapters={investigation.chapters} />
@@ -152,7 +152,7 @@ export default async function InvestigationPage({ params }: Params) {
         </Container>
       ) : null}
 
-      <Container width="article">
+      <Container width="wide">
         <EditorialTimeline events={investigation.timeline} />
 
         <EntityList entities={investigation.entities} />

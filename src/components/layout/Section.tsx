@@ -44,7 +44,7 @@ export function Section({
   tone = 'paper',
   spacing = 'lg',
   contained = true,
-  width = 'editorial',
+  width = 'wide',
   className,
   ...rest
 }: SectionProps) {

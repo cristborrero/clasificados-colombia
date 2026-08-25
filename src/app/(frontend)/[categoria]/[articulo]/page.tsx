@@ -128,7 +128,7 @@ export default async function ArticlePage({ params }: Params) {
       <JsonLd data={articleLd} />
       <JsonLd data={trail} />
 
-      <Container width="article" className="pt-8 pb-6">
+      <Container width="wide" className="pt-8 pb-6">
         <Breadcrumbs
           items={[
             { label: settings.siteName, href: '/' },
@@ -140,40 +140,39 @@ export default async function ArticlePage({ params }: Params) {
           className="mb-8"
         />
 
-        {article.category ? (
-          <CardEyebrow
-            label={article.category.name}
-            href={categoryPath(article.category.slug)}
-            className="mb-3"
-          />
-        ) : null}
+        <div className="max-w-4xl">
+          {article.category ? (
+            <CardEyebrow
+              label={article.category.name}
+              href={categoryPath(article.category.slug)}
+              className="mb-3"
+            />
+          ) : null}
 
-        {/* §59: the headline is limited to the article column, not the canvas. */}
-        <HeadlineXL>{article.title}</HeadlineXL>
+          <HeadlineXL>{article.title}</HeadlineXL>
 
-        {article.dek ? (
-          <Dek className="mt-5 max-w-[52ch] text-[color:var(--color-text-muted)]">
-            {article.dek}
-          </Dek>
-        ) : null}
+          {article.dek ? (
+            <Dek className="mt-5 max-w-[56ch] text-[color:var(--color-text-muted)]">
+              {article.dek}
+            </Dek>
+          ) : null}
 
-        <div className="mt-8 flex flex-col gap-4 border-t border-[var(--color-border)] pt-6">
-          <Byline authors={article.authors} />
+          <div className="mt-8 flex flex-col gap-4 border-t border-[var(--color-border)] pt-6">
+            <Byline authors={article.authors} />
 
-          <PublicationMeta
-            publishedAt={article.publishedAt}
-            updatedAt={article.updatedAt}
-            wordCount={article.wordCount}
-          />
+            <PublicationMeta
+              publishedAt={article.publishedAt}
+              updatedAt={article.updatedAt}
+              wordCount={article.wordCount}
+            />
 
-          <ShareActions url={shareUrl} title={article.title} className="mt-2" />
+            <ShareActions url={shareUrl} title={article.title} className="mt-2" />
+          </div>
         </div>
       </Container>
 
       {article.hero.image ? (
-        <Container width="article" className="pb-10">
-          {/* §63: the story's own ratio, no aggressive crop. The image keeps
-              its intrinsic dimensions and the column decides the width. */}
+        <Container width="wide" className="pb-10">
           <EditorialImage
             src={article.hero.image.url}
             alt={article.hero.image.alt}
@@ -181,24 +180,20 @@ export default async function ArticlePage({ params }: Params) {
             height={1067}
             caption={article.hero.caption}
             credit={article.hero.credit}
-            sizes="(min-width: 900px) 900px, 100vw"
+            sizes="(min-width: 1440px) 1440px, 100vw"
             priority
           />
         </Container>
       ) : null}
 
-      <Container width="reading" className="pb-16">
-        <RichText data={article.body} />
-
-        {/*
-          After the body, inside the reading column. A correction belongs to the
-          piece, not to the page furniture around it, and putting it out at
-          editorial width would read as a site-wide notice.
-        */}
-        <CorrectionsNotice corrections={corrections} className="mt-12" />
+      <Container width="wide" className="pb-16">
+        <div className="max-w-[72ch]">
+          <RichText data={article.body} />
+          <CorrectionsNotice corrections={corrections} className="mt-12" />
+        </div>
       </Container>
 
-      <Container width="editorial" className="pb-24">
+      <Container width="wide" className="pb-24">
         <RelatedContent
           articles={article.related.map((item) => ({
             slug: item.slug,

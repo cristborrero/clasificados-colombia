@@ -146,11 +146,27 @@ const nextConfig = {
        */
       {
         source: '/admin',
-        headers: [...securityHeaders, { key: 'Content-Security-Policy', value: adminCsp }],
+        headers: [
+          ...securityHeaders,
+          { key: 'Content-Security-Policy', value: adminCsp },
+          /*
+           * The admin panel is a stateful React app whose content depends on
+           * the session cookie. Without no-store, Next.js App Router caches
+           * the page in the client-side Router Cache, which means:
+           *   - Logout shows "session closed" but the cached admin page
+           *     stays on screen instead of redirecting to /admin/login.
+           *   - Browser back/forward may show stale admin views.
+           */
+          { key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' },
+        ],
       },
       {
         source: '/admin/:path*',
-        headers: [...securityHeaders, { key: 'Content-Security-Policy', value: adminCsp }],
+        headers: [
+          ...securityHeaders,
+          { key: 'Content-Security-Policy', value: adminCsp },
+          { key: 'Cache-Control', value: 'private, no-cache, no-store, max-age=0, must-revalidate' },
+        ],
       },
       {
         source: '/api/:path*',

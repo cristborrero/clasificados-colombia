@@ -35,37 +35,20 @@ const mediaHost = (() => {
 
 const publicCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${mediaHost ? ` ${mediaHost}` : ''}`,
-  "font-src 'self'",
-  "connect-src 'self'",
+  `img-src 'self' data: blob: https:${mediaHost ? ` ${mediaHost}` : ''}`,
+  "font-src 'self' data:",
+  "connect-src 'self' blob: data: https:",
+  "worker-src 'self' blob:",
   // YouTube is the only third party allowed to frame anything, and only
   // through the domain that sets no tracking cookie until playback starts.
   "frame-src https://www.youtube-nocookie.com https://challenges.cloudflare.com",
-  "media-src 'self' https:",
+  "media-src 'self' blob: data: https:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
-  /*
-   * `upgrade-insecure-requests` is deliberately absent.
-   *
-   * Its job is to rewrite hardcoded `http://` subresource URLs to `https://`,
-   * and this application emits none: every asset reference is relative and
-   * same-origin, `default-src 'self'` already forbids loading anything from
-   * another origin over any scheme, and HSTS below is what actually guarantees
-   * the browser never speaks plain HTTP to this host.
-   *
-   * What it did do was break every deployment that is not behind TLS —
-   * including the whole test suite. `headers()` is evaluated during `next build`
-   * and baked into `routes-manifest.json`, so the policy cannot be relaxed per
-   * environment at start-up; the E2E server is served over plain HTTP and the
-   * directive turned each subresource request into an `https://localhost` one
-   * that died on TLS. Chromium hides this by exempting loopback as a
-   * trustworthy origin, WebKit does not, so it surfaced only in mobile-safari
-   * and looked like a layout overflow on every page at once.
-   */
+  "frame-ancestors 'self'",
 ].join('; ')
 
 /**
@@ -87,7 +70,7 @@ const adminCsp = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self'",
 ].join('; ')
 
 const securityHeaders = [

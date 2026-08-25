@@ -44,7 +44,11 @@ function hasAny(value: unknown): boolean {
 export function PublicationChecklist() {
   const [fields] = useAllFormFields() as unknown as [FormState, unknown]
 
-  const heroId = read(fields, 'hero.image') ?? read(fields, 'poster')
+  const rawHero = read(fields, 'hero.image') ?? read(fields, 'poster')
+  const heroId =
+    typeof rawHero === 'object' && rawHero !== null && 'id' in rawHero
+      ? (rawHero as { id: unknown }).id
+      : rawHero
 
   /*
    * Keyed by the image it describes, rather than reset when the image changes.
@@ -53,7 +57,8 @@ export function PublicationChecklist() {
    * can simply be derived.
    */
   const [checked, setChecked] = useState<{ id: string; blocker: string | null } | null>(null)
-  const heroKey = hasAny(heroId) ? String(heroId) : null
+  const heroKey =
+    typeof heroId === 'string' || typeof heroId === 'number' ? String(heroId) : null
   const rightsBlocker = checked && checked.id === heroKey ? checked.blocker : null
 
   useEffect(() => {

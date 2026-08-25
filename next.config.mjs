@@ -79,11 +79,11 @@ const adminCsp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${mediaHost ? ` ${mediaHost}` : ''}`,
+  `img-src 'self' data: blob: https:${mediaHost ? ` ${mediaHost}` : ''}`,
   "font-src 'self' data:",
-  "connect-src 'self' blob:",
+  "connect-src 'self' blob: data: https:",
   "worker-src 'self' blob:",
-  "media-src 'self' blob:",
+  "media-src 'self' blob: data: https:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -125,6 +125,20 @@ const nextConfig = {
    */
   images: {
     formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'clasificadoscolombia.co',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+      },
+    ],
   },
   /*
    * Standalone output is what the Docker multistage image needs, but it is not
@@ -156,7 +170,11 @@ const nextConfig = {
         headers: [...securityHeaders, { key: 'Content-Security-Policy', value: adminCsp }],
       },
       {
-        source: '/((?!admin).*)',
+        source: '/api/:path*',
+        headers: [...securityHeaders, { key: 'Content-Security-Policy', value: adminCsp }],
+      },
+      {
+        source: '/((?!admin|api).*)',
         headers: [...securityHeaders, { key: 'Content-Security-Policy', value: publicCsp }],
       },
     ]

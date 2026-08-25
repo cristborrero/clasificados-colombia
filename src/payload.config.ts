@@ -83,6 +83,17 @@ function buildEmailAdapter() {
 }
 
 export default buildConfig({
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  cors: [
+    process.env.NEXT_PUBLIC_SERVER_URL || 'https://clasificadoscolombia.co',
+    'https://clasificadoscolombia.co',
+    'http://localhost:3000',
+  ].filter(Boolean),
+  csrf: [
+    process.env.NEXT_PUBLIC_SERVER_URL || 'https://clasificadoscolombia.co',
+    'https://clasificadoscolombia.co',
+    'http://localhost:3000',
+  ].filter(Boolean),
   admin: {
     user: Users.slug,
     importMap: {

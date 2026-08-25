@@ -64,30 +64,32 @@ export default async function SearchPage({ searchParams }: Params) {
         className="mb-8"
       />
 
-      <HeadlineXL className="text-[length:var(--text-h2)]">Buscar</HeadlineXL>
+      <div className="mx-auto max-w-2xl text-center">
+        <HeadlineXL className="text-[length:var(--text-h2)]">Buscar</HeadlineXL>
+        <p className="mt-2 text-[length:var(--text-lead)] text-[color:var(--color-text-muted)]">
+          Explora artículos, investigaciones y autores
+        </p>
 
-      <div className="mt-8">
-        <SearchForm defaultValue={outcome.query} />
+        <div className="mt-8">
+          <SearchForm defaultValue={outcome.query} />
+        </div>
+
+        <div className="mt-6">
+          <Suspense fallback={null}>
+            <SearchFilters />
+          </Suspense>
+        </div>
       </div>
 
-      {/*
-        `useSearchParams` suspends during prerendering, so the filters are
-        wrapped rather than left to bubble a build error. The fallback is
-        deliberately empty: filters that flash in before the results are noise.
-      */}
-      <div className="mt-8">
-        <Suspense fallback={null}>
-          <SearchFilters />
-        </Suspense>
-      </div>
-
-      <div className="mt-10">
+      <div className="mx-auto mt-12 max-w-3xl">
         {outcome.unavailable ? (
           <InlineError message="La búsqueda no está disponible en este momento. El resto del sitio funciona con normalidad." />
         ) : !outcome.query ? (
-          <Body className="text-[color:var(--color-text-muted)]">
-            Escribí qué estás buscando.
-          </Body>
+          <div className="py-8 text-center">
+            <Body className="text-[color:var(--color-text-muted)]">
+              Escribí qué estás buscando para comenzar.
+            </Body>
+          </div>
         ) : outcome.results.length === 0 ? (
           <EmptyState
             title={`Sin resultados para «${outcome.query}»`}
@@ -101,14 +103,14 @@ export default async function SearchPage({ searchParams }: Params) {
               {outcome.total === 1 ? 'resultado' : 'resultados'}
             </MetaText>
 
-            <ol aria-label="Resultados" className="mt-6">
+            <ol aria-label="Resultados" className="mt-6 divide-y divide-[var(--color-border)]">
               {outcome.results.map((result) => (
                 <SearchResultItem key={result.id} result={result} />
               ))}
             </ol>
 
             {outcome.totalPages > 1 ? (
-              <nav aria-label="Paginación" className="mt-10 flex items-center justify-between gap-4">
+              <nav aria-label="Paginación" className="mt-10 flex items-center justify-between gap-4 border-t border-[var(--color-border)] pt-6">
                 {outcome.page > 1 ? (
                   <Link
                     href={pageHref(params, outcome.page - 1)}

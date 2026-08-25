@@ -64,13 +64,18 @@ export default async function TopicPage({ params }: Params) {
           className="mb-8"
         />
 
-        <HeadlineXL className="text-[length:var(--text-h2)]">{topic.name}</HeadlineXL>
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="font-sans text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--letter-spacing)] uppercase text-[color:var(--color-accent)]">
+            Tema
+          </p>
+          <HeadlineXL className="mt-2 text-[length:var(--text-h2)]">{topic.name}</HeadlineXL>
 
-        {topic.description ? (
-          <Lead className="mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
-            {topic.description}
-          </Lead>
-        ) : null}
+          {topic.description ? (
+            <Lead className="mx-auto mt-4 max-w-[56ch] text-[color:var(--color-text-muted)]">
+              {topic.description}
+            </Lead>
+          ) : null}
+        </div>
       </Container>
 
       {topic.investigations.length > 0 ? (

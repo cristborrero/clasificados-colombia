@@ -51,17 +51,17 @@ export default async function NotFound() {
 
   return (
     <Section spacing="lg" width="wide">
-      <Stack gap="lg">
-        <header>
+      <Stack gap="xl">
+        <header className="mx-auto max-w-2xl text-center">
           <p className="font-[family-name:var(--font-sans)] text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--color-accent)]">
             Error 404
           </p>
 
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl leading-tight text-[color:var(--color-text)] sm:text-5xl">
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl leading-tight text-[color:var(--color-text)] sm:text-5xl font-bold">
             Esta página no existe
           </h1>
 
-          <p className="mt-4 max-w-prose font-[family-name:var(--font-sans)] text-lg text-[color:var(--color-text-muted)]">
+          <p className="mx-auto mt-4 max-w-prose font-[family-name:var(--font-sans)] text-lg text-[color:var(--color-text-muted)]">
             Puede que la dirección esté mal escrita, que el enlace haya quedado viejo o que el
             contenido se haya retirado. Busca lo que necesitas o empieza por la{' '}
             <Link href={homePath()} className="underline underline-offset-4">
@@ -69,11 +69,11 @@ export default async function NotFound() {
             </Link>
             .
           </p>
-        </header>
 
-        <div className="max-w-xl">
-          <SearchForm />
-        </div>
+          <div className="mx-auto mt-8 max-w-lg">
+            <SearchForm />
+          </div>
+        </header>
 
         {articles.length > 0 && (
           <section aria-labelledby="404-ultimas">

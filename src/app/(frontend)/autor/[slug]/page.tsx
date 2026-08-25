@@ -64,7 +64,7 @@ export default async function AuthorPage({ params }: Params) {
       />
 
       <Container width="wide" className="py-16">
-        <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+        <header className="mx-auto flex max-w-2xl flex-col items-center text-center gap-5">
           {author.portrait ? (
             <Image
               src={author.portrait.url}
@@ -73,35 +73,29 @@ export default async function AuthorPage({ params }: Params) {
               height={320}
               sizes="128px"
               priority
-              className="size-32 shrink-0 rounded-full object-cover"
+              className="size-32 shrink-0 rounded-full object-cover ring-4 ring-[var(--color-surface-sunken)] shadow-sm"
             />
           ) : null}
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col items-center gap-2.5">
             <HeadlineXL className="text-[length:var(--text-h2)]">{author.name}</HeadlineXL>
 
             {author.jobTitle ? (
-              <MetaText className="text-[color:var(--color-text-muted)]">{author.jobTitle}</MetaText>
+              <MetaText className="font-medium text-[color:var(--color-text-muted)]">{author.jobTitle}</MetaText>
             ) : null}
 
-            {author.bio ? <Body className="max-w-[60ch]">{author.bio}</Body> : null}
+            {author.bio ? <Body className="mt-2 max-w-[54ch] text-[color:var(--color-text-muted)]">{author.bio}</Body> : null}
 
             {author.expertise.length > 0 ? (
-              <div className="mt-2">
-                <h2 className="font-[family-name:var(--font-sans)] text-[length:var(--text-label)] tracking-[var(--text-label--letter-spacing)] text-[color:var(--color-text-muted)] uppercase">
-                  Cubre
-                </h2>
-
-                <ul className="mt-2 flex flex-wrap gap-2">
-                  {author.expertise.map((area) => (
-                    <li
-                      key={area}
-                      className="border border-[var(--color-border)] px-3 py-1 font-[family-name:var(--font-sans)] text-[length:var(--text-metadata)]"
-                    >
-                      {area}
-                    </li>
-                  ))}
-                </ul>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {author.expertise.map((area) => (
+                  <span
+                    key={area}
+                    className="border border-[var(--color-border)] px-3 py-1 font-[family-name:var(--font-sans)] text-[length:var(--text-metadata)] text-[color:var(--color-text-muted)]"
+                  >
+                    {area}
+                  </span>
+                ))}
               </div>
             ) : null}
           </div>

@@ -50,36 +50,38 @@ export function InvestigationHero({
   return (
     <header className={cn('bg-[var(--color-surface-inverse)]', className)}>
       <Container width="wide" className="py-16">
-        <p className="font-[family-name:var(--font-sans)] text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--letter-spacing)] text-[color:var(--color-accent)] uppercase">
-          {eyebrow}
-        </p>
+        <div className="max-w-4xl">
+          <p className="font-[family-name:var(--font-sans)] text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--letter-spacing)] text-[color:var(--color-accent)] uppercase">
+            {eyebrow}
+          </p>
 
-        <span
-          aria-hidden
-          className="mt-4 block h-[2px] w-16 bg-[var(--color-accent)]"
-        />
-
-        <Display as="h1" className="mt-6 text-[color:var(--color-text-inverse)]">
-          {title}
-        </Display>
-
-        {summary ? (
-          <Lead className="mt-6 max-w-[56ch] text-[color:var(--color-text-inverse-muted)]">
-            {summary}
-          </Lead>
-        ) : null}
-
-        <div className="mt-10 flex flex-col gap-3 border-t border-[var(--color-border-inverse)] pt-6 text-[color:var(--color-text-inverse-muted)]">
-          <Byline
-            authors={authors}
-            className="[&_a]:text-[color:var(--color-text-inverse)] [&_span]:text-[color:var(--color-text-inverse-muted)]"
+          <span
+            aria-hidden
+            className="mt-4 block h-[2px] w-16 bg-[var(--color-accent)]"
           />
 
-          <PublicationMeta
-            publishedAt={publishedAt}
-            updatedAt={updatedAt}
-            className="text-[color:var(--color-text-inverse-muted)]"
-          />
+          <Display as="h1" className="mt-6 text-balance text-[color:var(--color-text-inverse)]">
+            {title}
+          </Display>
+
+          {summary ? (
+            <Lead className="mt-6 max-w-[62ch] text-[color:var(--color-text-inverse-muted)]">
+              {summary}
+            </Lead>
+          ) : null}
+
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-[var(--color-border-inverse)] pt-6 text-[color:var(--color-text-inverse-muted)]">
+            <Byline
+              authors={authors}
+              className="[&_a]:text-[color:var(--color-text-inverse)] [&_span]:text-[color:var(--color-text-inverse-muted)]"
+            />
+
+            <PublicationMeta
+              publishedAt={publishedAt}
+              updatedAt={updatedAt}
+              className="text-[color:var(--color-text-inverse-muted)]"
+            />
+          </div>
         </div>
       </Container>
 

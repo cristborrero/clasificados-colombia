@@ -72,30 +72,32 @@ export default async function CategoryPage({ params }: Params) {
           className="mb-8"
         />
 
-        <HeadlineXL className="text-[length:var(--text-h2)]">{category.name}</HeadlineXL>
+        <div className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-8">
+          <HeadlineXL className="text-balance text-[length:var(--text-h1)] sm:text-5xl">{category.name}</HeadlineXL>
 
-        {category.description ? (
-          <Lead className="mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
-            {category.description}
-          </Lead>
-        ) : null}
+          {category.description ? (
+            <Lead className="max-w-[64ch] text-[color:var(--color-text-muted)]">
+              {category.description}
+            </Lead>
+          ) : null}
 
-        {category.subsections.length > 0 ? (
-          <nav aria-label="Subsecciones" className="mt-8">
-            <ul className="flex flex-wrap gap-3">
-              {category.subsections.map((subsection) => (
-                <li key={subsection.slug}>
-                  <Link
-                    href={categoryPath(subsection.slug)}
-                    className="inline-block border border-[var(--color-border)] px-4 py-2 font-[family-name:var(--font-sans)] text-[length:var(--text-metadata)] no-underline hover:bg-[var(--color-surface-sunken)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
-                  >
-                    {subsection.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ) : null}
+          {category.subsections.length > 0 ? (
+            <nav aria-label="Subsecciones" className="mt-2">
+              <ul className="flex flex-wrap gap-2.5">
+                {category.subsections.map((subsection) => (
+                  <li key={subsection.slug}>
+                    <Link
+                      href={categoryPath(subsection.slug)}
+                      className="inline-block border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-1.5 font-[family-name:var(--font-sans)] text-[length:var(--text-metadata)] font-medium no-underline transition-colors hover:bg-[var(--color-surface-sunken)] hover:border-[var(--color-ink)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-focus)]"
+                    >
+                      {subsection.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ) : null}
+        </div>
       </Container>
 
       {category.featured ? (

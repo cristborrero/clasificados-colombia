@@ -140,24 +140,25 @@ export default async function ArticlePage({ params }: Params) {
           className="mb-8"
         />
 
-        <div className="max-w-4xl">
+        <header className="mx-auto max-w-4xl text-center">
           {article.category ? (
-            <CardEyebrow
-              label={article.category.name}
-              href={categoryPath(article.category.slug)}
-              className="mb-3"
-            />
+            <div className="mb-4 flex justify-center">
+              <CardEyebrow
+                label={article.category.name}
+                href={categoryPath(article.category.slug)}
+              />
+            </div>
           ) : null}
 
-          <HeadlineXL>{article.title}</HeadlineXL>
+          <HeadlineXL className="text-balance">{article.title}</HeadlineXL>
 
           {article.dek ? (
-            <Dek className="mt-5 max-w-[56ch] text-[color:var(--color-text-muted)]">
+            <Dek className="mx-auto mt-5 max-w-[58ch] text-[length:var(--text-lead)] text-[color:var(--color-text-muted)]">
               {article.dek}
             </Dek>
           ) : null}
 
-          <div className="mt-8 flex flex-col gap-4 border-t border-[var(--color-border)] pt-6">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 border-y border-[var(--color-border)] py-4">
             <Byline authors={article.authors} />
 
             <PublicationMeta
@@ -166,13 +167,13 @@ export default async function ArticlePage({ params }: Params) {
               wordCount={article.wordCount}
             />
 
-            <ShareActions url={shareUrl} title={article.title} className="mt-2" />
+            <ShareActions url={shareUrl} title={article.title} />
           </div>
-        </div>
+        </header>
       </Container>
 
       {article.hero.image ? (
-        <Container width="wide" className="pb-10">
+        <Container width="wide" className="pb-12">
           <EditorialImage
             src={article.hero.image.url}
             alt={article.hero.image.alt}
@@ -186,10 +187,10 @@ export default async function ArticlePage({ params }: Params) {
         </Container>
       ) : null}
 
-      <Container width="wide" className="pb-16">
-        <div className="max-w-[72ch]">
+      <Container width="wide" className="pb-20">
+        <div className="mx-auto max-w-[70ch]">
           <RichText data={article.body} />
-          <CorrectionsNotice corrections={corrections} className="mt-12" />
+          <CorrectionsNotice corrections={corrections} className="mt-14" />
         </div>
       </Container>
 

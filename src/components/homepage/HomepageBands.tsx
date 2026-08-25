@@ -169,7 +169,7 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
 
           case 'secondary':
             return (
-              <Container key={key} width="editorial" as="section" className="py-12">
+              <Container key={key} width="wide" as="section" className="py-12">
                 {band.title ? <SectionHeader title={band.title} /> : null}
                 <SecondaryStoryGrid
                   articles={band.items.map(toCard)}
@@ -190,7 +190,7 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
              * Agregar el sumario alarga cada tarjeta y rompe la fila.
              */
             return (
-              <Container key={key} width="editorial" as="section" className="py-12">
+              <Container key={key} width="wide" as="section" className="py-12">
                 {band.title ? (
                   <SectionHeader
                     title={band.title}
@@ -233,7 +233,7 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
 
           case 'collection':
             return (
-              <Container key={key} width="editorial" as="section" className="py-12">
+              <Container key={key} width="wide" as="section" className="py-12">
                 {band.title ? (
                   <SectionHeader
                     title={band.title}
@@ -258,7 +258,7 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
             const { investigations, analysis, data } = band
 
             return (
-              <Container key={key} width="editorial" as="section" className="py-12">
+              <Container key={key} width="wide" as="section" className="py-12">
                 <div className="grid gap-10 lg:grid-cols-3 lg:gap-[var(--gutter)]">
                   {investigations.items.length > 0 ? (
                     <div className="flex flex-col gap-5">
@@ -332,7 +332,7 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
                 key={key}
                 className="mt-16 bg-[var(--color-surface-inverse)] text-[color:var(--color-text-inverse)]"
               >
-                <Container width="editorial" className="py-14">
+                <Container width="wide" className="py-14">
                   <div className="grid gap-10 lg:grid-cols-3 lg:gap-[var(--gutter)]">
                     <div className="flex flex-col gap-3">
                       <p className={titulo}>Denuncias ciudadanas</p>

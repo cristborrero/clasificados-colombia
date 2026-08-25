@@ -66,7 +66,7 @@ export default async function CategoryPage({ params }: Params) {
         ])}
       />
 
-      <Container width="editorial" className="py-12">
+      <Container width="wide" className="py-12">
         <Breadcrumbs
           items={[{ label: settings.siteName, href: '/' }, { label: category.name }]}
           className="mb-8"
@@ -99,7 +99,7 @@ export default async function CategoryPage({ params }: Params) {
       </Container>
 
       {category.featured ? (
-        <Container width="editorial" as="section" className="pb-12">
+        <Container width="wide" as="section" className="pb-12">
           <ArticleCardFeatured
             article={{
               slug: category.featured.slug,
@@ -114,7 +114,7 @@ export default async function CategoryPage({ params }: Params) {
         </Container>
       ) : null}
 
-      <Container width="editorial" as="section" className="pb-24">
+      <Container width="wide" as="section" className="pb-24">
         <SectionHeader title="Lo último" />
 
         <LatestNewsList

@@ -108,7 +108,7 @@ export function HomepageHero({
       ) : null}
 
       <Container
-        width="editorial"
+        width="wide"
         className="relative flex min-h-[inherit] flex-col justify-end py-10 sm:py-14 lg:py-16"
       >
         <div className="flex max-w-[56ch] flex-col gap-5 lg:max-w-[62%]">

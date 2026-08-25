@@ -7,6 +7,7 @@ import {
   editorialStaffOnly,
   getUser,
   hasRole,
+  newsroomStaffOnly,
 } from '@/payload/access/helpers'
 import {
   ALLOWED_IMAGE_MIME_TYPES,
@@ -50,9 +51,8 @@ export const Media: CollectionConfig = {
   access: {
     // Published imagery is public by nature.
     read: () => true,
-    create: ({ req }) =>
-      hasRole(getUser(req), ['admin', 'editor', 'author']),
-    update: editorialStaffOnly,
+    create: newsroomStaffOnly,
+    update: newsroomStaffOnly,
     /*
      * PRD Nº10 §49-§51. Administrator-only, and even then refused for an asset
      * something is displaying — see the `beforeDelete` hook, which is where the

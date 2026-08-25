@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminOnly, editorialStaffOnly, publicActiveOrEditorial } from '@/payload/access/helpers'
+import { adminOnly, newsroomStaffOnly, publicActiveOrEditorial } from '@/payload/access/helpers'
 import { seoFields } from '@/payload/fields/seo'
 import { slugField } from '@/payload/fields/slug'
 
@@ -22,8 +22,8 @@ export const Categories: CollectionConfig = {
 
   access: {
     read: publicActiveOrEditorial,
-    create: editorialStaffOnly,
-    update: editorialStaffOnly,
+    create: newsroomStaffOnly,
+    update: newsroomStaffOnly,
     /*
      * PRD Nº7 §118: deleting a category that published content points at
      * breaks that content. Retire with `active = false` instead. Restricted to

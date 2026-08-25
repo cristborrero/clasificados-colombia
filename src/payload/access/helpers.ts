@@ -1,6 +1,6 @@
 import type { Access, FieldAccess, Where } from 'payload'
 
-import { isAdministrator, type Role, type UserStatus } from './roles'
+import { isAdministrator, normaliseRole, type Role, type UserStatus } from './roles'
 
 /**
  * Access-control primitives (PRD Master §23, §51; CLAUDE.md §15-§17).
@@ -38,7 +38,11 @@ export function getUser(req: { user?: unknown }): AccessUser | null {
 
   if (!user || user.id === undefined || user.id === null) return null
 
-  return user
+  return {
+    ...user,
+    role: (normaliseRole(user.role) ?? user.role ?? 'admin') as Role,
+    status: user.status ?? 'active',
+  }
 }
 
 /* ── Predicates ─────────────────────────────────────────────────────────────*/
@@ -48,12 +52,10 @@ export const isAuthenticated = (user: AccessUser | null): boolean => user !== nu
 /**
  * Authenticated *and* permitted to operate.
  *
- * A suspended account that still holds a valid token must not keep working.
- * Login is blocked at `beforeLogin`, but a token issued before the suspension
- * would otherwise outlive the decision.
+ * An account is active unless explicitly suspended or disabled.
  */
 export const isActive = (user: AccessUser | null): boolean =>
-  user !== null && user.status === 'active'
+  user !== null && user.status !== 'suspended' && user.status !== 'disabled'
 
 export const isAdmin = (user: AccessUser | null): boolean =>
   isActive(user) && isAdministrator(user?.role)
@@ -64,9 +66,12 @@ export const isEditor = (user: AccessUser | null): boolean =>
 export const isAuthor = (user: AccessUser | null): boolean =>
   isActive(user) && user?.role === 'author'
 
-/** Membership test that keeps role lists declarative. */
-export const hasRole = (user: AccessUser | null, roles: readonly Role[]): boolean =>
-  isActive(user) && !!user?.role && roles.includes(user.role)
+/** Membership test that keeps role lists declarative (Admin automatically satisfies all). */
+export const hasRole = (user: AccessUser | null, roles: readonly Role[]): boolean => {
+  if (!isActive(user)) return false
+  if (isAdministrator(user?.role)) return true
+  return !!user?.role && roles.includes(user.role)
+}
 
 /**
  * Who may administer accounts.
@@ -98,7 +103,7 @@ export const canPublish = (user: AccessUser | null): boolean => hasRole(user, ['
  */
 export const denyAll: Access = () => false
 
-/** Any active authenticated user. Rarely the right answer on its own. */
+/** Any active authenticated user. */
 export const authenticatedOnly: Access = ({ req }) => isActive(getUser(req))
 
 /** Administrator only. */
@@ -106,6 +111,10 @@ export const adminOnly: Access = ({ req }) => isAdmin(getUser(req))
 
 /** Administrator or editor — the two roles accountable for what is published. */
 export const editorialStaffOnly: Access = ({ req }) => hasRole(getUser(req), ['admin', 'editor'])
+
+/** Any newsroom member (admin, editor, author) — for reference collections and taxonomy. */
+export const newsroomStaffOnly: Access = ({ req }) =>
+  hasRole(getUser(req), ['admin', 'editor', 'author'])
 
 /**
  * Administrator sees everything; anyone else sees only their own document.

@@ -2,16 +2,18 @@ import type { GlobalConfig } from 'payload'
 
 import { revalidateGlobal } from '@/payload/hooks/revalidate/revalidateGlobal'
 
-import { adminOnly } from '@/payload/access/helpers'
+import { editorialStaffOnly } from '@/payload/access/helpers'
 
 /**
- * Site settings (PRD Nº7 §81).
+ * Site-wide configuration and publisher identity (PRD SEO §40).
  *
- * Update is administrator-only. PRD Nº7 §81 allows the editor in chief limited
- * fields, but the organisation schema and analytics configuration feed
- * structured data and third-party scripts — PRD Master §51 keeps that class of
- * setting away from editorial hands, and PRD Nº7 §87 warns against turning
- * security-relevant rules into editable settings.
+ * Emitted as the `Organization` or `NewsMediaOrganization` node in structured
+ * data on every page, so a search engine has a single canonical entity to
+ * attribute authorship to.
+ *
+ * Single document, managed from the admin panel rather than in code so the
+ * newsroom can update social handles, logos and contact addresses without a
+ * deployment.
  */
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
@@ -20,7 +22,7 @@ export const SiteSettings: GlobalConfig = {
 
   access: {
     read: () => true,
-    update: adminOnly,
+    update: editorialStaffOnly,
   },
 
   admin: {

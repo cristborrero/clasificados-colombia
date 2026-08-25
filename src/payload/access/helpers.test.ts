@@ -16,6 +16,7 @@ import {
   isAuthenticated,
   isAuthor,
   isEditor,
+  newsroomStaffOnly,
   publicActiveOrEditorial,
   type AccessUser,
 } from './helpers'
@@ -138,6 +139,14 @@ describe('authenticatedOnly / adminOnly / editorialStaffOnly', () => {
     expect(editorialStaffOnly(req(user('admin')))).toBe(true)
     expect(editorialStaffOnly(req(user('editor')))).toBe(true)
     expect(editorialStaffOnly(req(user('author')))).toBe(false)
+  })
+
+  it('newsroomStaffOnly admits admin, editor and author', () => {
+    expect(newsroomStaffOnly(req(user('admin')))).toBe(true)
+    expect(newsroomStaffOnly(req(user('editor')))).toBe(true)
+    expect(newsroomStaffOnly(req(user('author')))).toBe(true)
+    expect(newsroomStaffOnly(req(null))).toBe(false)
+    expect(newsroomStaffOnly(req(user('author', 'suspended')))).toBe(false)
   })
 })
 

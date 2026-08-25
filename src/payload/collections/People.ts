@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminOnly, editorialStaffOnly, publicActiveOrEditorial } from '@/payload/access/helpers'
+import { adminOnly, newsroomStaffOnly, publicActiveOrEditorial } from '@/payload/access/helpers'
 import { slugField } from '@/payload/fields/slug'
 
 /**
@@ -25,8 +25,8 @@ export const People: CollectionConfig = {
 
   access: {
     read: publicActiveOrEditorial,
-    create: editorialStaffOnly,
-    update: editorialStaffOnly,
+    create: newsroomStaffOnly,
+    update: newsroomStaffOnly,
     delete: adminOnly, // PRD Nº7 §118 — retire with `active = false`.
   },
 

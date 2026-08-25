@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { adminOnly, editorialStaffOnly, publicActiveOrEditorial } from '@/payload/access/helpers'
+import { adminOnly, newsroomStaffOnly, publicActiveOrEditorial } from '@/payload/access/helpers'
 import { seoFields } from '@/payload/fields/seo'
 import { slugField } from '@/payload/fields/slug'
 
@@ -25,8 +25,8 @@ export const Authors: CollectionConfig = {
 
   access: {
     read: publicActiveOrEditorial,
-    create: editorialStaffOnly,
-    update: editorialStaffOnly,
+    create: newsroomStaffOnly,
+    update: newsroomStaffOnly,
     /*
      * PRD Nº7 §118: deleting an author orphans every published byline they
      * carry. Retiring a journalist is `active = false`, which keeps the

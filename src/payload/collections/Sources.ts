@@ -1,6 +1,6 @@
 import type { CollectionConfig, Where } from 'payload'
 
-import { adminOnly, editorialStaffOnly, getUser, isActive } from '@/payload/access/helpers'
+import { adminOnly, getUser, isActive, newsroomStaffOnly } from '@/payload/access/helpers'
 
 /**
  * Sources — the documentary basis of a piece (PRD Nº7 §62-§64).
@@ -32,8 +32,8 @@ export const Sources: CollectionConfig = {
       if (isActive(getUser(req))) return true
       return { visibility: { equals: 'public' } } satisfies Where
     },
-    create: editorialStaffOnly,
-    update: editorialStaffOnly,
+    create: newsroomStaffOnly,
+    update: newsroomStaffOnly,
     delete: adminOnly,
   },
 

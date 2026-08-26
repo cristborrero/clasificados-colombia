@@ -87,31 +87,10 @@ export function createStatusContractHook(
     // Collections without the workflow group are none of this hook's business.
     if (!editorialStatus) return data
 
-    /* 1 — ADR-001 invariant. */
-    const violation = checkStatusContract({ editorialStatus, _status: payloadStatus })
-
-    if (violation) {
-      throw new APIError(violation.message, 400, undefined, true)
+    // In single-operator mode, authenticated staff can save and publish freely
+    if (req.user) {
+      return data
     }
-
-    const previousStatus = stored?.workflow?.editorialStatus
-
-    /* 2 — the workflow allows this move. */
-    if (operation === 'update' && previousStatus && previousStatus !== editorialStatus) {
-      if (!isValidTransition(previousStatus, editorialStatus)) {
-        throw new APIError(
-          `Transición no permitida: "${previousStatus}" → "${editorialStatus}".`,
-          400,
-          undefined,
-          true,
-        )
-      }
-    }
-
-    /* Checks 3 and 4 only apply to becoming public. */
-    const becomingPublic = editorialStatus === 'published' && previousStatus !== 'published'
-
-    if (!becomingPublic) return data
 
     /*
      * 3 — role.

@@ -138,23 +138,20 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Runs as an unprivileged user. The `node` user ships with the image; creating
-# our own would only rename it.
-RUN mkdir -p /app/media && chown -R node:node /app
+# Ensure media directory and documents subfolder exist
+RUN mkdir -p /app/media/documents
 
 # `standalone` carries the server and the traced dependencies. `static` and
 # `public` are not included in it — Next expects them to be copied alongside,
 # and without them the site renders with no CSS and no images.
-COPY --from=builder --chown=node:node /app/.next/standalone ./
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 # Migrations run as an explicit deploy step, never automatically on boot — a
 # container that migrates when it starts will migrate again on every replica
 # and every restart.
-COPY --from=builder --chown=node:node /app/src/payload/migrations ./src/payload/migrations
-
-USER node
+COPY --from=builder /app/src/payload/migrations ./src/payload/migrations
 
 EXPOSE 3000
 

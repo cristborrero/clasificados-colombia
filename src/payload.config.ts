@@ -83,16 +83,7 @@ function buildEmailAdapter() {
 }
 
 export default buildConfig({
-  /*
-   * In the browser, an empty serverURL forces Payload to use relative URLs
-   * (/api/...), ensuring form saves and drawer requests always hit the current
-   * active domain without being tied to a build-time hardcoded host.
-   * On the server, it provides the canonical origin for email/jobs/CSRF.
-   */
-  serverURL:
-    typeof window !== 'undefined'
-      ? ''
-      : (process.env.NEXT_PUBLIC_SERVER_URL || 'https://clasificadoscolombia.co'),
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'https://clasificadoscolombia.co',
   cors: [
     'https://clasificadoscolombia.co',
     'https://www.clasificadoscolombia.co',

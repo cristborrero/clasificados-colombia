@@ -1,5 +1,7 @@
 import type { Field } from 'payload'
 
+import { editorialStaffFieldOnly } from '@/payload/access/helpers'
+
 /**
  * Ownership and assignment (PRD Nº7 §13, §45, §48; PRD Nº5 §13).
  *
@@ -26,10 +28,7 @@ export function ownershipFields(): Field[] {
         description: 'Lo registra el sistema. Determina quién puede editar el borrador.',
       },
       access: {
-        update: ({ req }) => {
-          const user = getUser(req)
-          return isSuperUser(user) || hasRole(user, ['admin', 'editor', 'author'])
-        },
+        update: editorialStaffFieldOnly,
       },
       hooks: {
         beforeChange: [

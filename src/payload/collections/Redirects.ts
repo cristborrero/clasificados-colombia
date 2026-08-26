@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { normalisePath } from '@/lib/routes'
-import { adminOnly, editorialStaffOnly } from '@/payload/access/helpers'
+import { adminOnly, editorialStaffOnly, editorialStaffFieldOnly } from '@/payload/access/helpers'
 
 /**
  * Redirects (PRD SEO §15-§16, PRD Nº7 §79-§80).
@@ -121,10 +121,7 @@ export const Redirects: CollectionConfig = {
         description: 'Marca las que generó el sistema al cambiar un slug publicado.',
       },
       access: {
-        update: ({ req }) => {
-          const user = getUser(req)
-          return isSuperUser(user) || hasRole(user, ['admin', 'editor'])
-        },
+        update: editorialStaffFieldOnly,
       },
     },
   ],

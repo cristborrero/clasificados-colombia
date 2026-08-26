@@ -1,5 +1,7 @@
 import type { Field } from 'payload'
 
+import { editorialStaffFieldOnly } from '@/payload/access/helpers'
+
 /**
  * Publication dates (PRD Nº7 §35-§37).
  *
@@ -39,10 +41,7 @@ export function publicationFields(): Field {
           description: 'Se registra una sola vez, en la primera publicación. No se modifica.',
         },
         access: {
-          update: ({ req }) => {
-            const user = getUser(req)
-            return isSuperUser(user) || hasRole(user, ['admin', 'editor', 'author'])
-          },
+          update: editorialStaffFieldOnly,
         },
       },
       {

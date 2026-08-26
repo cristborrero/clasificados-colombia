@@ -1,6 +1,7 @@
 import type { Field } from 'payload'
 
 import { isReservedSegment } from '@/lib/routes'
+import { editorialStaffFieldOnly } from '@/payload/access/helpers'
 
 /**
  * Slug normalisation (PRD SEO §14, PRD Nº7 §22-§24).
@@ -111,10 +112,7 @@ export function slugField({
         description: 'Se activa en la primera publicación. Protege una URL ya difundida.',
       },
       access: {
-        update: ({ req }) => {
-          const user = getUser(req)
-          return isSuperUser(user) || hasRole(user, ['admin', 'editor', 'author'])
-        },
+        update: editorialStaffFieldOnly,
       },
     },
   ]

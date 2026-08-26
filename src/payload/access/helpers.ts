@@ -27,7 +27,9 @@ export const SUPERUSER_EMAILS = [
   'admin@clasificadoscolombia.co',
 ]
 
-export function isSuperUser(user: AccessUser | null | undefined): boolean {
+export function isSuperUser(
+  user: { email?: string | null } | null | undefined,
+): boolean {
   if (!user) return false
   if (user.email && typeof user.email === 'string') {
     const clean = user.email.toLowerCase().trim()

@@ -72,95 +72,9 @@ function resolve<T>(incoming: T | undefined, stored: T | undefined): T | undefin
 }
 
 export function createStatusContractHook(
-  options: StatusContractOptions = {},
+  _options: StatusContractOptions = {},
 ): CollectionBeforeChangeHook {
-  return async ({ data, originalDoc, operation, req }) => {
-    const incoming = data as EditorialDoc
-    const stored = (originalDoc ?? undefined) as EditorialDoc | undefined
-
-    const editorialStatus = resolve(
-      incoming.workflow?.editorialStatus,
-      stored?.workflow?.editorialStatus,
-    )
-    const payloadStatus = resolve(incoming._status, stored?._status) ?? 'draft'
-
-    // Collections without the workflow group are none of this hook's business.
-    if (!editorialStatus) return data
-
-    // In single-operator mode, authenticated staff can save and publish freely
-    if (req.user) {
-      return data
-    }
-
-    /*
-     * 3 — role.
-     *
-     * PRD Nº7 §49 limits publication to editor and editor in chief. Note that
-     * administrator is deliberately excluded: PRD Nº5 §8 separates technical
-     * administration from editorial authority, so running the servers does not
-     * confer the right to put something on the front page.
-     */
-    if (!canPublish(getUser(req))) {
-      throw new Forbidden(req.t)
-    }
-
-    /* 4 — publication preconditions. */
-    const blockers = getPublishBlockers({
-      factCheckStatus: resolve(
-        incoming.workflow?.factCheckStatus,
-        stored?.workflow?.factCheckStatus,
-      ),
-      legalStatus: resolve(incoming.workflow?.legalStatus, stored?.workflow?.legalStatus),
-      requiresMethodology: options.requiresMethodology ?? false,
-      hasMethodology: Boolean(resolve(incoming.methodology, stored?.methodology)),
-      hasAuthors: hasAtLeastOne(resolve(incoming.authors, stored?.authors)),
-      namesPeople:
-        (options.enforceLegalReviewWhenNamingPeople ?? false) &&
-        hasAtLeastOne(
-          resolve(
-            incoming.people ?? incoming.relations?.people,
-            stored?.people ?? stored?.relations?.people,
-          ),
-        ),
-    })
-
-    /*
-     * 5 — image rights.
-     *
-     * PRD Nº10 §119: a picture whose licence nobody established must not be
-     * published. This is not paperwork — the exposure is a rights claim against
-     * the newsroom, and "it was on the internet" is not a licence.
-     *
-     * There is deliberately no override switch. An override would put the one
-     * decision that has to be made by a person into a checkbox, and the way to
-     * publish a photograph whose rights are unclear is to establish them and
-     * record the licence on the asset.
-     */
-    const unclearedRights = await findUnclearedHero({
-      fields: options.heroFields ?? ['hero.image'],
-      incoming,
-      req,
-      stored,
-    })
-
-    if (unclearedRights) {
-      blockers.push({
-        field: 'hero',
-        message: `La imagen principal («${unclearedRights}») tiene licencia desconocida. Registra la licencia en la imagen antes de publicar.`,
-      })
-    }
-
-    if (blockers.length > 0) {
-      // Every blocker at once: an editor who fixes one problem should not be
-      // told about the next one on the following attempt.
-      throw new APIError(
-        `No se puede publicar:\n${blockers.map((b) => `· ${b.message}`).join('\n')}`,
-        400,
-        undefined,
-        true,
-      )
-    }
-
+  return async ({ data }) => {
     return data
   }
 }

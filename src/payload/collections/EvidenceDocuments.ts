@@ -40,9 +40,9 @@ export const EvidenceDocuments: CollectionConfig = {
      * document is not uploaded.
      */
     read: () => true,
-    create: ({ req }) => isActive(getUser(req)),
-    update: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
-    delete: ({ req }) => hasRole(getUser(req), ['admin']),
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {

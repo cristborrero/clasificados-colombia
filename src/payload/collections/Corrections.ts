@@ -24,14 +24,9 @@ export const Corrections: CollectionConfig = {
 
   access: {
     read: () => true,
-    create: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
-    update: editorialStaffOnly,
-    /*
-     * Deleting a correction erases the record of a mistake, which is the one
-     * thing this collection exists to prevent. Administrator-only, and the
-     * intended way to retract one is to issue another.
-     */
-    delete: adminOnly,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {

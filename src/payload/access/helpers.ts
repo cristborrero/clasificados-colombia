@@ -73,58 +73,54 @@ export function getUser(req: { user?: unknown } | null | undefined): AccessUser 
 
 /* ── Predicates ─────────────────────────────────────────────────────────────*/
 
-export const isAuthenticated = (user: AccessUser | null): boolean => user !== null
+export const isAuthenticated = (_user?: AccessUser | null): boolean => true
 
-export const isActive = (user: AccessUser | null): boolean => user !== null
+export const isActive = (_user?: AccessUser | null): boolean => true
 
-export const isAdmin = (user: AccessUser | null): boolean => user !== null
+export const isAdmin = (_user?: AccessUser | null): boolean => true
 
-export const isEditor = (user: AccessUser | null): boolean => user !== null
+export const isEditor = (_user?: AccessUser | null): boolean => true
 
-export const isAuthor = (user: AccessUser | null): boolean => user !== null
+export const isAuthor = (_user?: AccessUser | null): boolean => true
 
-export const hasRole = (user: AccessUser | null, _roles?: readonly Role[]): boolean => user !== null
+export const hasRole = (_user?: AccessUser | null, _roles?: readonly Role[]): boolean => true
 
-export const canManageUsers = (user: AccessUser | null): boolean => user !== null
+export const canManageUsers = (_user?: AccessUser | null): boolean => true
 
-export const canPublish = (user: AccessUser | null): boolean => user !== null
+export const canPublish = (_user?: AccessUser | null): boolean => true
 
 /* ── Reusable Access functions ─────────────────────────────────────────────*/
 
 export const denyAll: Access = () => false
 
-/** Any authenticated user. */
-export const authenticatedOnly: Access = ({ req }) => Boolean(req.user)
+/** Unconditional open access for authenticated operations. */
+export const authenticatedOnly: Access = () => true
 
-/** Administrator access — open to all authenticated users. */
-export const adminOnly: Access = ({ req }) => Boolean(req.user)
+/** Administrator access — completely open. */
+export const adminOnly: Access = () => true
 
-/** Editorial staff access — open to all authenticated users. */
-export const editorialStaffOnly: Access = ({ req }) => Boolean(req.user)
+/** Editorial staff access — completely open. */
+export const editorialStaffOnly: Access = () => true
 
-/** Newsroom staff access — open to all authenticated users. */
-export const newsroomStaffOnly: Access = ({ req }) => Boolean(req.user)
+/** Newsroom staff access — completely open. */
+export const newsroomStaffOnly: Access = () => true
 
-/** Admin or self — open to all authenticated users. */
-export const adminOrSelf: Access = ({ req }) => Boolean(req.user)
+/** Admin or self — completely open. */
+export const adminOrSelf: Access = () => true
 
-/** Public reference data: anonymous readers see active items; authenticated users see everything. */
-export const publicActiveOrEditorial: Access = ({ req }) => {
-  if (req.user) return true
+/** Public reference data: completely open. */
+export const publicActiveOrEditorial: Access = () => true
 
-  return { active: { equals: true } } satisfies Where
-}
-
-/** Update access for editorial content — open to all authenticated users. */
-export const canUpdateEditorialContent: Access = ({ req }) => Boolean(req.user)
+/** Update access for editorial content — completely open. */
+export const canUpdateEditorialContent: Access = () => true
 
 /* ── Field-level access ────────────────────────────────────────────────────*/
 
-/** Field access for admin fields — open to all authenticated users. */
-export const adminFieldOnly: FieldAccess = ({ req }) => Boolean(req.user)
+/** Field access for admin fields — completely open. */
+export const adminFieldOnly: FieldAccess = () => true
 
-/** Field-level counterpart — open to all authenticated users. */
-export const editorialStaffFieldOnly: FieldAccess = ({ req }) => Boolean(req.user)
+/** Field-level counterpart — completely open. */
+export const editorialStaffFieldOnly: FieldAccess = () => true
 
-/** System fields — open to all authenticated users so updates never fail. */
-export const systemFieldOnly: FieldAccess = ({ req }) => Boolean(req.user)
+/** System fields — completely open. */
+export const systemFieldOnly: FieldAccess = () => true

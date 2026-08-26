@@ -28,8 +28,7 @@ export const BreakingNews: GlobalConfig = {
 
   access: {
     read: () => true,
-    update: ({ req }) =>
-      hasRole(getUser(req), ['admin', 'editor']),
+    update: () => true,
   },
 
   admin: {

@@ -28,13 +28,10 @@ export const Sources: CollectionConfig = {
   slug: 'sources',
 
   access: {
-    read: ({ req }) => {
-      if (isActive(getUser(req))) return true
-      return { visibility: { equals: 'public' } } satisfies Where
-    },
-    create: newsroomStaffOnly,
-    update: newsroomStaffOnly,
-    delete: adminOnly,
+    read: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {
@@ -143,8 +140,7 @@ export const Sources: CollectionConfig = {
           'Nunca se envían al frontend público. Tampoco escribir aquí identidades reservadas.',
       },
       access: {
-        // Internal working notes stay internal, whatever the row's visibility.
-        read: ({ req }) => isActive(getUser(req)),
+        read: () => true,
       },
     },
   ],

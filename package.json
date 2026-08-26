@@ -10,8 +10,8 @@
     "node": ">=22.11.0 <23"
   },
   "scripts": {
-    "dev": "next dev",
-    "devsafe": "rm -rf .next && next dev",
+    "dev": "next dev --webpack",
+    "devsafe": "rm -rf .next && next dev --webpack",
     "build": "payload generate:importmap && next build",
     "start": "next start",
     "lint": "eslint .",

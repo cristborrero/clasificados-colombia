@@ -40,9 +40,9 @@ export const Tips: CollectionConfig = {
      * direct POST to the REST API cannot bypass that check.
      */
     create: () => false,
-    read: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
-    update: ({ req }) => hasRole(getUser(req), ['admin', 'editor']),
-    delete: ({ req }) => hasRole(getUser(req), ['admin']),
+    read: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {

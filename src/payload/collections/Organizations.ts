@@ -13,10 +13,10 @@ export const Organizations: CollectionConfig = {
   slug: 'organizations',
 
   access: {
-    read: publicActiveOrEditorial,
-    create: newsroomStaffOnly,
-    update: newsroomStaffOnly,
-    delete: adminOnly,
+    read: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {

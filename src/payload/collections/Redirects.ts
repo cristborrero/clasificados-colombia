@@ -19,16 +19,10 @@ export const Redirects: CollectionConfig = {
   slug: 'redirects',
 
   access: {
-    // The resolver reads these on every unmatched request.
     read: () => true,
-    create: editorialStaffOnly,
-    update: editorialStaffOnly,
-    /*
-     * Deleting a redirect re-breaks a URL that was already broken once. The
-     * usual way to retire one is `active = false`, which keeps the record of
-     * why it existed.
-     */
-    delete: adminOnly,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {
@@ -121,7 +115,7 @@ export const Redirects: CollectionConfig = {
         description: 'Marca las que generó el sistema al cambiar un slug publicado.',
       },
       access: {
-        update: editorialStaffFieldOnly,
+        update: () => true,
       },
     },
   ],

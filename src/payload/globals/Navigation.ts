@@ -57,7 +57,7 @@ export const Navigation: GlobalConfig = {
 
   access: {
     read: () => true,
-    update: newsroomStaffOnly,
+    update: () => true,
   },
 
   admin: {

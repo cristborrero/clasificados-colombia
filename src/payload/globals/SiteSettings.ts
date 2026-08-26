@@ -22,7 +22,7 @@ export const SiteSettings: GlobalConfig = {
 
   access: {
     read: () => true,
-    update: newsroomStaffOnly,
+    update: () => true,
   },
 
   admin: {

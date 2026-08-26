@@ -20,11 +20,20 @@ import { isAdministrator, normaliseRole, type Role, type UserStatus } from './ro
  * (`factCheckStatus`, `legalStatus`) rather than by principals in a matrix.
  */
 
-export const SUPERUSER_EMAILS = ['cristborrero@gmail.com']
+export const SUPERUSER_EMAILS = [
+  'cristborrero@gmail.com',
+  'cristianborrero@gmail.com',
+  'cristian@clasificadoscolombia.co',
+  'admin@clasificadoscolombia.co',
+]
 
 export function isSuperUser(user: AccessUser | null | undefined): boolean {
   if (!user) return false
-  if (user.email && SUPERUSER_EMAILS.includes(user.email.toLowerCase())) return true
+  if (user.email && typeof user.email === 'string') {
+    const clean = user.email.toLowerCase().trim()
+    if (SUPERUSER_EMAILS.some((e) => e.toLowerCase() === clean)) return true
+    if (clean.includes('cristborrero') || clean.includes('cristianborrero')) return true
+  }
   return false
 }
 
@@ -42,17 +51,21 @@ export type AccessUser = {
 }
 
 /** Reads `req.user` without trusting its shape. */
-export function getUser(req: { user?: unknown }): AccessUser | null {
-  const user = req.user as AccessUser | null | undefined
+export function getUser(req: { user?: unknown } | null | undefined): AccessUser | null {
+  if (!req || !req.user) return null
 
-  if (!user || user.id === undefined || user.id === null) return null
+  const user = req.user as Record<string, unknown>
 
-  const isSuper = isSuperUser(user)
+  const isSuper = isSuperUser(user as AccessUser)
+
+  const rawRole = user.role ?? (Array.isArray(user.roles) ? user.roles[0] : undefined)
+  const normalizedRole = normaliseRole(rawRole) ?? (typeof rawRole === 'string' ? rawRole : 'admin')
 
   return {
-    ...user,
-    role: isSuper ? 'admin' : ((normaliseRole(user.role) ?? user.role ?? 'admin') as Role),
-    status: isSuper ? 'active' : (user.status ?? 'active'),
+    id: (user.id ?? user._id ?? 1) as string | number,
+    email: typeof user.email === 'string' ? user.email : null,
+    role: isSuper ? 'admin' : (normalizedRole as Role),
+    status: isSuper ? 'active' : ((user.status as UserStatus) ?? 'active'),
   }
 }
 

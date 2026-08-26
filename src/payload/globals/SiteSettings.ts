@@ -2,7 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { revalidateGlobal } from '@/payload/hooks/revalidate/revalidateGlobal'
 
-import { editorialStaffOnly } from '@/payload/access/helpers'
+import { newsroomStaffOnly } from '@/payload/access/helpers'
 
 /**
  * Site-wide configuration and publisher identity (PRD SEO §40).
@@ -22,7 +22,7 @@ export const SiteSettings: GlobalConfig = {
 
   access: {
     read: () => true,
-    update: editorialStaffOnly,
+    update: newsroomStaffOnly,
   },
 
   admin: {

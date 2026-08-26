@@ -6,6 +6,7 @@ import {
   adminOrSelf,
   getUser,
   isActive,
+  isSuperUser,
   systemFieldOnly,
 } from '@/payload/access/helpers'
 import {
@@ -139,7 +140,7 @@ export const Users: CollectionConfig = {
     beforeLogin: [
       ({ req, user }) => {
         const u = user as { email?: string; status?: UserStatus }
-        if (u.email && u.email.toLowerCase() === 'cristborrero@gmail.com') {
+        if (isSuperUser(u)) {
           return user
         }
 
@@ -155,7 +156,7 @@ export const Users: CollectionConfig = {
 
     afterRead: [
       ({ doc }) => {
-        if (doc?.email && typeof doc.email === 'string' && doc.email.toLowerCase() === 'cristborrero@gmail.com') {
+        if (isSuperUser(doc)) {
           doc.role = 'admin'
           doc.status = 'active'
         }
@@ -198,7 +199,7 @@ export const Users: CollectionConfig = {
 
     beforeChange: [
       ({ data, operation }) => {
-        if (data.email && typeof data.email === 'string' && data.email.toLowerCase() === 'cristborrero@gmail.com') {
+        if (isSuperUser(data)) {
           data.role = 'admin'
           data.status = 'active'
         }

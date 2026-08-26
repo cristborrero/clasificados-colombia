@@ -2,7 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { revalidateGlobal } from '@/payload/hooks/revalidate/revalidateGlobal'
 
-import { editorialStaffOnly } from '@/payload/access/helpers'
+import { newsroomStaffOnly } from '@/payload/access/helpers'
 
 /**
  * Site navigation (PRD Nº7 §82-§83, PRD Nº8 §28).
@@ -57,7 +57,7 @@ export const Navigation: GlobalConfig = {
 
   access: {
     read: () => true,
-    update: editorialStaffOnly,
+    update: newsroomStaffOnly,
   },
 
   admin: {

@@ -36,9 +36,9 @@ const mediaHost = (() => {
 const publicCsp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://challenges.cloudflare.com",
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.googleapis.com https:",
   `img-src 'self' data: blob: https:${mediaHost ? ` ${mediaHost}` : ''}`,
-  "font-src 'self' data:",
+  "font-src 'self' data: blob: https://fonts.gstatic.com https://*.gstatic.com https:",
   "connect-src 'self' blob: data: https:",
   "worker-src 'self' blob:",
   // YouTube is the only third party allowed to frame anything, and only
@@ -61,9 +61,9 @@ const publicCsp = [
 const adminCsp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
-  "style-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.googleapis.com https:",
   `img-src 'self' data: blob: https:${mediaHost ? ` ${mediaHost}` : ''}`,
-  "font-src 'self' data:",
+  "font-src 'self' data: blob: https://fonts.gstatic.com https://*.gstatic.com https:",
   "connect-src 'self' blob: data: https:",
   "worker-src 'self' blob:",
   "media-src 'self' blob: data: https:",

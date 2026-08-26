@@ -86,7 +86,7 @@ ENV PAYLOAD_SECRET=${PAYLOAD_SECRET}
 # So: pass the real domain as a build argument for any image that will be
 # deployed. The default below exists so the image can be built and verified
 # without one.
-ARG NEXT_PUBLIC_SERVER_URL=http://localhost:3000
+ARG NEXT_PUBLIC_SERVER_URL=https://clasificadoscolombia.co
 ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 
 # Same rule, same reason: the tip form reads this in a Client Component, so the

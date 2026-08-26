@@ -178,6 +178,11 @@ export const editorialStaffFieldOnly: FieldAccess = ({ req }) => {
 }
 
 /**
- * Fields written by the system and by nothing else.
+ * Fields written by the system (telemetry, security metadata).
+ * Superusers and administrators are permitted so document updates sending
+ * unchanged read-only fields do not fail validation.
  */
-export const systemFieldOnly: FieldAccess = () => false
+export const systemFieldOnly: FieldAccess = ({ req }) => {
+  const user = getUser(req)
+  return isSuperUser(user) || isAdmin(user)
+}

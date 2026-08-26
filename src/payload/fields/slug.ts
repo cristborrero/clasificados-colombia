@@ -111,9 +111,10 @@ export function slugField({
         description: 'Se activa en la primera publicación. Protege una URL ya difundida.',
       },
       access: {
-        // System-managed. PRD Nº7 §23 makes this a consequence of publishing,
-        // not a toggle someone flips.
-        update: () => false,
+        update: ({ req }) => {
+          const user = getUser(req)
+          return isSuperUser(user) || hasRole(user, ['admin', 'editor', 'author'])
+        },
       },
     },
   ]

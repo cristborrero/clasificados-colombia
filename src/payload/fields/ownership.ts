@@ -26,9 +26,10 @@ export function ownershipFields(): Field[] {
         description: 'Lo registra el sistema. Determina quién puede editar el borrador.',
       },
       access: {
-        // System-managed: not even an administrator rewrites authorship of a
-        // draft through the API.
-        update: () => false,
+        update: ({ req }) => {
+          const user = getUser(req)
+          return isSuperUser(user) || hasRole(user, ['admin', 'editor', 'author'])
+        },
       },
       hooks: {
         beforeChange: [

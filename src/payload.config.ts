@@ -84,16 +84,15 @@ function buildEmailAdapter() {
 
 export default buildConfig({
   /*
-   * serverURL is set from the environment so Payload can derive the origin for
-   * its internal CSRF check. Without it, mutation requests from the admin UI
-   * are rejected as cross-origin because Payload cannot compare the incoming
-   * Origin header against an expected value.
-   *
-   * The client bundle uses relative URLs either way — Next.js App Router does
-   * not embed this into fetches — so setting it here only affects server-side
-   * origin matching, not the URLs the browser hits.
+   * In the browser, an empty serverURL forces Payload to use relative URLs
+   * (/api/...), ensuring form saves and drawer requests always hit the current
+   * active domain without being tied to a build-time hardcoded host.
+   * On the server, it provides the canonical origin for email/jobs/CSRF.
    */
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || '',
+  serverURL:
+    typeof window !== 'undefined'
+      ? ''
+      : (process.env.NEXT_PUBLIC_SERVER_URL || 'https://clasificadoscolombia.co'),
   cors: [
     'https://clasificadoscolombia.co',
     'https://www.clasificadoscolombia.co',

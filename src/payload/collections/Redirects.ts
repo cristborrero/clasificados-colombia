@@ -121,7 +121,10 @@ export const Redirects: CollectionConfig = {
         description: 'Marca las que generó el sistema al cambiar un slug publicado.',
       },
       access: {
-        update: () => false,
+        update: ({ req }) => {
+          const user = getUser(req)
+          return isSuperUser(user) || hasRole(user, ['admin', 'editor'])
+        },
       },
     },
   ],

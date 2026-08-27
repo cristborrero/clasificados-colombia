@@ -24,7 +24,7 @@ FROM node:${NODE_VERSION} AS deps
 
 WORKDIR /app
 
-RUN corepack enable
+RUN npm install -g pnpm@10.28.2
 
 # Only the manifests, so this layer is reused whenever dependencies have not
 # changed — which on this project is most builds.
@@ -52,7 +52,7 @@ FROM node:${NODE_VERSION} AS builder
 
 WORKDIR /app
 
-RUN corepack enable
+RUN npm install -g pnpm@10.28.2
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -118,7 +118,7 @@ FROM node:${NODE_VERSION} AS migrator
 
 WORKDIR /app
 
-RUN corepack enable
+RUN npm install -g pnpm@10.28.2
 
 ENV NODE_ENV=production
 

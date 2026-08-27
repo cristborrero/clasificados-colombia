@@ -97,7 +97,6 @@ export function sanitiseMetadata(
 export async function recordAuditEvent(
   payload: Payload,
   event: AuditEventInput,
-  req?: PayloadRequest,
 ): Promise<void> {
   try {
     await payload.create({
@@ -114,7 +113,6 @@ export async function recordAuditEvent(
         metadata: sanitiseMetadata(event.metadata),
       },
       overrideAccess: true,
-      ...(req ? { req } : {}),
     })
   } catch (error) {
     payload.logger.error(

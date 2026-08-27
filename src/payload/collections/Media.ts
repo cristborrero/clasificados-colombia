@@ -146,13 +146,12 @@ export const Media: CollectionConfig = {
         req.file.data = data
         req.file.size = data.byteLength
 
-        /*
-         * The checksum is taken from the bytes as uploaded, not from the
-         * normalised output: hashing the output would tie the identity of an
-         * asset to the sharp version that processed it, so the same photograph
-         * re-uploaded after a dependency bump would look like a new one.
-         */
-        req.context.uploadChecksum = checksumOf(original)
+        if (context) {
+          ;(context as Record<string, unknown>).uploadChecksum = checksumOf(original)
+        }
+        if (req && 'context' in req && req.context) {
+          ;(req.context as Record<string, unknown>).uploadChecksum = checksumOf(original)
+        }
 
         return args
       },

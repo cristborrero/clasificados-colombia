@@ -104,8 +104,9 @@ export function normalisePath(path: string): string {
 
 export function siteOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_SERVER_URL ?? 'http://localhost:3000'
+  const first = (raw.split(',')[0] || '').trim()
 
-  return raw.replace(/\/+$/, '')
+  return first.replace(/\/+$/, '') || 'http://localhost:3000'
 }
 
 /**

@@ -147,6 +147,7 @@ RUN mkdir -p /app/media/documents
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY server-preload.js ./server-preload.js
 
 # Migrations run as an explicit deploy step, never automatically on boot — a
 # container that migrates when it starts will migrate again on every replica
@@ -161,4 +162,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-CMD ["node", "server.js"]
+CMD ["node", "-r", "./server-preload.js", "server.js"]

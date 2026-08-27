@@ -83,21 +83,23 @@ function buildEmailAdapter() {
   })
 }
 
+import { siteOrigin } from './lib/routes'
+
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'https://clasificadoscolombia.co',
+  serverURL: siteOrigin(),
   cors: [
     'https://clasificadoscolombia.co',
     'https://www.clasificadoscolombia.co',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    process.env.NEXT_PUBLIC_SERVER_URL,
+    siteOrigin(),
   ].filter(Boolean) as string[],
   csrf: [
     'https://clasificadoscolombia.co',
     'https://www.clasificadoscolombia.co',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    process.env.NEXT_PUBLIC_SERVER_URL,
+    siteOrigin(),
   ].filter(Boolean) as string[],
   admin: {
     user: Users.slug,

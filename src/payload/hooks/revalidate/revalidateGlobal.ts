@@ -21,15 +21,6 @@ export const revalidateGlobal =
   (slug: PublicGlobalSlug): GlobalAfterChangeHook =>
   ({ doc }) => {
     try {
-      /*
-       * `{ expire: 0 }` — purge now, do not merely mark stale. Next 16 requires
-       * a cache-life profile here; the default would let the previous value
-       * keep being served while the new one warms, and an editor who just
-       * corrected a breaking-news headline should not have to reload twice to
-       * see it gone. `updateTag`, the read-your-own-writes variant, is not an
-       * option: it only works inside a Server Action, and a Payload hook runs
-       * in a Route Handler.
-       */
       revalidateTag(globalTag(slug), { expire: 0 })
       revalidateTag(SHELL_TAG, { expire: 0 })
     } catch {

@@ -107,7 +107,7 @@ export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SERVER_URL: z.preprocess(
     (value) =>
       typeof value === 'string' && value.trim() !== ''
-        ? value
+        ? (value.split(',')[0] || '').trim().replace(/\/+$/, '')
         : 'https://clasificadoscolombia.co',
     z.string().min(1, 'NEXT_PUBLIC_SERVER_URL is required'),
   ),

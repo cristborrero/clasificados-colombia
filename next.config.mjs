@@ -134,6 +134,16 @@ const nextConfig = {
    * keeps a working `pnpm start`.
    */
   ...(process.env.BUILD_STANDALONE === 'true' ? { output: 'standalone' } : {}),
+  experimental: {
+    serverActions: {
+      allowedOrigins: [
+        'clasificadoscolombia.co',
+        'www.clasificadoscolombia.co',
+        'localhost:3000',
+        '127.0.0.1:3000',
+      ],
+    },
+  },
   async headers() {
     return [
       /*

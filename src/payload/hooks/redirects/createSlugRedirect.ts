@@ -109,7 +109,6 @@ export function createSlugRedirect({ buildPath }: SlugRedirectOptions): Collecti
         where: { from: { equals: from } },
         limit: 1,
         overrideAccess: true,
-        req,
       })
 
       if (existing.totalDocs > 0) {
@@ -122,7 +121,6 @@ export function createSlugRedirect({ buildPath }: SlugRedirectOptions): Collecti
             id: first.id,
             data: { to, active: true },
             overrideAccess: true,
-            req,
           })
         }
 
@@ -140,10 +138,9 @@ export function createSlugRedirect({ buildPath }: SlugRedirectOptions): Collecti
           automatic: true,
         },
         overrideAccess: true,
-        req,
       })
     } catch (error) {
-      req.payload.logger.error(
+      req.payload?.logger?.error?.(
         { err: error, from, to },
         'No se pudo crear el redirect automático tras cambiar un slug publicado',
       )

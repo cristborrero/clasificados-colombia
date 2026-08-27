@@ -27,19 +27,16 @@ async function enqueue(
   input: { collection: string; documentId: string; operation: 'upsert' | 'delete'; version: string },
 ): Promise<void> {
   try {
-    await req.payload.jobs.queue({
-      task: 'syncSearch',
-      input,
-      req,
-    })
+    if (req?.payload?.jobs?.queue) {
+      void req.payload.jobs.queue({
+        task: 'syncSearch',
+        input,
+      }).catch((err) => {
+        req.payload?.logger?.error?.({ err, ...input }, 'No se pudo encolar la sincronización')
+      })
+    }
   } catch (error) {
-    /*
-     * Logged, never thrown. §87 again: if even queueing fails, an editor
-     * pressing Publish must still publish. The index is then stale until the
-     * next change to the document or the next `pnpm search:reindex`, which is a
-     * far smaller problem than a newsroom that cannot publish.
-     */
-    req.payload.logger.error(
+    req.payload?.logger?.error?.(
       { err: error, ...input },
       'No se pudo encolar la sincronización con el buscador',
     )

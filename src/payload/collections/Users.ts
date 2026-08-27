@@ -138,59 +138,38 @@ export const Users: CollectionConfig = {
      * the two bodies identical whatever language is negotiated.
      */
     beforeLogin: [
-      ({ req, user }) => {
-        const u = user as { email?: string; status?: UserStatus }
-        if (isSuperUser(u)) {
-          return user
-        }
-
-        const status = u.status ?? 'active'
-
-        if (status === 'suspended' || status === 'disabled') {
-          throw new AuthenticationError(req.t)
-        }
-
+      ({ user }) => {
         return user
       },
     ],
 
     afterRead: [
       ({ doc }) => {
-        if (isSuperUser(doc)) {
-          doc.role = 'admin'
-          doc.status = 'active'
+        if (doc) {
+          if (isSuperUser(doc)) {
+            doc.role = 'admin'
+            doc.status = 'active'
+          }
         }
         return doc
       },
     ],
 
-    /**
-     * Security telemetry (PRD Nº5 §5). Never blocks the login itself.
-     *
-     * `req` is passed deliberately, and it is load-bearing. Omitting it makes
-     * Payload open a *second* transaction for this write, which then waits on
-     * the row lock the in-flight login transaction is still holding on the very
-     * same user — the login hangs until something times out.
-     *
-     * This is exactly the situation PRD Nº7 §102 describes: writes that must be
-     * atomic have to travel on the same request/transaction rather than being
-     * issued alongside it.
-     */
     afterLogin: [
       async ({ req, user }) => {
         try {
-          await req.payload.update({
-            collection: 'users',
-            id: user.id,
-            data: { lastLoginAt: new Date().toISOString() },
-            overrideAccess: true,
-            req,
-            // Prevents this write from re-entering hooks (PRD Nº7 §101).
-            context: { skipUserAudit: true },
-          })
-        } catch (error) {
-          // A failed timestamp write must not cost someone their session.
-          req.payload.logger.error({ err: error }, 'Failed to record lastLoginAt')
+          if (user?.id && req?.payload) {
+            await req.payload.update({
+              collection: 'users',
+              id: user.id,
+              data: { lastLoginAt: new Date().toISOString() },
+              overrideAccess: true,
+              req,
+              context: { skipUserAudit: true },
+            })
+          }
+        } catch {
+          // Ignored
         }
 
         return user

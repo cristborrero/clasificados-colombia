@@ -35,10 +35,7 @@ export const Opinions: CollectionConfig = {
   slug: 'opinions',
 
   access: {
-    read: ({ req }) => {
-      if (req.user) return true
-      return { _status: { equals: 'published' } }
-    },
+    read: () => true,
     create: () => true,
     update: () => true,
     delete: () => true,

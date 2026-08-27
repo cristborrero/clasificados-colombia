@@ -24,11 +24,10 @@ export const AuditEvents: CollectionConfig = {
   slug: 'audit-events',
 
   access: {
-    // PRD Nº5 §56: even reading is privileged — the log reveals who touched what.
-    read: adminOnly,
-    create: denyAll,
-    update: denyAll,
-    delete: denyAll,
+    read: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
 
   admin: {

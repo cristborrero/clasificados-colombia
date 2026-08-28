@@ -72,18 +72,18 @@ export default async function CategoryPage({ params }: Params) {
           className="mb-8"
         />
 
-        <div className="flex flex-col gap-4 border-b border-[var(--color-border)] pb-8">
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center gap-4 border-b border-[var(--color-border)] pb-8">
           <HeadlineXL className="text-balance text-[length:var(--text-h1)] sm:text-5xl">{category.name}</HeadlineXL>
 
           {category.description ? (
-            <Lead className="max-w-[64ch] text-[color:var(--color-text-muted)]">
+            <Lead className="mx-auto max-w-[64ch] text-balance text-[color:var(--color-text-muted)]">
               {category.description}
             </Lead>
           ) : null}
 
           {category.subsections.length > 0 ? (
             <nav aria-label="Subsecciones" className="mt-2">
-              <ul className="flex flex-wrap gap-2.5">
+              <ul className="flex flex-wrap justify-center gap-2.5">
                 {category.subsections.map((subsection) => (
                   <li key={subsection.slug}>
                     <Link

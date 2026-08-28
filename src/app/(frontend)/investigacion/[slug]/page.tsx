@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { redirectOrNotFound } from '@/lib/navigation/notFound'
 
-import { Breadcrumbs } from '@/components/articles/Breadcrumbs'
-import { ShareActions } from '@/components/articles/ShareActions'
 import { RichText } from '@/components/editorial/RichText'
 import { Body, HeadlineLG } from '@/components/editorial/Typography'
 import { EditorialTimeline } from '@/components/investigations/EditorialTimeline'
@@ -102,25 +100,15 @@ export default async function InvestigationPage({ params }: Params) {
         image={investigation.hero.image}
         caption={investigation.hero.caption}
         credit={investigation.hero.credit}
+        breadcrumbs={[
+          { label: settings.siteName, href: '/' },
+          { label: 'Investigaciones', href: '/investigaciones' },
+          { label: investigation.title },
+        ]}
+        shareUrl={`/investigacion/${investigation.slug}`}
       />
 
-      <Container width="wide" className="pt-8">
-        <Breadcrumbs
-          items={[
-            { label: settings.siteName, href: '/' },
-            { label: 'Investigaciones', href: '/investigaciones' },
-            { label: investigation.title },
-          ]}
-        />
-
-        <ShareActions
-          url={`/investigacion/${investigation.slug}`}
-          title={investigation.title}
-          className="mt-6"
-        />
-      </Container>
-
-      <Container width="wide">
+      <Container width="wide" className="pt-12">
         <KeyFindings findings={investigation.keyFindings} />
       </Container>
 

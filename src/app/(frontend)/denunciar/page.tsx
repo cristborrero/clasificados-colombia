@@ -33,12 +33,14 @@ export default async function DenunciarPage() {
         className="mb-8"
       />
 
-      <HeadlineXL className="text-[length:var(--text-h2)]">Cuéntanos qué está pasando</HeadlineXL>
+      <div className="mx-auto max-w-3xl text-center pb-8 border-b border-[var(--color-border)]">
+        <HeadlineXL className="text-[length:var(--text-h2)]">Cuéntanos qué está pasando</HeadlineXL>
 
-      <Lead className="mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
-        Leemos todo lo que llega. Si tienes documentos, fechas o nombres concretos, dilo: es lo que
-        permite verificar.
-      </Lead>
+        <Lead className="mx-auto mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
+          Leemos todo lo que llega. Si tienes documentos, fechas o nombres concretos, dilo: es lo que
+          permite verificar.
+        </Lead>
+      </div>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-7">

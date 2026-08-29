@@ -57,7 +57,7 @@ export default async function NotFound() {
             Error 404
           </p>
 
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl leading-tight text-[color:var(--color-text)] sm:text-5xl font-bold">
+          <h1 className="mt-2 font-[family-name:var(--font-editorial)] text-[length:var(--text-h1)] leading-tight text-[color:var(--color-text)] font-bold">
             Esta página no existe
           </h1>
 

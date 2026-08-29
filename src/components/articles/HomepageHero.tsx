@@ -138,7 +138,7 @@ export function HomepageHero({
             </p>
           )}
 
-          <h2 className="max-w-[32ch] font-[family-name:var(--font-editorial)] text-[clamp(2rem,5vw,3.75rem)] leading-[1.05] font-semibold text-balance text-[color:var(--color-white)]">
+          <h2 className="font-[family-name:var(--font-editorial)] text-[length:var(--text-display)] leading-[1.08] font-semibold text-balance text-[color:var(--color-white)]">
             <Link
               href={href}
               className="no-underline hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--color-white)]"

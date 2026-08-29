@@ -73,7 +73,7 @@ export default async function CategoryPage({ params }: Params) {
         />
 
         <div className="mx-auto flex max-w-3xl flex-col items-center text-center gap-4 border-b border-[var(--color-border)] pb-8">
-          <HeadlineXL className="text-balance text-[length:var(--text-h1)] sm:text-5xl">{category.name}</HeadlineXL>
+          <HeadlineXL className="text-balance">{category.name}</HeadlineXL>
 
           {category.description ? (
             <Lead className="mx-auto text-balance text-[color:var(--color-text-muted)]">

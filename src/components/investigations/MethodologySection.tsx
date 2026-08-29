@@ -32,7 +32,7 @@ export function MethodologySection({
   return (
     <section
       className={cn(
-        'my-16 border-y border-[var(--color-border-strong)] bg-[var(--color-surface-sunken)] px-6 py-10',
+        'my-16 mx-auto max-w-3xl border-y border-[var(--color-border-strong)] bg-[var(--color-surface-sunken)] p-8 sm:p-10',
         className,
       )}
       aria-labelledby="metodologia"
@@ -41,7 +41,7 @@ export function MethodologySection({
         {title}
       </HeadlineMD>
 
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="mt-4 flex flex-col gap-4 max-w-[62ch]">
         {paragraphs.map((paragraph) => (
           <Body key={paragraph.slice(0, 40)}>{paragraph}</Body>
         ))}

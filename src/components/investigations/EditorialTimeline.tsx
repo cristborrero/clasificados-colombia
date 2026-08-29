@@ -40,12 +40,12 @@ export function EditorialTimeline({
   if (dated.length === 0) return null
 
   return (
-    <section className={cn('my-16', className)} aria-labelledby="cronologia">
+    <section className={cn('my-16 mx-auto max-w-3xl', className)} aria-labelledby="cronologia">
       <HeadlineMD as="h2" id="cronologia">
         {title}
       </HeadlineMD>
 
-      <ol className="mt-8 flex flex-col border-l border-[var(--color-border)]">
+      <ol className="mt-8 flex flex-col border-l border-[var(--color-border)] max-w-[62ch]">
         {dated.map((event) => (
           <li key={`${event.attr}-${event.title}`} className="relative py-5 pl-8">
             <span

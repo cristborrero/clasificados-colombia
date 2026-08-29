@@ -27,12 +27,12 @@ export function EvidenceSection({
   if (evidence.length === 0) return null
 
   return (
-    <section className={cn('my-16', className)} aria-labelledby="documentos">
+    <section className={cn('my-16 mx-auto max-w-3xl', className)} aria-labelledby="documentos">
       <HeadlineMD as="h2" id="documentos">
         {title}
       </HeadlineMD>
 
-      <Metadata className="mt-2 max-w-[60ch] text-[color:var(--color-text-muted)]">
+      <Metadata className="mt-2 max-w-[58ch] text-[color:var(--color-text-muted)]">
         Documentos públicos en los que se apoya esta investigación.
       </Metadata>
 

@@ -35,12 +35,12 @@ export function KeyFindings({
   if (findings.length === 0) return null
 
   return (
-    <section className={cn('my-16', className)} aria-labelledby="hallazgos">
+    <section className={cn('my-16 mx-auto max-w-3xl', className)} aria-labelledby="hallazgos">
       <HeadlineMD as="h2" id="hallazgos">
         {title}
       </HeadlineMD>
 
-      <ol className="mt-8 flex flex-col gap-8">
+      <ol className="mt-8 flex flex-col gap-8 max-w-[62ch]">
         {findings.map((finding, index) => (
           <li key={finding.headline} className="flex gap-5">
             <span

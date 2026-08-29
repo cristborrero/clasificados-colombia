@@ -140,7 +140,7 @@ export default async function ArticlePage({ params }: Params) {
           className="mb-8"
         />
 
-        <header className="mx-auto max-w-4xl text-center">
+        <header className="mx-auto max-w-3xl text-center">
           {article.category ? (
             <div className="mb-4 flex justify-center">
               <CardEyebrow
@@ -188,7 +188,7 @@ export default async function ArticlePage({ params }: Params) {
       ) : null}
 
       <Container width="wide" className="pb-20">
-        <div className="mx-auto max-w-[70ch]">
+        <div className="mx-auto max-w-[62ch]">
           <RichText data={article.body} />
           <CorrectionsNotice corrections={corrections} className="mt-14" />
         </div>

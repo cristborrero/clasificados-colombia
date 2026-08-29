@@ -53,7 +53,7 @@ export function InvestigationHero({
           />
         ) : null}
 
-        <div className="mx-auto max-w-4xl text-center">
+        <div className="mx-auto max-w-3xl text-center">
           <p className="font-[family-name:var(--font-sans)] text-[length:var(--text-label)] font-semibold tracking-[var(--text-label--letter-spacing)] text-[color:var(--color-accent)] uppercase">
             {eyebrow}
           </p>
@@ -68,7 +68,7 @@ export function InvestigationHero({
           </Display>
 
           {summary ? (
-            <Lead className="mx-auto mt-6 max-w-[64ch] text-balance text-[color:var(--color-text-inverse-muted)]">
+            <Lead className="mx-auto mt-6 max-w-[58ch] text-balance text-[color:var(--color-text-inverse-muted)]">
               {summary}
             </Lead>
           ) : null}

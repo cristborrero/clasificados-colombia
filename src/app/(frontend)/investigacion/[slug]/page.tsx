@@ -127,12 +127,12 @@ export default async function InvestigationPage({ params }: Params) {
                   </HeadlineLG>
 
                   {chapter.intro ? (
-                    <Body className="mt-4 max-w-[60ch] text-[color:var(--color-text-muted)]">
+                    <Body className="mt-4 max-w-[58ch] text-[color:var(--color-text-muted)]">
                       {chapter.intro}
                     </Body>
                   ) : null}
 
-                  <RichText data={chapter.body} className="mt-6" />
+                  <RichText data={chapter.body} className="mt-6 max-w-[62ch]" />
                 </section>
               ))}
             </div>

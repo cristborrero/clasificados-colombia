@@ -250,3 +250,25 @@ sube ese par a texto de cuerpo, el test lo detiene.
 4. Tres variantes de botón con sus cuatro estados.
 5. Sistema de etiquetas donde el color codifica sección.
 6. Confirmación de que el modo oscuro es **recurso editorial por bloque**, no dark mode global (PRD Master §45, PRD Nº8 §140).
+
+---
+
+## 11. Calibración Editorial y Tipográfica (2026-08-29)
+
+### 11.1 Ancho de lectura unificado (768px / `max-w-3xl`)
+- **Marco global:** Todo el flujo de lectura (artículos, investigaciones, categorías, temas, autores, búsquedas, denuncias) opera sobre un contenedor centrado de **768px** (`max-w-3xl`), emulando la arquitectura limpia de medios periodísticos como *El Espectador*.
+- **Regla de oro:** Prohibidos cuellos de botella arbitrarios anidados (`max-w-[...ch]`) dentro del contenedor de 768px. Los textos y titulares copan limpiamente el ancho completo.
+
+### 11.2 Escala tipográfica sobria y balanceada
+Para evitar gigantismo visual en titulares y lograr una lectura descansada y proporcionada:
+- **Cuerpo (`--text-body`):** `clamp(1rem, 0.98rem + 0.08vw, 1.0625rem)` (16px móvil → 17px desktop), line-height: 1.65.
+- **Bajada / Lead (`--text-lead`):** `clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem)` (18px → 20px), line-height: 1.5.
+- **Titulares principales (`--text-h1` / `Display`):** `clamp(1.75rem, 1.35rem + 1.4vw, 2.375rem)` (28px → 38px / 44px máx), line-height: 1.08–1.12.
+- **Subtítulos H2 (`--text-h2`):** `clamp(1.375rem, 1.15rem + 0.8vw, 1.625rem)` (22px → 26px), line-height: 1.2.
+- **Subtítulos H3 (`--text-h3`):** `clamp(1.125rem, 1.05rem + 0.3vw, 1.25rem)` (18px → 20px), line-height: 1.3.
+- **Metadatos (`--text-metadata`):** `clamp(0.8125rem, 0.8rem + 0.05vw, 0.875rem)` (13px → 14px), line-height: 1.4.
+- **Etiquetas / Eyebrow (`--text-label`):** `clamp(0.6875rem, 0.66rem + 0.09vw, 0.75rem)` (11px → 12px), line-height: 1.3.
+
+### 11.3 Preservación de saltos de línea y párrafos (`whitespace-pre-line`)
+- Todos los campos de texto plano y `textarea` de Payload CMS (`KeyFindings`, `EditorialTimeline`, `InvestigationHero`, `EntityList`, capítulos `intro`, autores `bio`, `dek`, descripciones de categoría y temas) aplican la clase CSS `whitespace-pre-line`.
+- Esto garantiza que los saltos de línea (`Enter`) y separaciones entre párrafos ingresados por los editores se rendericen fielmente sin colapsar en un bloque monolítico de texto.

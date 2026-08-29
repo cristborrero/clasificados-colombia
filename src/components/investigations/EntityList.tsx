@@ -74,7 +74,9 @@ export function EntityList({
               ) : null}
             </p>
 
-            <Body className="text-[color:var(--color-text-muted)]">{entity.context}</Body>
+            <Body className="whitespace-pre-line text-[color:var(--color-text-muted)]">
+              {entity.context}
+            </Body>
           </li>
         ))}
       </ul>

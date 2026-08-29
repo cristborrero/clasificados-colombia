@@ -65,7 +65,9 @@ export function EditorialTimeline({
             </p>
 
             {event.description ? (
-              <Body className="mt-1 text-[color:var(--color-text-muted)]">{event.description}</Body>
+              <Body className="mt-1 whitespace-pre-line text-[color:var(--color-text-muted)]">
+                {event.description}
+              </Body>
             ) : null}
           </li>
         ))}

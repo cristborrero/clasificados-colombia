@@ -153,7 +153,7 @@ export default async function ArticlePage({ params }: Params) {
           <HeadlineXL className="text-balance">{article.title}</HeadlineXL>
 
           {article.dek ? (
-            <Dek className="mx-auto mt-5 text-[length:var(--text-lead)] text-[color:var(--color-text-muted)]">
+            <Dek className="mx-auto mt-5 whitespace-pre-line text-[length:var(--text-lead)] text-[color:var(--color-text-muted)]">
               {article.dek}
             </Dek>
           ) : null}

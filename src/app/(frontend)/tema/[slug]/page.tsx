@@ -71,7 +71,7 @@ export default async function TopicPage({ params }: Params) {
           <HeadlineXL className="mt-2 text-[length:var(--text-h2)]">{topic.name}</HeadlineXL>
 
           {topic.description ? (
-            <Lead className="mx-auto mt-4 text-[color:var(--color-text-muted)]">
+            <Lead className="mx-auto mt-4 whitespace-pre-line text-[color:var(--color-text-muted)]">
               {topic.description}
             </Lead>
           ) : null}

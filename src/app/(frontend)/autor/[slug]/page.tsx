@@ -84,7 +84,11 @@ export default async function AuthorPage({ params }: Params) {
               <MetaText className="font-medium text-[color:var(--color-text-muted)]">{author.jobTitle}</MetaText>
             ) : null}
 
-            {author.bio ? <Body className="mt-2 text-[color:var(--color-text-muted)]">{author.bio}</Body> : null}
+            {author.bio ? (
+              <Body className="mt-2 whitespace-pre-line text-[color:var(--color-text-muted)]">
+                {author.bio}
+              </Body>
+            ) : null}
 
             {author.expertise.length > 0 ? (
               <div className="mt-4 flex flex-wrap justify-center gap-2">

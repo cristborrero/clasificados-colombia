@@ -56,7 +56,9 @@ export function KeyFindings({
               </p>
 
               {finding.description ? (
-                <Body className="text-[color:var(--color-text-muted)]">{finding.description}</Body>
+                <Body className="whitespace-pre-line text-[color:var(--color-text-muted)]">
+                  {finding.description}
+                </Body>
               ) : null}
 
               {finding.sourceReference ? (

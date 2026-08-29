@@ -76,7 +76,7 @@ export default async function CategoryPage({ params }: Params) {
           <HeadlineXL className="text-balance">{category.name}</HeadlineXL>
 
           {category.description ? (
-            <Lead className="mx-auto text-balance text-[color:var(--color-text-muted)]">
+            <Lead className="mx-auto text-balance whitespace-pre-line text-[color:var(--color-text-muted)]">
               {category.description}
             </Lead>
           ) : null}

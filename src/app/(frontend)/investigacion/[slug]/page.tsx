@@ -127,7 +127,7 @@ export default async function InvestigationPage({ params }: Params) {
                   </HeadlineLG>
 
                   {chapter.intro ? (
-                    <Body className="mt-4 text-[color:var(--color-text-muted)]">
+                    <Body className="mt-4 whitespace-pre-line text-[color:var(--color-text-muted)]">
                       {chapter.intro}
                     </Body>
                   ) : null}

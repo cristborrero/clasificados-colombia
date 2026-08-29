@@ -50,12 +50,12 @@ export function EntityList({
         {title}
       </HeadlineMD>
 
-      <Metadata className="mt-2 max-w-[58ch] text-[color:var(--color-text-muted)]">
+      <Metadata className="mt-2 text-[color:var(--color-text-muted)]">
         Aparecer en esta lista no implica responsabilidad penal ni disciplinaria. Se indica en cada
         caso por qué la persona u organización figura en la investigación.
       </Metadata>
 
-      <ul className="mt-8 flex flex-col gap-6 max-w-[62ch]">
+      <ul className="mt-8 flex flex-col gap-6 w-full">
         {contextualised.map((entity) => (
           <li key={`${entity.kind}-${entity.slug}`} className="flex flex-col gap-1">
             <p className="font-[family-name:var(--font-sans)] text-[length:var(--text-body)] font-semibold">

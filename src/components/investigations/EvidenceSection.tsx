@@ -32,7 +32,7 @@ export function EvidenceSection({
         {title}
       </HeadlineMD>
 
-      <Metadata className="mt-2 max-w-[58ch] text-[color:var(--color-text-muted)]">
+      <Metadata className="mt-2 text-[color:var(--color-text-muted)]">
         Documentos públicos en los que se apoya esta investigación.
       </Metadata>
 

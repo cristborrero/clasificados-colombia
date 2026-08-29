@@ -41,7 +41,7 @@ export function MethodologySection({
         {title}
       </HeadlineMD>
 
-      <div className="mt-4 flex flex-col gap-4 max-w-[62ch]">
+      <div className="mt-4 flex flex-col gap-4 w-full">
         {paragraphs.map((paragraph) => (
           <Body key={paragraph.slice(0, 40)}>{paragraph}</Body>
         ))}

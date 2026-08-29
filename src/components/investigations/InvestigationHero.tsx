@@ -68,7 +68,7 @@ export function InvestigationHero({
           </Display>
 
           {summary ? (
-            <Lead className="mx-auto mt-6 max-w-[58ch] text-balance text-[color:var(--color-text-inverse-muted)]">
+            <Lead className="mx-auto mt-6 text-balance text-[color:var(--color-text-inverse-muted)]">
               {summary}
             </Lead>
           ) : null}

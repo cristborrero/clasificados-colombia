@@ -40,7 +40,7 @@ export function KeyFindings({
         {title}
       </HeadlineMD>
 
-      <ol className="mt-8 flex flex-col gap-8 max-w-[62ch]">
+      <ol className="mt-8 flex flex-col gap-8 w-full">
         {findings.map((finding, index) => (
           <li key={finding.headline} className="flex gap-5">
             <span

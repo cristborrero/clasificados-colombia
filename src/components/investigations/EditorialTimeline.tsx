@@ -45,7 +45,7 @@ export function EditorialTimeline({
         {title}
       </HeadlineMD>
 
-      <ol className="mt-8 flex flex-col border-l border-[var(--color-border)] max-w-[62ch]">
+      <ol className="mt-8 flex flex-col border-l border-[var(--color-border)] w-full">
         {dated.map((event) => (
           <li key={`${event.attr}-${event.title}`} className="relative py-5 pl-8">
             <span

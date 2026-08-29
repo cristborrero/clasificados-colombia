@@ -64,7 +64,7 @@ export default async function SearchPage({ searchParams }: Params) {
         className="mb-8"
       />
 
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-3xl text-center">
         <HeadlineXL className="text-[length:var(--text-h2)]">Buscar</HeadlineXL>
         <p className="mt-2 text-[length:var(--text-lead)] text-[color:var(--color-text-muted)]">
           Explora artículos, investigaciones y autores

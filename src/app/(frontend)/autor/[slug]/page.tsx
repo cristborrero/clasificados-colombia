@@ -64,7 +64,7 @@ export default async function AuthorPage({ params }: Params) {
       />
 
       <Container width="wide" className="py-16">
-        <header className="mx-auto flex max-w-2xl flex-col items-center text-center gap-5">
+        <header className="mx-auto flex max-w-3xl flex-col items-center text-center gap-5">
           {author.portrait ? (
             <Image
               src={author.portrait.url}
@@ -77,14 +77,14 @@ export default async function AuthorPage({ params }: Params) {
             />
           ) : null}
 
-          <div className="flex flex-col items-center gap-2.5">
+          <div className="flex flex-col items-center gap-2.5 w-full">
             <HeadlineXL className="text-[length:var(--text-h2)]">{author.name}</HeadlineXL>
 
             {author.jobTitle ? (
               <MetaText className="font-medium text-[color:var(--color-text-muted)]">{author.jobTitle}</MetaText>
             ) : null}
 
-            {author.bio ? <Body className="mt-2 max-w-[54ch] text-[color:var(--color-text-muted)]">{author.bio}</Body> : null}
+            {author.bio ? <Body className="mt-2 text-[color:var(--color-text-muted)]">{author.bio}</Body> : null}
 
             {author.expertise.length > 0 ? (
               <div className="mt-4 flex flex-wrap justify-center gap-2">

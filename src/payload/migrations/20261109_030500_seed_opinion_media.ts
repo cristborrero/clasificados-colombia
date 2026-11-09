@@ -8,3 +8,4 @@ export async function up({ payload }: MigrateUpArgs): Promise<void> {
 export async function down(_args: MigrateDownArgs): Promise<void> {
   // No-op
 }
+

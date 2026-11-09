@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -388,21 +388,39 @@ export async function publicarOpinion(payload: Payload): Promise<void> {
     const rutaDestino = path.join(process.cwd(), 'media', nombreArchivo)
     const mediaExisteEnDisco = existsSync(rutaDestino)
 
-    if (existentes.docs[0] && mediaExisteEnDisco) {
-      return existentes.docs[0]
-    }
+    if (existentes.docs[0]) {
+      if (!mediaExisteEnDisco) {
+        const rutaLocal = path.join(FIXTURES, nombreArchivo)
+        try {
+          const data = await readFile(rutaLocal)
+          await mkdir(path.dirname(rutaDestino), { recursive: true })
+          await writeFile(rutaDestino, data)
 
-    if (existentes.docs[0] && !mediaExisteEnDisco) {
-      await payload.delete({
-        collection: 'media',
-        id: existentes.docs[0].id,
-        overrideAccess: true,
-      })
+          try {
+            await payload.update({
+              collection: 'media',
+              id: existentes.docs[0].id,
+              filePath: rutaDestino,
+              data: { alt, caption, credit },
+              overrideAccess: true,
+              context: { skipUploadProcessing: true },
+            })
+          } catch (updateErr) {
+            payload.logger.warn(`No se pudo regenerar derivados para ${nombreArchivo}: ${updateErr}`)
+          }
+        } catch (fileErr) {
+          payload.logger.warn(`No se pudo escribir archivo local para ${nombreArchivo}: ${fileErr}`)
+        }
+      }
+      return existentes.docs[0]
     }
 
     const rutaLocal = path.join(FIXTURES, nombreArchivo)
     try {
       const data = await readFile(rutaLocal)
+      await mkdir(path.dirname(rutaDestino), { recursive: true })
+      await writeFile(rutaDestino, data)
+
       const creado = await payload.create({
         collection: 'media',
         overrideAccess: true,

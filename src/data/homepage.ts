@@ -142,9 +142,19 @@ async function resolveHero(block: Block): Promise<HeroBand | null> {
     if (item) return { kind: 'hero', item, source: picked.collection, imageFirst }
   }
 
-  const [latest] = await listPublished('articles', { limit: 1 })
+  const [latestArticle, latestOpinion] = await Promise.all([
+    listPublished('articles', { limit: 1 }).then((res) => res[0] ?? null),
+    listPublished('opinions', { limit: 1 }).then((res) => res[0] ?? null),
+  ])
 
-  return latest ? { kind: 'hero', item: latest, source: 'articles', imageFirst } : null
+  const articleTime = latestArticle?.publishedAt ? new Date(latestArticle.publishedAt).getTime() : 0
+  const opinionTime = latestOpinion?.publishedAt ? new Date(latestOpinion.publishedAt).getTime() : 0
+
+  if (latestOpinion && opinionTime >= articleTime) {
+    return { kind: 'hero', item: latestOpinion, source: 'opinions', imageFirst }
+  }
+
+  return latestArticle ? { kind: 'hero', item: latestArticle, source: 'articles', imageFirst } : null
 }
 
 async function resolveBand(block: Block, heroSlug: string | null): Promise<HomepageBand | null> {

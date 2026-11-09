@@ -52,11 +52,11 @@ const HeroBlock: Block = {
     {
       name: 'article',
       type: 'relationship',
-      relationTo: ['articles', 'investigations', 'data-stories', 'opinions'],
+      relationTo: ['articles', 'investigations', 'data-stories'],
       label: 'Pieza destacada',
       admin: {
         description:
-          'PRD Nº8 §38: el hero admite nota, investigación, dato u opinión. Vacío = la publicación más reciente.',
+          'PRD Nº8 §38: el hero admite nota, investigación o dato. Vacío = la publicación más reciente.',
       },
     },
     {

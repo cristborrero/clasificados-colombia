@@ -38,6 +38,7 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
+      ALLOW_INDEXING: ${ALLOW_INDEXING:-true}
       PORT: 3000
       HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://clasificadoscolombia.co}

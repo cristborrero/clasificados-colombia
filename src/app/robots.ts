@@ -48,23 +48,37 @@ export default function robots(): MetadataRoute.Robots {
     return { rules: [{ userAgent: '*', disallow: '/' }] }
   }
 
+  const disallowList = [
+    '/admin',
+    '/api/',
+    '/dev/',
+    '/buscar',
+    '/denunciar',
+  ]
+
+  const aiAgents = [
+    'GPTBot',
+    'ChatGPT-User',
+    'PerplexityBot',
+    'ClaudeBot',
+    'anthropic-ai',
+    'Google-Extended',
+    'Applebot-Extended',
+    'cohere-ai',
+  ]
+
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: [
-          '/admin',
-          '/api/',
-          // The component workbench. Real pages, no editorial value.
-          '/dev/',
-          // Search results are infinite, generated on demand and near
-          // duplicates of each other (§54).
-          '/buscar',
-          // A tip form has no business in search results.
-          '/denunciar',
-        ],
+        disallow: disallowList,
       },
+      ...aiAgents.map((agent) => ({
+        userAgent: agent,
+        allow: '/',
+        disallow: disallowList,
+      })),
     ],
     sitemap: [absoluteUrl('/sitemap.xml'), absoluteUrl('/news-sitemap.xml')],
     host: absoluteUrl('/'),

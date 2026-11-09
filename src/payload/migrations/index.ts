@@ -7,6 +7,7 @@ import * as migration_20261109_020000_publish_opinion_drones from './20261109_02
 import * as migration_20261109_030500_seed_opinion_media from './20261109_030500_seed_opinion_media';
 import * as migration_20261109_110000_feature_opinion_hero from './20261109_110000_feature_opinion_hero';
 import * as migration_20261109_120000_seed_noticias_reales from './20261109_120000_seed_noticias_reales';
+import * as migration_20261109_150000_update_noticias_reales_media from './20261109_150000_update_noticias_reales_media';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20261109_120000_seed_noticias_reales.up,
     down: migration_20261109_120000_seed_noticias_reales.down,
     name: '20261109_120000_seed_noticias_reales'
+  },
+  {
+    up: migration_20261109_150000_update_noticias_reales_media.up,
+    down: migration_20261109_150000_update_noticias_reales_media.down,
+    name: '20261109_150000_update_noticias_reales_media'
   },
 ];

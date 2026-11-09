@@ -9,6 +9,7 @@ import { getPayload, type Payload } from 'payload'
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURES_VITRINA = path.join(dirname, 'fixtures/vitrina')
 const FIXTURES_OPINION = path.join(dirname, 'fixtures/opinion-drones')
+const FIXTURES_NOTICIAS = path.join(dirname, 'fixtures/noticias-reales')
 
 function textNode(text: string, bold = false) {
   return {
@@ -178,7 +179,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'Más de 1.800 familias campesinas permanecen incomunicadas por la confrontación armada y la siembra de minas antipersonal entre Santa Rosa del Sur, Simití y Morales.',
     contentType: 'analysis',
     seccion: 'conflicto',
-    foto: 'choco',
+    foto: 'san-lucas',
     hoursAgo: 38,
     cuerpoNodes: [
       paragraph('La Defensoría del Pueblo emitió un llamado de urgencia humanitaria ante el grave deterioro del orden público y las libertades civiles en la subregión de la Serranía de San Lucas, en el sur de Bolívar, un territorio estratégico donde convergen límites con el Magdalena Medio y el bajo Cauca antioqueño.'),
@@ -200,7 +201,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'El Ministerio de Defensa aceleró la adquisición e instalación de inhibidores de radiofrecuencia y sistemas de detección electro-ópticos en diez guarniciones prioritarias.',
     contentType: 'news',
     seccion: 'conflicto',
-    foto: 'casa-narino',
+    foto: 'canton-militar',
     hoursAgo: 24,
     cuerpoNodes: [
       paragraph('Tras el mortífero ataque contra el cantón militar de Santa Rosa del Sur, el Ministerio de Defensa y el Comando General de las Fuerzas Militares activaron un plan de contingencia inmediata para dotar de tecnología de detección y neutralización de drones a diez guarniciones del Ejército y la Policía Nacional ubicadas en zonas de alta confrontación.'),
@@ -223,7 +224,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'Con 57 votos en el Senado y 95 en la Cámara, la iniciativa insignia del Ministerio de Justicia quedó lista para sanción presidencial tras excluir beneficios a reclutadores de menores.',
     contentType: 'news',
     seccion: 'politica',
-    foto: 'capitolio',
+    foto: 'congreso-int',
     hoursAgo: 32,
     cuerpoNodes: [
       paragraph('En una sesión a contrarreloj y con textos idénticos aprobados en ambas cámaras legislativas, las plenarias del Senado de la República y la Cámara de Representantes le dieron el visto bueno definitivo al proyecto de Ley de Sometimiento a la Justicia para estructuras armadas organizadas de alto impacto.'),
@@ -249,7 +250,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'Sectores políticos plantean un cronograma de cierre y el traslado progresivo de expedientes pendientes hacia la justicia ordinaria antes de 2028.',
     contentType: 'analysis',
     seccion: 'politica',
-    foto: 'congreso-int',
+    foto: 'jep-sede',
     hoursAgo: 20,
     cuerpoNodes: [
       paragraph('La Comisión Primera del Senado de la República abrió formalmente el debate alrededor de un proyecto de acto legislativo que busca fijar un término perentorio de funcionamiento para la Jurisdicción Especial para la Paz (JEP), creada en virtud del Acuerdo de Paz de 2016.'),
@@ -302,7 +303,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'La segunda instancia determinó que no persiste el riesgo de obstrucción procesal en la etapa preparatoria del proceso por presunto cohecho y concierto para delinquir.',
     contentType: 'news',
     seccion: 'justicia',
-    foto: 'capitolio',
+    foto: 'luis-fernando-velasco',
     hoursAgo: 26,
     cuerpoNodes: [
       paragraph('La Sala Penal del Tribunal Superior de Bogotá revocó la medida de aseguramiento privativa de la libertad que pesaba contra el exministro del Interior Luis Fernando Velasco, disponiendo su libertad inmediata en el marco de la investigación por el entramado de corrupción en la UNGRD.'),
@@ -316,7 +317,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'El juez de tutela consideró que las medidas de seguridad adoptadas por el INPEC en el pabellón de testigos protegidos son idóneas y no vulneran derechos fundamentales.',
     contentType: 'news',
     seccion: 'justicia',
-    foto: 'palacio-just',
+    foto: 'la-picota',
     hoursAgo: 18,
     cuerpoNodes: [
       paragraph('Un juzgado penal del circuito de Bogotá declaró improcedente la acción de tutela promovida por el exsubdirector de Manejo de Desastres de la UNGRD, Sneyder Pinilla, con la cual pretendía que se ordenara su traslado inmediato desde el Complejo Carcelario La Picota hacia una instalación militar de reclusión especial.'),
@@ -332,7 +333,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'El Ideam y la UNGRD vigilan crecientes súbitas en los ríos Cauca, San Jorge y Atrato. Municipios ribereños piden acelerar obras de contención y dragado.',
     contentType: 'news',
     seccion: 'regiones',
-    foto: 'quibdo',
+    foto: 'inundaciones-cauca',
     hoursAgo: 28,
     cuerpoNodes: [
       paragraph('El Instituto de Hidrología, Meteorología y Estudios Ambientales (Ideam) declaró la alerta roja hidrológica en sectores neurálgicos de la región de La Mojana —que abarca zonas de Sucre, Bolívar, Córdoba y Antioquia— y en la cuenca media y baja del río Atrato, en el departamento del Chocó, debido al incremento sostenido de las precipitaciones.'),
@@ -348,7 +349,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'La declaratoria de procesos desiertos para plantas de regasificación obliga a las termoeléctricas de la región a operar con combustibles líquidos más costosos.',
     contentType: 'analysis',
     seccion: 'regiones',
-    foto: 'cartagena',
+    foto: 'refineria-barrancabermeja',
     hoursAgo: 22,
     cuerpoNodes: [
       paragraph('Gremios empresariales y térmicos de la Costa Caribe colombiana expresaron su profunda preocupación por las tensiones en el abastecimiento de gas natural para el sector industrial y las plantas termoeléctricas de Barranquilla, Cartagena y La Guajira.'),
@@ -363,7 +364,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'La cotización de la libra en la Bolsa de Nueva York por encima de los 2,40 dólares impulsa los ingresos de más de 550.000 familias productoras del país.',
     contentType: 'feature',
     seccion: 'regiones',
-    foto: 'pereira',
+    foto: 'cosecha-cafe',
     hoursAgo: 14,
     cuerpoNodes: [
       paragraph('La cosecha cafetera del segundo semestre de 2026 está cerrando con balances históricos en departamentos productores clave como Caldas, Risaralda, Quindío, Huila y Tolima, impulsada por un régimen climático favorable y una cotización internacional sostenida en máximos de los últimos años.'),
@@ -379,7 +380,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'El DANE reporta que la variación mensual del índice de precios estuvo explicada en más del 60% por los gastos asociados a vivienda y servicios públicos domiciliarios.',
     contentType: 'news',
     seccion: 'nacion',
-    foto: 'medellin',
+    foto: 'corabastos',
     hoursAgo: 12,
     cuerpoNodes: [
       paragraph('El Departamento Administrativo Nacional de Estadística (DANE) reveló que el Índice de Precios al Consumidor (IPC) acumuló una variación anual del 6,38% al cierre de octubre de 2026, lo que confirma una persistente rigidez en la senda de desaceleración del costo de vida en Colombia.'),
@@ -404,7 +405,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'La reactivación de la línea Antonio Ricaurte busca incorporar 50 millones de pies cúbicos diarios de gas natural para asegurar el consumo industrial hacia 2027.',
     contentType: 'news',
     seccion: 'nacion',
-    foto: 'casa-narino',
+    foto: 'edificio-ecopetrol',
     hoursAgo: 10,
     cuerpoNodes: [
       paragraph('El Gobierno Nacional y la junta directiva de Ecopetrol oficializaron la inclusión de la rehabilitación y puesta en marcha del Gasoducto Binacional Antonio Ricaurte —que conecta el campo Ballena en La Guajira con yacimientos del occidente venezolano— dentro de la lista de Proyectos de Interés Nacional y Estratégico (PINES).'),
@@ -418,7 +419,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
     dek: 'La junta directiva del emisor prioriza el anclaje de las expectativas inflacionarias de cara a la negociación del salario mínimo del próximo año.',
     contentType: 'analysis',
     seccion: 'nacion',
-    foto: 'capitolio',
+    foto: 'banco-republica',
     hoursAgo: 8,
     cuerpoNodes: [
       paragraph('En una votación dividida de cinco a dos, la junta directiva del Banco de la República decidió mantener inalterada su tasa de interés de política monetaria en el 12,25%, ratificando una postura cautelosa frente a las presiones persistentes en el IPC y la incertidumbre fiscal global.'),
@@ -433,7 +434,7 @@ export const INVESTIGACIONES_REALES = [
     slug: 'ruta-coltan-oro-san-lucas-guerra-drones',
     title: 'La ruta del oro y el coltán en San Lucas: la economía clandestina detrás de la guerra con drones',
     dek: 'Una investigación en territorio reconstruye cómo los dragones mineros del río Tigüí y los yacimientos ilegales de Santa Rosa financian el arsenal tecnológico y los ataques de grupos armados en el sur de Bolívar.',
-    foto: 'choco',
+    foto: 'mineria-oro',
     hoursAgo: 40,
     methodology: 'Investigación periodística desarrollada mediante trabajo de campo en municipios del sur de Bolívar (Santa Rosa del Sur, Simití y San Pablo) entre agosto y noviembre de 2026, complementada con el análisis de imágenes satelitales de deforestación de la Amazonía y San Lucas, georreferenciación de dragas y entrevistas con 14 fuentes comunitarias, militares y judiciales bajo estricto protocolo de seguridad.',
     cuerpoNodes: [
@@ -454,7 +455,7 @@ export const INVESTIGACIONES_REALES = [
     slug: 'contratos-mitigacion-la-mojana-obras-inconclusas',
     title: 'Los contratos de mitigación en La Mojana: una década de obras inconclusas y $1,2 billones sin rastro',
     dek: 'Auditoría documental a 42 contratos de dragado y jarillones firmados tras las emergencias invernales demuestra cómo las mismas firmas acaparan las licitaciones sin frenar las inundaciones.',
-    foto: 'pereira',
+    foto: 'policia-inundaciones',
     hoursAgo: 34,
     methodology: 'Revisión sistemática de 42 procesos contractuales registrados en las plataformas SECOP I y SECOP II entre 2016 y 2026, cruzados con informes de auditoría forense de la Contraloría General de la República, visitas técnicas a los puntos de cierre en Caregato y entrevistas con ingenieros hidráulicos y veedores ciudadanos de Sucre, Córdoba y Bolívar.',
     cuerpoNodes: [
@@ -478,7 +479,7 @@ export const DATA_STORY_REAL = {
   dek: 'Base de datos consolidada a partir de reportes militares y alertas humanitarias muestra el desplazamiento de los ataques aéreos no tripulados desde el suroccidente hacia el Magdalena Medio y Bolívar.',
   headlineFigure: '1.420',
   headlineFigureContext: 'incidentes con explosivos y artefactos aéreos registrados en Colombia en 2026',
-  foto: 'choco',
+  foto: 'clasificados-cobertura',
   hoursAgo: 25,
   methodology: 'Compilación y limpieza de 1.420 reportes de incidentes armados, comunicados oficiales de la Fuerza Pública, informes del Sistema de Alertas Tempranas de la Defensoría del Pueblo y monitoreos de organizaciones no gubernamentales especializadas en conflicto armado entre el 1 de enero y el 8 de noviembre de 2026. Los datos fueron estandarizados por coordenadas geográficas, tipología de artefacto y estructura responsable.',
   cuerpoNodes: [
@@ -602,6 +603,11 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
       const filePath = path.join(directorio, archivoNombre)
       if (existsSync(filePath)) {
         const data = await readFile(filePath)
+        const mimetype = archivoNombre.endsWith('.png')
+          ? 'image/png'
+          : archivoNombre.endsWith('.webp')
+            ? 'image/webp'
+            : 'image/jpeg'
         const creada = await payload.create({
           collection: 'media',
           overrideAccess: true,
@@ -617,7 +623,7 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
           file: {
             data,
             name: archivoNombre,
-            mimetype: 'image/jpeg',
+            mimetype,
             size: data.byteLength,
           },
         })
@@ -663,6 +669,34 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
       'Cobertura oficial',
       'creative_commons',
       'Clasificados Colombia',
+    )
+    if (id) fotoIds.set(f.clave, id)
+  }
+
+  // Cargar fotos específicas de noticias reales
+  const FOTOS_NOTICIAS = [
+    { clave: 'luis-fernando-velasco', archivo: 'luis-fernando-velasco.jpg', alt: 'Luis Fernando Velasco, exministro del Interior', autor: 'Presidencia de la República / Archivo oficial', licencia: 'public_domain' },
+    { clave: 'la-picota', archivo: 'la-picota.jpg', alt: 'Complejo Penitenciario y Carcelario Metropolitano de Bogotá La Picota', autor: 'INPEC / Archivo judicial', licencia: 'public_domain' },
+    { clave: 'jep-sede', archivo: 'jep-sede.jpg', alt: 'Sede de la Jurisdicción Especial para la Paz (JEP) en Bogotá', autor: 'JEP Colombia / Archivo institucional', licencia: 'public_domain' },
+    { clave: 'banco-republica', archivo: 'banco-republica.jpg', alt: 'Sede principal del Banco de la República en Bogotá', autor: 'Banco de la República / Wikimedia Commons', licencia: 'creative_commons' },
+    { clave: 'edificio-ecopetrol', archivo: 'edificio-ecopetrol.jpg', alt: 'Edificio corporativo principal de Ecopetrol en Bogotá', autor: 'Ecopetrol / Wikimedia Commons', licencia: 'creative_commons' },
+    { clave: 'refineria-barrancabermeja', archivo: 'refineria-barrancabermeja.jpg', alt: 'Refinería y complejo petroquímico e industrial de Barrancabermeja', autor: 'Ecopetrol / Archivo industrial', licencia: 'creative_commons' },
+    { clave: 'cosecha-cafe', archivo: 'cosecha-cafe.jpg', alt: 'Recolección de café maduro en cultivo campesino colombiano', autor: 'Federación Nacional de Cafeteros / Archivo', licencia: 'creative_commons' },
+    { clave: 'inundaciones-cauca', archivo: 'inundaciones-cauca.jpg', alt: 'Inundaciones y desbordamiento en cuencas de La Mojana y bajo Cauca', autor: 'UNGRD / Archivo de emergencias', licencia: 'public_domain' },
+    { clave: 'mineria-oro', archivo: 'mineria-oro.jpg', alt: 'Explotación minera de oro y dragas fluviales en zona selvática', autor: 'Defensoría del Pueblo / Archivo', licencia: 'public_domain' },
+    { clave: 'corabastos', archivo: 'corabastos.jpg', alt: 'Central mayorista de abastos Corabastos en Bogotá', autor: 'Corabastos / Archivo documental', licencia: 'creative_commons' },
+    { clave: 'san-lucas', archivo: 'san-lucas.png', alt: 'Mapa orográfico y satelital de la Serranía de San Lucas en el sur de Bolívar', autor: 'IGAC / Satelital', licencia: 'public_domain' },
+    { clave: 'policia-inundaciones', archivo: 'policia-inundaciones.jpg', alt: 'Obras de emergencia y contención en zonas inundadas de La Mojana', autor: 'Policía Nacional / UNGRD', licencia: 'public_domain' },
+  ]
+
+  for (const f of FOTOS_NOTICIAS) {
+    const id = await subirOEncontrar(
+      f.archivo,
+      FIXTURES_NOTICIAS,
+      f.alt,
+      'Cobertura documental',
+      f.licencia,
+      f.autor,
     )
     if (id) fotoIds.set(f.clave, id)
   }

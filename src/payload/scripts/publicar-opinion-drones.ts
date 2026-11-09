@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -384,8 +385,19 @@ export async function publicarOpinion(payload: Payload): Promise<void> {
       overrideAccess: true,
     })
 
-    if (existentes.docs[0]) {
+    const rutaDestino = path.join(process.cwd(), 'media', nombreArchivo)
+    const mediaExisteEnDisco = existsSync(rutaDestino)
+
+    if (existentes.docs[0] && mediaExisteEnDisco) {
       return existentes.docs[0]
+    }
+
+    if (existentes.docs[0] && !mediaExisteEnDisco) {
+      await payload.delete({
+        collection: 'media',
+        id: existentes.docs[0].id,
+        overrideAccess: true,
+      })
     }
 
     const rutaLocal = path.join(FIXTURES, nombreArchivo)

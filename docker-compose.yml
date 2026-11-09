@@ -112,6 +112,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - media:/app/media
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}

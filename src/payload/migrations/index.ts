@@ -5,7 +5,6 @@ import * as migration_20260819_074919_f18_jobs from './20260819_074919_f18_jobs'
 import * as migration_20260819_182314_f_trio_banda from './20260819_182314_f_trio_banda';
 import * as migration_20261109_020000_publish_opinion_drones from './20261109_020000_publish_opinion_drones';
 import * as migration_20261109_030500_seed_opinion_media from './20261109_030500_seed_opinion_media';
-import * as migration_20261109_110000_feature_opinion_hero from './20261109_110000_feature_opinion_hero';
 
 export const migrations = [
   {
@@ -42,10 +41,5 @@ export const migrations = [
     up: migration_20261109_030500_seed_opinion_media.up,
     down: migration_20261109_030500_seed_opinion_media.down,
     name: '20261109_030500_seed_opinion_media'
-  },
-  {
-    up: migration_20261109_110000_feature_opinion_hero.up,
-    down: migration_20261109_110000_feature_opinion_hero.down,
-    name: '20261109_110000_feature_opinion_hero'
   },
 ];

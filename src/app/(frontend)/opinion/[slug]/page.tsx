@@ -13,7 +13,7 @@ import { Dek, HeadlineXL } from '@/components/editorial/Typography'
 import { Container } from '@/components/layout/Container'
 import { EditorialImage } from '@/components/media/EditorialImage'
 import { CardEyebrow } from '@/components/articles/parts/CardEyebrow'
-import { getOpinionBySlug, listPublishedOpinionSlugs } from '@/data/opinion'
+import { getOpinionBySlug } from '@/data/opinion'
 import { getCorrectionsFor } from '@/data/corrections'
 import { getSiteSettings } from '@/data/site'
 import { JsonLd } from '@/components/seo/JsonLd'
@@ -27,12 +27,6 @@ import { breadcrumbJsonLd, newsArticleJsonLd } from '@/lib/seo/structuredData'
  * structured data, and highlights the single responsible author.
  */
 type Params = { params: Promise<{ slug: string }> }
-
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  const slugs = await listPublishedOpinionSlugs()
-
-  return slugs.map((slug) => ({ slug }))
-}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params

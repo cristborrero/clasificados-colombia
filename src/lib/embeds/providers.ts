@@ -10,7 +10,7 @@
  * article. Each provider is matched against its own hosts, and anything else is
  * refused.
  */
-export const EMBED_PROVIDERS = ['youtube', 'x', 'instagram', 'tiktok'] as const
+export const EMBED_PROVIDERS = ['youtube', 'x', 'instagram', 'tiktok', 'facebook'] as const
 
 export type EmbedProvider = (typeof EMBED_PROVIDERS)[number]
 
@@ -19,6 +19,7 @@ const HOSTS: Record<EmbedProvider, readonly string[]> = {
   x: ['x.com', 'www.x.com', 'twitter.com', 'www.twitter.com'],
   instagram: ['instagram.com', 'www.instagram.com'],
   tiktok: ['tiktok.com', 'www.tiktok.com'],
+  facebook: ['facebook.com', 'www.facebook.com', 'fb.watch', 'web.facebook.com'],
 }
 
 export const PROVIDER_LABEL: Record<EmbedProvider, string> = {
@@ -26,6 +27,7 @@ export const PROVIDER_LABEL: Record<EmbedProvider, string> = {
   x: 'X',
   instagram: 'Instagram',
   tiktok: 'TikTok',
+  facebook: 'Facebook',
 }
 
 export function isEmbedProvider(value: unknown): value is EmbedProvider {

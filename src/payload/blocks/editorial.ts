@@ -145,6 +145,7 @@ export const EmbedBlock: Block = {
         { label: 'X', value: 'x' },
         { label: 'Instagram', value: 'instagram' },
         { label: 'TikTok', value: 'tiktok' },
+        { label: 'Facebook', value: 'facebook' },
       ],
     },
     { name: 'url', type: 'text', required: true, label: 'URL' },

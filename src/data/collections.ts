@@ -69,7 +69,7 @@ export function toSummary(doc: Record<string, unknown>): EditorialSummary | null
      */
     publishedAt: asString(asRecord(doc.publication as never)?.publishedAt),
     category: toNamedRef(doc.category as never),
-    authors: toNamedRefs(doc.authors),
+    authors: toNamedRefs(doc.authors ?? (doc.author ? [doc.author] : [])),
     /*
      * Articles, investigations, opinions and data stories keep their lead
      * image under a `hero` group; video stories call theirs `poster`. Reading

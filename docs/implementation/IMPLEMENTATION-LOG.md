@@ -5,6 +5,29 @@ en el código.
 
 ---
 
+## 2026-11-09 · Publicación de columna de opinión · Drones en Santa Rosa del Sur
+
+**Integración editorial de la colección Opinions con el frontend y despliegue**
+
+Se implementa y publica la columna de opinión y análisis «Seis semanas después de la promesa, llegaron los drones», documentando los hechos ocurridos en el Cantón Militar de Santa Rosa del Sur (Bolívar).
+
+1. **Rutas y arquitectura de URL para Opinión:**
+   - Se crea la ruta `/opinion/[slug]` con plantilla editorial sobria, metadatos, migas de pan y marcado estructurado `OpinionNewsArticle` (según PRD SEO §29 / Master §29).
+   - Se implementa el hub `/opinion` para listado de columnas y análisis.
+   - Se añade soporte para el proveedor `facebook` en `EmbedBlock` y `providers.ts`, preservando el principio de privacidad de cero rastreadores de terceros al cargar.
+
+2. **Carga y normalización de activos multimedia oficiales:**
+   - Fotografía oficial de los tres soldados fallecidos (Jairo Lince Carvajal, Dilan Andrés Lozano León, Álvaro Pushaina), atribuida al Ejército Nacional.
+   - Registro de daños estructurales en el cantón militar de Santa Rosa del Sur.
+   - Infografía de cobertura y seguimiento de Clasificados Colombia.
+   - Inclusión de los cuatro enlaces de video en redes sociales (Facebook e Instagram Reels).
+
+3. **Publicación automatizada e idempotente:**
+   - Script de publicación `src/payload/scripts/publicar-opinion-drones.ts` y comando en `package.json`.
+   - Migración de Payload `20261109_020000_publish_opinion_drones.ts` para ejecución automática en producción durante el ciclo de despliegue en Coolify.
+
+---
+
 ## 2026-08-19 · F18 · Cola de trabajos y UX de Admin
 
 **Crítico contra no crítico, expresado por dónde vive el trabajo**

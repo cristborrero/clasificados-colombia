@@ -41,6 +41,7 @@ describe('resolveEmbed', () => {
 
     expect(resolveEmbed('instagram', 'https://www.instagram.com/p/abc/')?.kind).toBe('link')
     expect(resolveEmbed('tiktok', 'https://www.tiktok.com/@a/video/1')?.kind).toBe('link')
+    expect(resolveEmbed('facebook', 'https://www.facebook.com/share/r/123')?.kind).toBe('link')
   })
 
   it('accepts twitter.com for the X provider, since old links still exist', () => {
@@ -49,7 +50,7 @@ describe('resolveEmbed', () => {
 
   it('refuses a URL that does not belong to the declared provider', () => {
     expect(resolveEmbed('youtube', 'https://evil.example/embed/xyz')).toBeNull()
-    expect(resolveEmbed('x', 'https://facebook.com/post/1')).toBeNull()
+    expect(resolveEmbed('x', 'https://evil.example/post/1')).toBeNull()
   })
 
   it('refuses non-http protocols', () => {
@@ -59,10 +60,11 @@ describe('resolveEmbed', () => {
 })
 
 describe('isEmbedProvider', () => {
-  it('accepts the four declared providers and nothing else', () => {
+  it('accepts the declared providers and nothing else', () => {
     expect(isEmbedProvider('youtube')).toBe(true)
     expect(isEmbedProvider('x')).toBe(true)
-    expect(isEmbedProvider('facebook')).toBe(false)
+    expect(isEmbedProvider('facebook')).toBe(true)
+    expect(isEmbedProvider('unsupported')).toBe(false)
     expect(isEmbedProvider(null)).toBe(false)
   })
 })

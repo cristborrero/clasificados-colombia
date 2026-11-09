@@ -37,6 +37,7 @@
     "jobs:health": "payload run src/payload/jobs/jobs-health.ts",
     "seed:vitrina": "payload run src/payload/scripts/seed-vitrina.ts",
     "publicar:articulo-001": "payload run src/payload/scripts/publicar-articulo-001.ts",
+    "publicar:opinion-drones": "payload run src/payload/scripts/publicar-opinion-drones.ts",
     "crear:editor": "payload run src/payload/scripts/crear-editor.ts",
     "services:up": "docker compose -f docker-compose.dev.yml up -d",
     "services:down": "docker compose -f docker-compose.dev.yml down",

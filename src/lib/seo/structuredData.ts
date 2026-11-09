@@ -71,6 +71,8 @@ export type NewsArticleInput = {
   organizationName: string
   /** `true` for investigations, which are reported work rather than reporting. */
   isInvestigation?: boolean
+  /** `true` for opinion pieces, which require OpinionNewsArticle (PRD SEO §29 / Master §29). */
+  isOpinion?: boolean
 }
 
 /**
@@ -99,9 +101,15 @@ export function newsArticleJsonLd(input: NewsArticleInput): JsonLd | null {
       ? { dateModified: input.dateModified }
       : {}
 
+  const schemaType = input.isOpinion
+    ? 'OpinionNewsArticle'
+    : input.isInvestigation
+      ? 'ReportageNewsArticle'
+      : 'NewsArticle'
+
   return {
     '@context': 'https://schema.org',
-    '@type': input.isInvestigation ? 'ReportageNewsArticle' : 'NewsArticle',
+    '@type': schemaType,
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     url,
     headline: input.headline,

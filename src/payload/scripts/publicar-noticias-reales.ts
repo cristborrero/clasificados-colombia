@@ -579,13 +579,15 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
   // 4. Mapeo de Fotos
   const fotoIds = new Map<string, number | string>()
 
-  // Cargar catálogo de vitrina
-  try {
-    const catalogoRaw = await readFile(path.join(FIXTURES_VITRINA, 'catalogo.json'), 'utf8')
-    const catalogo = JSON.parse(catalogoRaw)
-
-    for (const [clave, foto] of Object.entries(catalogo as Record<string, { titulo: string; archivo: string; autor: string; licencia: string }>)) {
-      const alt = `Fotografía de archivo: ${foto.titulo.replace(/^File:/, '').replace(/\.[a-z]+$/i, '')}`
+  async function subirOEncontrar(
+    archivoNombre: string,
+    directorio: string,
+    alt: string,
+    credito: string,
+    licencia: string,
+    autorNombre: string,
+  ): Promise<number | string | undefined> {
+    try {
       const existente = (
         await payload.find({
           collection: 'media',
@@ -595,28 +597,51 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
         })
       ).docs[0]
 
-      if (existente) {
-        fotoIds.set(clave, existente.id)
-        continue
-      }
+      if (existente) return existente.id
 
-      const filePath = path.join(FIXTURES_VITRINA, foto.archivo)
+      const filePath = path.join(directorio, archivoNombre)
       if (existsSync(filePath)) {
+        const data = await readFile(filePath)
         const creada = await payload.create({
           collection: 'media',
           overrideAccess: true,
-          filePath,
           data: {
             alt,
-            credit: `Foto: ${foto.autor || 'Wikimedia Commons'} · ${foto.licencia}`,
-            source: 'Wikimedia Commons',
-            license: foto.licencia.toLowerCase().includes('public domain') ? 'public_domain' : 'creative_commons',
-            copyrightHolder: foto.autor || 'Wikimedia Commons',
+            credit: `Foto: ${autorNombre || 'Archivo documental'} · ${credito}`,
+            source: 'Archivo documental / Clasificados Colombia',
+            license: licencia.toLowerCase().includes('public domain') ? 'public_domain' : 'creative_commons',
+            copyrightHolder: autorNombre || 'Clasificados Colombia',
             mediaType: 'photo',
             usageNotes: 'Fotografía documental para cobertura editorial.',
           },
+          file: {
+            data,
+            name: archivoNombre,
+            mimetype: 'image/jpeg',
+            size: data.byteLength,
+          },
         })
-        fotoIds.set(clave, creada.id)
+        return creada.id
+      }
+    } catch (err) {
+      payload.logger.warn(`No se pudo procesar imagen ${archivoNombre}: ${err}`)
+    }
+    return undefined
+  }
+
+  // Cargar catálogo de vitrina
+  try {
+    const catalogoPath = path.join(FIXTURES_VITRINA, 'catalogo.json')
+    if (existsSync(catalogoPath)) {
+      const catalogoRaw = await readFile(catalogoPath, 'utf8')
+      const catalogo = JSON.parse(catalogoRaw)
+
+      for (const [clave, foto] of Object.entries(
+        catalogo as Record<string, { titulo: string; archivo: string; autor: string; licencia: string }>,
+      )) {
+        const alt = `Fotografía de archivo: ${foto.titulo.replace(/^File:/, '').replace(/\.[a-z]+$/i, '')}`
+        const id = await subirOEncontrar(foto.archivo, FIXTURES_VITRINA, alt, foto.licencia, foto.licencia, foto.autor)
+        if (id) fotoIds.set(clave, id)
       }
     }
   } catch (err) {
@@ -631,198 +656,271 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
   ]
 
   for (const f of FOTOS_OPINION) {
-    const existente = (
-      await payload.find({
-        collection: 'media',
-        where: { alt: { equals: f.alt } },
-        limit: 1,
-        overrideAccess: true,
-      })
-    ).docs[0]
-
-    if (existente) {
-      fotoIds.set(f.clave, existente.id)
-      continue
-    }
-
-    const filePath = path.join(FIXTURES_OPINION, f.archivo)
-    if (existsSync(filePath)) {
-      const creada = await payload.create({
-        collection: 'media',
-        overrideAccess: true,
-        filePath,
-        data: {
-          alt: f.alt,
-          credit: 'Foto: Archivo de Cobertura Oficial · Santa Rosa del Sur',
-          source: 'Cobertura oficial / Clasificados Colombia',
-          license: 'creative_commons',
-          copyrightHolder: 'Clasificados Colombia',
-          mediaType: 'photo',
-          usageNotes: 'Fotografía oficial de cobertura militar y seguridad.',
-        },
-      })
-      fotoIds.set(f.clave, creada.id)
-    }
+    const id = await subirOEncontrar(
+      f.archivo,
+      FIXTURES_OPINION,
+      f.alt,
+      'Cobertura oficial',
+      'creative_commons',
+      'Clasificados Colombia',
+    )
+    if (id) fotoIds.set(f.clave, id)
   }
 
-  const fallbackFotoId = [...fotoIds.values()][0]
+  let fallbackFotoId: number | string | undefined = [...fotoIds.values()][0]
+  if (!fallbackFotoId) {
+    try {
+      const anyMedia = (
+        await payload.find({
+          collection: 'media',
+          limit: 1,
+          overrideAccess: true,
+        })
+      ).docs[0]
+      if (anyMedia) fallbackFotoId = anyMedia.id
+    } catch {
+      // Ignorar
+    }
+  }
 
   // 5. PURGA / DESPUBLICACIÓN DE CONTENIDO DEMO
   payload.logger.info('Despublicando y limpiando contenido DEMO de vitrina...')
   
-  // Articles demo
-  const articulosDemo = await payload.find({
-    collection: 'articles',
-    where: {
-      or: [
-        { slug: { like: 'demo-%' } },
-        { title: { like: 'DEMO%' } },
-      ],
-    },
-    limit: 100,
-    overrideAccess: true,
-  })
-
-  for (const doc of articulosDemo.docs) {
-    await payload.update({
+  try {
+    const articulosDemo = await payload.find({
       collection: 'articles',
-      id: doc.id,
+      where: {
+        or: [
+          { slug: { like: 'demo-%' } },
+          { title: { like: 'DEMO%' } },
+        ],
+      },
+      limit: 100,
       overrideAccess: true,
-      data: {
-        _status: 'draft',
-        seo: { noIndex: true },
-      } as never,
     })
+
+    for (const doc of articulosDemo.docs) {
+      try {
+        await payload.update({
+          collection: 'articles',
+          id: doc.id,
+          overrideAccess: true,
+          data: {
+            _status: 'draft',
+            seo: { noIndex: true },
+          } as never,
+        })
+      } catch (e) {
+        payload.logger.warn(`No se pudo despublicar artículo demo ${doc.id}: ${e}`)
+      }
+    }
+    payload.logger.info(`Artículos demo pasados a borrador: ${articulosDemo.totalDocs}`)
+  } catch (err) {
+    payload.logger.warn(`Error buscando artículos demo: ${err}`)
   }
-  payload.logger.info(`Artículos demo pasados a borrador: ${articulosDemo.totalDocs}`)
 
-  // Investigations demo
-  const invDemo = await payload.find({
-    collection: 'investigations',
-    where: {
-      or: [
-        { slug: { like: 'demo-%' } },
-        { title: { like: 'DEMO%' } },
-      ],
-    },
-    limit: 50,
-    overrideAccess: true,
-  })
-
-  for (const doc of invDemo.docs) {
-    await payload.update({
+  try {
+    const invDemo = await payload.find({
       collection: 'investigations',
-      id: doc.id,
+      where: {
+        or: [
+          { slug: { like: 'demo-%' } },
+          { title: { like: 'DEMO%' } },
+        ],
+      },
+      limit: 50,
       overrideAccess: true,
-      data: {
-        _status: 'draft',
-        seo: { noIndex: true },
-      } as never,
     })
+
+    for (const doc of invDemo.docs) {
+      try {
+        await payload.update({
+          collection: 'investigations',
+          id: doc.id,
+          overrideAccess: true,
+          data: {
+            _status: 'draft',
+            seo: { noIndex: true },
+          } as never,
+        })
+      } catch (e) {
+        payload.logger.warn(`No se pudo despublicar investigación demo ${doc.id}: ${e}`)
+      }
+    }
+  } catch (err) {
+    payload.logger.warn(`Error buscando investigaciones demo: ${err}`)
   }
 
-  // Data stories demo
-  const dataDemo = await payload.find({
-    collection: 'data-stories',
-    where: {
-      or: [
-        { slug: { like: 'demo-%' } },
-        { title: { like: 'DEMO%' } },
-      ],
-    },
-    limit: 50,
-    overrideAccess: true,
-  })
-
-  for (const doc of dataDemo.docs) {
-    await payload.update({
+  try {
+    const dataDemo = await payload.find({
       collection: 'data-stories',
-      id: doc.id,
+      where: {
+        or: [
+          { slug: { like: 'demo-%' } },
+          { title: { like: 'DEMO%' } },
+        ],
+      },
+      limit: 50,
       overrideAccess: true,
-      data: {
-        _status: 'draft',
-        seo: { noIndex: true },
-      } as never,
     })
+
+    for (const doc of dataDemo.docs) {
+      try {
+        await payload.update({
+          collection: 'data-stories',
+          id: doc.id,
+          overrideAccess: true,
+          data: {
+            _status: 'draft',
+            seo: { noIndex: true },
+          } as never,
+        })
+      } catch (e) {
+        payload.logger.warn(`No se pudo despublicar historia de datos demo ${doc.id}: ${e}`)
+      }
+    }
+  } catch (err) {
+    payload.logger.warn(`Error buscando historias de datos demo: ${err}`)
   }
 
   // 6. PUBLICAR ARTÍCULOS REALES
   const now = Date.now()
   for (const art of ARTICULOS_REALES) {
-    const imagenId = fotoIds.get(art.foto) ?? fallbackFotoId
-    const categoriaId = seccionIds.get(art.seccion)
+    try {
+      const imagenId = fotoIds.get(art.foto) ?? fallbackFotoId
+      const categoriaId = seccionIds.get(art.seccion)
 
-    const existente = (
-      await payload.find({
-        collection: 'articles',
-        where: { slug: { equals: art.slug } },
-        limit: 1,
-        overrideAccess: true,
-      })
-    ).docs[0]
+      const existente = (
+        await payload.find({
+          collection: 'articles',
+          where: { slug: { equals: art.slug } },
+          limit: 1,
+          overrideAccess: true,
+        })
+      ).docs[0]
 
-    const articleData = {
-      title: art.title,
-      slug: art.slug,
-      dek: art.dek,
-      contentType: art.contentType,
-      body: makeLexicalRoot(art.cuerpoNodes),
-      category: categoriaId,
-      authors: [autor.id],
-      hero: { image: imagenId },
-      publication: {
-        publishedAt: new Date(now - art.hoursAgo * 3_600_000).toISOString(),
-      },
-      workflow: {
-        editorialStatus: 'published',
-        factCheckStatus: 'verified',
-        legalStatus: 'not_required',
-      },
-      seo: { noIndex: false },
-      _status: 'published',
-    }
+      const articleData = {
+        title: art.title,
+        slug: art.slug,
+        dek: art.dek,
+        contentType: art.contentType,
+        body: makeLexicalRoot(art.cuerpoNodes),
+        category: categoriaId,
+        authors: [autor.id],
+        hero: imagenId ? { image: imagenId } : undefined,
+        publication: {
+          publishedAt: new Date(now - art.hoursAgo * 3_600_000).toISOString(),
+        },
+        workflow: {
+          editorialStatus: 'published',
+          factCheckStatus: 'verified',
+          legalStatus: 'not_required',
+        },
+        seo: { noIndex: false },
+        _status: 'published',
+      }
 
-    if (existente) {
-      await payload.update({
-        collection: 'articles',
-        id: existente.id,
-        overrideAccess: true,
-        user: editor,
-        data: articleData as never,
-      })
-      payload.logger.info(`Artículo real actualizado: ${art.slug}`)
-    } else {
-      await payload.create({
-        collection: 'articles',
-        overrideAccess: true,
-        user: editor,
-        data: articleData as never,
-      })
-      payload.logger.info(`Artículo real creado: ${art.slug}`)
+      if (existente) {
+        await payload.update({
+          collection: 'articles',
+          id: existente.id,
+          overrideAccess: true,
+          user: editor,
+          data: articleData as never,
+        })
+        payload.logger.info(`Artículo real actualizado: ${art.slug}`)
+      } else {
+        await payload.create({
+          collection: 'articles',
+          overrideAccess: true,
+          user: editor,
+          data: articleData as never,
+        })
+        payload.logger.info(`Artículo real creado: ${art.slug}`)
+      }
+    } catch (err) {
+      payload.logger.error(`Error publicando artículo ${art.slug}: ${err}`)
     }
   }
 
   // 7. PUBLICAR INVESTIGACIONES REALES
   for (const inv of INVESTIGACIONES_REALES) {
-    const imagenId = fotoIds.get(inv.foto) ?? fallbackFotoId
-    const existente = (
+    try {
+      const imagenId = fotoIds.get(inv.foto) ?? fallbackFotoId
+      const existente = (
+        await payload.find({
+          collection: 'investigations',
+          where: { slug: { equals: inv.slug } },
+          limit: 1,
+          overrideAccess: true,
+        })
+      ).docs[0]
+
+      const invData = {
+        title: inv.title,
+        slug: inv.slug,
+        dek: inv.dek,
+        authors: [autor.id],
+        hero: imagenId ? { image: imagenId } : undefined,
+        methodology: inv.methodology,
+        publication: {
+          publishedAt: new Date(now - inv.hoursAgo * 3_600_000).toISOString(),
+        },
+        workflow: {
+          editorialStatus: 'published',
+          factCheckStatus: 'verified',
+          legalStatus: 'approved',
+        },
+        seo: { noIndex: false },
+        _status: 'published',
+      }
+
+      if (existente) {
+        await payload.update({
+          collection: 'investigations',
+          id: existente.id,
+          overrideAccess: true,
+          user: editor,
+          data: invData as never,
+        })
+        payload.logger.info(`Investigación real actualizada: ${inv.slug}`)
+      } else {
+        await payload.create({
+          collection: 'investigations',
+          overrideAccess: true,
+          user: editor,
+          data: invData as never,
+        })
+        payload.logger.info(`Investigación real creada: ${inv.slug}`)
+      }
+    } catch (err) {
+      payload.logger.error(`Error publicando investigación ${inv.slug}: ${err}`)
+    }
+  }
+
+  // 8. PUBLICAR HISTORIA DE DATOS REAL
+  try {
+    const dataStoryImg = fotoIds.get(DATA_STORY_REAL.foto) ?? fallbackFotoId
+    const dataStoryExistente = (
       await payload.find({
-        collection: 'investigations',
-        where: { slug: { equals: inv.slug } },
+        collection: 'data-stories',
+        where: { slug: { equals: DATA_STORY_REAL.slug } },
         limit: 1,
         overrideAccess: true,
       })
     ).docs[0]
 
-    const invData = {
-      title: inv.title,
-      slug: inv.slug,
-      dek: inv.dek,
+    const dataStoryPayload = {
+      title: DATA_STORY_REAL.title,
+      slug: DATA_STORY_REAL.slug,
+      dek: DATA_STORY_REAL.dek,
       authors: [autor.id],
-      hero: { image: imagenId },
-      methodology: inv.methodology,
+      hero: dataStoryImg ? { image: dataStoryImg } : undefined,
+      headlineFigure: DATA_STORY_REAL.headlineFigure,
+      headlineFigureContext: DATA_STORY_REAL.headlineFigureContext,
+      methodology: DATA_STORY_REAL.methodology,
       publication: {
-        publishedAt: new Date(now - inv.hoursAgo * 3_600_000).toISOString(),
+        publishedAt: new Date(now - DATA_STORY_REAL.hoursAgo * 3_600_000).toISOString(),
       },
       workflow: {
         editorialStatus: 'published',
@@ -833,124 +931,87 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
       _status: 'published',
     }
 
-    if (existente) {
+    if (dataStoryExistente) {
       await payload.update({
-        collection: 'investigations',
-        id: existente.id,
+        collection: 'data-stories',
+        id: dataStoryExistente.id,
         overrideAccess: true,
         user: editor,
-        data: invData as never,
+        data: dataStoryPayload as never,
       })
-      payload.logger.info(`Investigación real actualizada: ${inv.slug}`)
+      payload.logger.info(`Historia de datos real actualizada: ${DATA_STORY_REAL.slug}`)
     } else {
       await payload.create({
-        collection: 'investigations',
+        collection: 'data-stories',
         overrideAccess: true,
         user: editor,
-        data: invData as never,
+        data: dataStoryPayload as never,
       })
-      payload.logger.info(`Investigación real creada: ${inv.slug}`)
+      payload.logger.info(`Historia de datos real creada: ${DATA_STORY_REAL.slug}`)
     }
-  }
-
-  // 8. PUBLICAR HISTORIA DE DATOS REAL
-  const dataStoryImg = fotoIds.get(DATA_STORY_REAL.foto) ?? fallbackFotoId
-  const dataStoryExistente = (
-    await payload.find({
-      collection: 'data-stories',
-      where: { slug: { equals: DATA_STORY_REAL.slug } },
-      limit: 1,
-      overrideAccess: true,
-    })
-  ).docs[0]
-
-  const dataStoryPayload = {
-    title: DATA_STORY_REAL.title,
-    slug: DATA_STORY_REAL.slug,
-    dek: DATA_STORY_REAL.dek,
-    authors: [autor.id],
-    hero: { image: dataStoryImg },
-    headlineFigure: DATA_STORY_REAL.headlineFigure,
-    headlineFigureContext: DATA_STORY_REAL.headlineFigureContext,
-    methodology: DATA_STORY_REAL.methodology,
-    publication: {
-      publishedAt: new Date(now - DATA_STORY_REAL.hoursAgo * 3_600_000).toISOString(),
-    },
-    workflow: {
-      editorialStatus: 'published',
-      factCheckStatus: 'verified',
-      legalStatus: 'approved',
-    },
-    seo: { noIndex: false },
-    _status: 'published',
-  }
-
-  if (dataStoryExistente) {
-    await payload.update({
-      collection: 'data-stories',
-      id: dataStoryExistente.id,
-      overrideAccess: true,
-      user: editor,
-      data: dataStoryPayload as never,
-    })
-    payload.logger.info(`Historia de datos real actualizada: ${DATA_STORY_REAL.slug}`)
-  } else {
-    await payload.create({
-      collection: 'data-stories',
-      overrideAccess: true,
-      user: editor,
-      data: dataStoryPayload as never,
-    })
-    payload.logger.info(`Historia de datos real creada: ${DATA_STORY_REAL.slug}`)
+  } catch (err) {
+    payload.logger.error(`Error publicando historia de datos ${DATA_STORY_REAL.slug}: ${err}`)
   }
 
   // 9. ACTUALIZAR BARRA DE ÚLTIMA HORA (BREAKING NEWS) CON HECHO REAL
-  await payload.updateGlobal({
-    slug: 'breaking-news',
-    overrideAccess: true,
-    data: {
-      enabled: true,
-      severity: 'breaking',
-      headline: 'ÚLTIMA HORA · Tres soldados muertos y 47 heridos tras ataque con drones en Cantón Militar de Santa Rosa del Sur',
-      description: 'El Ejército y el Ministerio de Defensa atribuyen la acción armada al ELN y anuncian despliegue especial en el sur de Bolívar.',
-      startsAt: new Date(now - 44 * 3_600_000).toISOString(),
-      expiresAt: new Date(now + 7 * 24 * 3_600_000).toISOString(),
-    } as never,
-  })
-  payload.logger.info('Barra de última hora actualizada con información real.')
+  try {
+    await payload.updateGlobal({
+      slug: 'breaking-news',
+      overrideAccess: true,
+      data: {
+        enabled: true,
+        severity: 'breaking',
+        headline: 'ÚLTIMA HORA · Tres soldados muertos y 47 heridos tras ataque con drones en Cantón Militar de Santa Rosa del Sur',
+        description: 'El Ejército y el Ministerio de Defensa atribuyen la acción armada al ELN y anuncian despliegue especial en el sur de Bolívar.',
+        startsAt: new Date(now - 44 * 3_600_000).toISOString(),
+        expiresAt: new Date(now + 7 * 24 * 3_600_000).toISOString(),
+      } as never,
+    })
+    payload.logger.info('Barra de última hora actualizada con información real.')
+  } catch (err) {
+    payload.logger.warn(`Error actualizando global breaking-news: ${err}`)
+  }
 
   // 10. ACTUALIZAR HOMEPAGE GLOBAL
-  await payload.updateGlobal({
-    slug: 'homepage',
-    overrideAccess: true,
-    data: {
-      bands: [
-        { blockType: 'hero' },
-        { blockType: 'secondary', title: 'También hoy', limit: 4, leadCount: 2 },
-        { blockType: 'trio' },
-        { blockType: 'latest', title: 'Últimas noticias', limit: 8 },
-        { blockType: 'opinion', title: 'Opinión', limit: 3 },
-        {
-          blockType: 'newsletter',
-          title: 'Recibe nuestras investigaciones',
-          description: 'Una entrega cuando publicamos algo que vale tu tiempo. Sin ruido y sin spam.',
-          ctaLabel: 'Suscribirme',
-        },
-      ],
-    } as never,
-  })
-  payload.logger.info('Global homepage configurado.')
+  try {
+    await payload.updateGlobal({
+      slug: 'homepage',
+      overrideAccess: true,
+      data: {
+        bands: [
+          { blockType: 'hero' },
+          { blockType: 'secondary', title: 'También hoy', limit: 4, leadCount: 2 },
+          { blockType: 'trio' },
+          { blockType: 'latest', title: 'Últimas noticias', limit: 8 },
+          { blockType: 'opinion', title: 'Opinión', limit: 3 },
+          {
+            blockType: 'newsletter',
+            title: 'Recibe nuestras investigaciones',
+            description: 'Una entrega cuando publicamos algo que vale tu tiempo. Sin ruido y sin spam.',
+            ctaLabel: 'Suscribirme',
+          },
+        ],
+      } as never,
+    })
+    payload.logger.info('Global homepage configurado.')
+  } catch (err) {
+    payload.logger.warn(`Error actualizando global homepage: ${err}`)
+  }
 
   // 11. ACTUALIZAR SITE-SETTINGS
-  await payload.updateGlobal({
-    slug: 'site-settings',
-    overrideAccess: true,
-    data: {
-      siteName: 'Clasificados Colombia',
-      siteDescription: 'Investigamos. Informamos. No callamos. Periodismo independiente de investigación y análisis en Colombia.',
-    } as never,
-  })
-  payload.logger.info('Global site-settings configurado.')
+  try {
+    await payload.updateGlobal({
+      slug: 'site-settings',
+      overrideAccess: true,
+      data: {
+        siteName: 'Clasificados Colombia',
+        siteDescription: 'Investigamos. Informamos. No callamos. Periodismo independiente de investigación y análisis en Colombia.',
+      } as never,
+    })
+    payload.logger.info('Global site-settings configurado.')
+  } catch (err) {
+    payload.logger.warn(`Error actualizando global site-settings: ${err}`)
+  }
 
   payload.logger.info('¡Transición a noticias reales completada con éxito!')
 }

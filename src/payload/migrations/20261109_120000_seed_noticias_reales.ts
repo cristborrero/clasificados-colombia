@@ -2,7 +2,11 @@ import { MigrateUpArgs, MigrateDownArgs } from '@payloadcms/db-postgres'
 import { publicarNoticiasReales } from '../scripts/publicar-noticias-reales'
 
 export async function up({ payload }: MigrateUpArgs): Promise<void> {
-  await publicarNoticiasReales(payload)
+  try {
+    await publicarNoticiasReales(payload)
+  } catch (error) {
+    payload.logger.error(`Error en migración seed_noticias_reales: ${error}`)
+  }
 }
 
 export async function down(_args: MigrateDownArgs): Promise<void> {

@@ -234,7 +234,7 @@ async function resolveBand(block: Block, heroSlug: string | null): Promise<Homep
       const items = await listPublished(source, {
         limit: limitOf(block, 3),
         categorySlug,
-        excludeSlug: source === 'articles' ? heroSlug : null,
+        excludeSlug: heroSlug,
       })
 
       const ctaLabel = asString(block.ctaLabel)

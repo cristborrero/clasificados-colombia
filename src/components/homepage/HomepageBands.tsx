@@ -9,7 +9,7 @@ import { articlePath, categoryPath, type CardArticle } from '@/components/articl
 import { Body } from '@/components/editorial/Typography'
 import { InvestigationCard, investigationPath } from '@/components/investigations/InvestigationCard'
 import { Container } from '@/components/layout/Container'
-import { searchPath } from '@/lib/routes'
+import { opinionPath, searchPath } from '@/lib/routes'
 import { SectionHeader } from '@/components/layout/SectionHeader'
 import { VideoCard } from '@/components/media/VideoCard'
 import { cn } from '@/components/ui/cn'
@@ -134,6 +134,32 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
             const { item } = band
 
             const isInvestigation = band.source === 'investigations'
+            const isOpinion = band.source === 'opinions'
+
+            const href = isOpinion
+              ? opinionPath(item.slug)
+              : isInvestigation
+              ? investigationPath(item.slug)
+              : articlePath(item.category?.slug, item.slug)
+
+            const eyebrow = isOpinion
+              ? 'Opinión · Análisis'
+              : isInvestigation
+              ? 'Investigación'
+              : (item.category?.name ?? 'Última hora')
+
+            const eyebrowHref = isOpinion
+              ? '/opinion'
+              : !isInvestigation && item.category
+              ? categoryPath(item.category.slug)
+              : null
+
+            const eyebrowTone = isInvestigation || isOpinion ? 'accent' : 'default'
+            const ctaLabel = isOpinion
+              ? 'Leer análisis'
+              : isInvestigation
+              ? 'Leer investigación'
+              : 'Leer la nota'
 
             return (
               /*
@@ -143,25 +169,17 @@ export function HomepageBands({ bands }: { bands: readonly HomepageBand[] }) {
               */
               <section key={key}>
                 <HomepageHero
-                  href={
-                    isInvestigation
-                      ? investigationPath(item.slug)
-                      : articlePath(item.category?.slug, item.slug)
-                  }
-                  eyebrow={
-                    isInvestigation ? 'Investigación' : (item.category?.name ?? 'Última hora')
-                  }
-                  eyebrowHref={
-                    !isInvestigation && item.category ? categoryPath(item.category.slug) : null
-                  }
-                  eyebrowTone={isInvestigation ? 'accent' : 'default'}
+                  href={href}
+                  eyebrow={eyebrow}
+                  eyebrowHref={eyebrowHref}
+                  eyebrowTone={eyebrowTone}
                   title={item.title}
                   dek={item.dek}
                   publishedAt={item.publishedAt}
                   authors={item.authors}
                   image={item.image}
                   imageFirst={band.imageFirst}
-                  ctaLabel={isInvestigation ? 'Leer investigación' : 'Leer la nota'}
+                  ctaLabel={ctaLabel}
                 />
               </section>
             )

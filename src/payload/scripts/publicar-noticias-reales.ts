@@ -140,6 +140,38 @@ type ArticuloDef = {
 export const ARTICULOS_REALES: ArticuloDef[] = [
   // ── 1. CONFLICTO ──
   {
+    slug: 'atentados-motobomba-cali-jamundi-alerta-seguridad-valle',
+    title: 'Ola de atentados con artefactos explosivos sacude a Cali y Jamundí: refuerzan cordón de seguridad en el Valle',
+    dek: 'Detonaciones dirigidas contra estaciones de policía y sedes de medios de comunicación elevan la alerta máxima en el suroccidente. Autoridades intensifican patrullajes y ofrecen millonarias recompensas.',
+    contentType: 'news',
+    seccion: 'conflicto',
+    foto: 'cali-valle',
+    hoursAgo: 8,
+    cuerpoNodes: [
+      paragraph('Una serie de atentados coordinados con motobombas y artefactos explosivos improvisados perpetrados en sectores periféricos de Cali y el municipio vecino de Jamundí desató una alerta roja de orden público en el departamento del Valle del Cauca. Las autoridades convocaron un consejo extraordinario de seguridad conjunto entre la gobernación, las alcaldías metropolitanas y la cúpula de la Tercera Brigada del Ejército.'),
+      paragraph('Las explosiones se registraron de manera casi simultánea en las inmediaciones de subestaciones policiales y corredores viales que conectan el sur del departamento con el norte del Cauca, provocando daños estructurales en inmuebles civiles y lesiones a uniformados y transeúntes.'),
+      factBoxBlock(
+        'Balance de los atentados en Cali y Jamundí',
+        [
+          { label: 'Puntos de impacto', value: 'Perímetro Siloé (Cali) y accesos a Jamundí', description: 'Cargas detonadas en motocicletas abandonadas' },
+          { label: 'Afectación a civiles', value: '4 lesionados leves', description: 'Por esquirlas y rotura de vidrios' },
+          { label: 'Uniformados heridos', value: '2 patrulleros', description: 'Atendidos en centros asistenciales con esquirlas superficiales' },
+          { label: 'Recompensa oficial', value: 'Hasta $100 millones', description: 'Por información veraz sobre los autores materiales' },
+        ],
+        'Policía Metropolitana de Santiago de Cali · Reporte preliminar',
+      ),
+      heading('Hostigamientos y zozobra contra la prensa'),
+      paragraph('Los informes periciales de técnicos antiexplosivos confirmaron el uso de mezclas de nitrato de amonio y combustible (anfo). Uno de los artefactos generó especial conmoción y rechazo gremial por haber detonado a escasa distancia de sedes informativas y cabinas de radio, lo que motivó un pronunciamiento enérgico de la Fundación para la Libertad de Prensa (FLIP) exigiendo garantías plenas para el ejercicio periodístico regional.'),
+      pullQuoteBlock(
+        'No vamos a permitir que las estructuras criminales dobleguen a la ciudadanía ni que intenten amedrentar a las instituciones mediante el terrorismo en las ciudades.',
+        'Comandante de la Tercera Brigada del Ejército',
+        'Declaración en Puesto de Mando Unificado de Cali',
+      ),
+      heading('La presión de las disidencias en la cordillera'),
+      paragraph('Las principales líneas de investigación señalan como presuntos responsables a integrantes de las disidencias de las FARC (frentes Jaime Martínez y Dagoberto Ramos), que buscan dispersar el accionar de la Fuerza Pública en momentos en que las tropas sostienen una ofensiva sostenida en el cañón del Micay y la cuenca alta del río Naya.'),
+    ],
+  },
+  {
     slug: 'ataque-drones-canton-santa-rosa-del-sur',
     title: 'Ataque con drones a Cantón Militar de Santa Rosa del Sur deja tres soldados muertos y 47 uniformados afectados',
     dek: 'Aparatos no tripulados cargados con explosivos impactaron el rancho de tropa al mediodía del sábado 7 de noviembre. El Ejército atribuye la acción al ELN como represalia por la captura de alias "Carrito".',
@@ -218,6 +250,38 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
   },
 
   // ── 2. POLÍTICA ──
+  {
+    slug: 'reforma-laboral-avanza-senado-recargo-nocturno-dominical',
+    title: 'Reforma laboral supera debate clave en el Senado: recargo nocturno desde las 7:00 p.m. y pago del 100% en dominicales',
+    dek: 'La Comisión Séptima avaló el núcleo económico de la iniciativa gubernamental tras un acuerdo entre ponentes. Se ratifica la jornada máxima de 42 horas y la remuneración laboral a los aprendices del SENA.',
+    contentType: 'analysis',
+    seccion: 'politica',
+    foto: 'congreso-int',
+    hoursAgo: 5,
+    cuerpoNodes: [
+      paragraph('En una jornada de intensas deliberaciones que se prolongó hasta la medianoche, la Comisión Séptima del Senado de la República aprobó el bloque neurálgico de artículos de la reforma laboral promovida por el Gobierno Nacional, destrabando uno de los proyectos legislativos más complejos y polémicos de la actual legislatura.'),
+      paragraph('La votación positiva fue el resultado de semanas de acercamientos técnicos entre los coordinadores ponentes, bancadas independientes y representantes de los sindicatos y gremios empresariales, buscando un balance entre la recuperación de garantías laborales y la estabilidad de las pequeñas y medianas empresas.'),
+      factBoxBlock(
+        'Puntos nodales de la reforma laboral avalada',
+        [
+          { label: 'Recargo nocturno', value: 'Desde las 7:00 p.m.', description: 'Recargo del 35% que antes comenzaba a las 9:00 p.m.' },
+          { label: 'Dominicales y festivos', value: 'Pago al 100%', description: 'Incremento escalonado (80%, 90% y 100%)' },
+          { label: 'Aprendices del SENA', value: 'Contrato laboral', description: '75% del salario mínimo en lectiva y 100% en práctica con salud y riesgos' },
+          { label: 'Límite de jornada', value: '42 horas semanales', description: 'Sin flexibilizaciones extremas por horas desreguladas' },
+        ],
+        'Comisión Séptima del Senado · Gaceta Legislativa',
+      ),
+      heading('El debate por los costos de contratación'),
+      paragraph('El adelanto del horario nocturno a las 7:00 de la noche constituyó la principal bandera de las centrales obreras, que recordaron que esa disposición había sido desmontada hace más de dos décadas. Por su parte, agremiaciones del comercio, la hotelería y la gastronomía manifestaron sus reservas respecto al impacto sobre los costos de nómina, logrando que el texto incluya un régimen de transición gradual para su entrada en vigor.'),
+      pullQuoteBlock(
+        'Es un acuerdo histórico que salda una deuda de justicia con los trabajadores de Colombia sin asfixiar la sostenibilidad financiera de las empresas que madrugan y trasnochan produciendo.',
+        'Senador coordinador de ponentes',
+        'Intervención en la Comisión Séptima',
+      ),
+      heading('Paso a la plenaria del Senado'),
+      paragraph('Con este avance, el proyecto queda habilitado para su discusión definitiva en la plenaria del Senado de la República antes de surtir la etapa de conciliación con el texto aprobado en la Cámara de Representantes y pasar a sanción presidencial.'),
+    ],
+  },
   {
     slug: 'congreso-aprueba-ley-sometimiento-justicia-bandas',
     title: 'Congreso aprueba en último debate la Ley de Sometimiento a la Justicia para bandas criminales',
@@ -328,13 +392,45 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
 
   // ── 4. REGIONES ──
   {
+    slug: 'gobierno-declara-desastre-nacional-lluvias-choco',
+    title: 'Gobierno declara situación de desastre nacional por ola invernal: Chocó, La Guajira y Bogotá en máxima emergencia',
+    dek: 'El presidente Gustavo Petro oficializó el decreto tras sesión de emergencia de la UNGRD. Veintisiete de los 31 municipios de Chocó están inundados mientras un paro armado del ELN obstaculiza las caravanas humanitarias.',
+    contentType: 'news',
+    seccion: 'regiones',
+    foto: 'quibdo',
+    hoursAgo: 2,
+    cuerpoNodes: [
+      paragraph('El Gobierno Nacional declaró formalmente la situación de desastre nacional en todo el territorio colombiano mediante decreto extraordinario, ante la magnitud sin precedentes de las inundaciones, deslizamientos de tierra y afectaciones viales provocadas por la segunda temporada de lluvias del año.'),
+      paragraph('La medida fue adoptada tras una sesión de urgencia del Consejo Nacional de Gestión del Riesgo en la sede de la UNGRD, presidida por el primer mandatario y el director de la entidad, Carlos Carrillo, con el propósito de agilizar traslados presupuestales del orden de los cientos de miles de millones de pesos directamente hacia los departamentos en calamidad pública.'),
+      factBoxBlock(
+        'Radiografía de la emergencia climática nacional',
+        [
+          { label: 'Chocó en calamidad', value: '27 de 31 municipios', description: 'Más del 85% del departamento bajo el agua' },
+          { label: 'Población damnificada', value: 'Más de 37.000 familias', description: 'Pérdidas totales de cosechas de plátano, arroz y enseres' },
+          { label: 'Zonas en alerta roja', value: 'Pacífico, Guajira, Bogotá', description: 'Desbordamiento de ríos Atrato, San Juan, arroyos y autopistas' },
+          { label: 'Factor agravante', value: 'Paro armado del ELN', description: 'Restricción al tránsito fluvial en la cuenca del San Juan' },
+        ],
+        'UNGRD · Consolidado Nacional de Emergencias',
+      ),
+      heading('El drama humanitario en el Chocó y el cerco armado'),
+      paragraph('La situación en el Chocó alcanza ribetes de tragedia humanitaria. Comunidades enteras de los municipios de Alto Baudó, Bojayá, Medio San Juan, Istmina y Novita permanecen con el agua a la altura de los techos tras crecientes históricas de los afluentes tributarios de los ríos Atrato y San Juan. A la pérdida de animales domésticos y reservas de alimentos se suma la zozobra por el paro armado impuesto por el ELN, que ha impedido que lanchas de auxilio y brigadas médicas naveguen con seguridad.'),
+      pullQuoteBlock(
+        'El desastre nacional nos habilita legalmente a saltar trabas burocráticas y enviar asistencia alimentaria y recursos de reconstrucción inmediata. En Chocó la gente tiene el agua al cuello y no admite dilaciones.',
+        'Carlos Carrillo',
+        'Director General de la UNGRD',
+      ),
+      heading('Afectación en La Guajira y la Sabana de Bogotá'),
+      paragraph('El decreto vincula igualmente medidas prioritarias para la Alta Guajira, donde arroyos desbordados por el paso de ciclones tropicales mantienen aislados a corregimientos de Uribia y Manaure, y ordena asistencia técnica a la Alcaldía Mayor de Bogotá tras las inundaciones torrenciales que colapsaron los corredores de entrada y salida de la capital sobre la Autopista Norte.'),
+    ],
+  },
+  {
     slug: 'alerta-roja-cuencas-la-mojana-choco-temporada-lluvias',
-    title: 'Alerta roja en cuencas de La Mojana y Chocó por inicio de la segunda temporada de lluvias',
-    dek: 'El Ideam y la UNGRD vigilan crecientes súbitas en los ríos Cauca, San Jorge y Atrato. Municipios ribereños piden acelerar obras de contención y dragado.',
+    title: 'Alerta roja en cuencas de La Mojana y Chocó: colapso de jarillones agrava inundaciones en cuatro departamentos',
+    dek: 'El colapso de terraplenes en Caregato y crecientes súbitas del río Cauca mantienen bajo el agua a más de 25.000 hectáreas mientras la UNGRD coordina giros directos y dragados de urgencia.',
     contentType: 'news',
     seccion: 'regiones',
     foto: 'inundaciones-cauca',
-    hoursAgo: 28,
+    hoursAgo: 24,
     cuerpoNodes: [
       paragraph('El Instituto de Hidrología, Meteorología y Estudios Ambientales (Ideam) declaró la alerta roja hidrológica en sectores neurálgicos de la región de La Mojana —que abarca zonas de Sucre, Bolívar, Córdoba y Antioquia— y en la cuenca media y baja del río Atrato, en el departamento del Chocó, debido al incremento sostenido de las precipitaciones.'),
       paragraph('En puntos críticos como el boquete de Caregato y la ribera de San Jacinto del Cauca, las aguas del río Cauca han alcanzado cotas de desbordamiento, anegando pastizales y amenazando más de 25.000 hectáreas sembradas de arroz y cultivos de pancoger.'),
@@ -687,6 +783,7 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
     { clave: 'corabastos', archivo: 'corabastos.jpg', alt: 'Central mayorista de abastos Corabastos en Bogotá', autor: 'Corabastos / Archivo documental', licencia: 'creative_commons' },
     { clave: 'san-lucas', archivo: 'san-lucas.png', alt: 'Mapa orográfico y satelital de la Serranía de San Lucas en el sur de Bolívar', autor: 'IGAC / Satelital', licencia: 'public_domain' },
     { clave: 'policia-inundaciones', archivo: 'policia-inundaciones.jpg', alt: 'Obras de emergencia y contención en zonas inundadas de La Mojana', autor: 'Policía Nacional / UNGRD', licencia: 'public_domain' },
+    { clave: 'cali-valle', archivo: 'cali-valle.jpg', alt: 'Panorámica de Santiago de Cali y cordillera del Valle del Cauca', autor: 'Archivo documental / Wikimedia Commons', licencia: 'creative_commons' },
   ]
 
   for (const f of FOTOS_NOTICIAS) {
@@ -995,9 +1092,9 @@ export async function publicarNoticiasReales(payload: Payload): Promise<void> {
       data: {
         enabled: true,
         severity: 'breaking',
-        headline: 'ÚLTIMA HORA · Tres soldados muertos y 47 heridos tras ataque con drones en Cantón Militar de Santa Rosa del Sur',
-        description: 'El Ejército y el Ministerio de Defensa atribuyen la acción armada al ELN y anuncian despliegue especial en el sur de Bolívar.',
-        startsAt: new Date(now - 44 * 3_600_000).toISOString(),
+        headline: 'ÚLTIMA HORA · Gobierno declara Situación de Desastre Nacional por ola invernal: 37.000 familias damnificadas en Chocó y alerta máxima en cuencas de Colombia',
+        description: 'La UNGRD coordina traslados presupuestales de emergencia y asistencia aérea mientras el ELN sostiene un paro armado que asfixia al río San Juan.',
+        startsAt: new Date(now - 2 * 3_600_000).toISOString(),
         expiresAt: new Date(now + 7 * 24 * 3_600_000).toISOString(),
       } as never,
     })

@@ -394,14 +394,14 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
   {
     slug: 'gobierno-declara-desastre-nacional-lluvias-choco',
     title: 'Gobierno declara situación de desastre nacional por ola invernal: Chocó, La Guajira y Bogotá en máxima emergencia',
-    dek: 'El presidente Gustavo Petro oficializó el decreto tras sesión de emergencia de la UNGRD. Veintisiete de los 31 municipios de Chocó están inundados mientras un paro armado del ELN obstaculiza las caravanas humanitarias.',
+    dek: 'El presidente Abelardo de la Espriella oficializó el decreto tras sesión de emergencia de la UNGRD. Veintisiete de los 31 municipios de Chocó están inundados mientras un paro armado del ELN obstaculiza las caravanas humanitarias.',
     contentType: 'news',
     seccion: 'regiones',
     foto: 'quibdo',
     hoursAgo: 2,
     cuerpoNodes: [
       paragraph('El Gobierno Nacional declaró formalmente la situación de desastre nacional en todo el territorio colombiano mediante decreto extraordinario, ante la magnitud sin precedentes de las inundaciones, deslizamientos de tierra y afectaciones viales provocadas por la segunda temporada de lluvias del año.'),
-      paragraph('La medida fue adoptada tras una sesión de urgencia del Consejo Nacional de Gestión del Riesgo en la sede de la UNGRD, presidida por el primer mandatario y el director de la entidad, Carlos Carrillo, con el propósito de agilizar traslados presupuestales del orden de los cientos de miles de millones de pesos directamente hacia los departamentos en calamidad pública.'),
+      paragraph('La medida fue adoptada tras una sesión de urgencia del Consejo Nacional de Gestión del Riesgo en la sede de la UNGRD, presidida por el primer mandatario, Abelardo de la Espriella, y el director de la entidad, David Tamayo, con el propósito de agilizar traslados presupuestales del orden de los cientos de miles de millones de pesos directamente hacia los departamentos en calamidad pública.'),
       factBoxBlock(
         'Radiografía de la emergencia climática nacional',
         [
@@ -416,7 +416,7 @@ export const ARTICULOS_REALES: ArticuloDef[] = [
       paragraph('La situación en el Chocó alcanza ribetes de tragedia humanitaria. Comunidades enteras de los municipios de Alto Baudó, Bojayá, Medio San Juan, Istmina y Novita permanecen con el agua a la altura de los techos tras crecientes históricas de los afluentes tributarios de los ríos Atrato y San Juan. A la pérdida de animales domésticos y reservas de alimentos se suma la zozobra por el paro armado impuesto por el ELN, que ha impedido que lanchas de auxilio y brigadas médicas naveguen con seguridad.'),
       pullQuoteBlock(
         'El desastre nacional nos habilita legalmente a saltar trabas burocráticas y enviar asistencia alimentaria y recursos de reconstrucción inmediata. En Chocó la gente tiene el agua al cuello y no admite dilaciones.',
-        'Carlos Carrillo',
+        'David Tamayo',
         'Director General de la UNGRD',
       ),
       heading('Afectación en La Guajira y la Sabana de Bogotá'),

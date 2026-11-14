@@ -9,6 +9,7 @@ import * as migration_20261109_110000_feature_opinion_hero from './20261109_1100
 import * as migration_20261109_120000_seed_noticias_reales from './20261109_120000_seed_noticias_reales';
 import * as migration_20261109_150000_update_noticias_reales_media from './20261109_150000_update_noticias_reales_media';
 import * as migration_20261113_160000_publish_latest_breaking_news from './20261113_160000_publish_latest_breaking_news';
+import * as migration_20261114_170000_fix_presidential_context_desastre_nacional from './20261114_170000_fix_presidential_context_desastre_nacional';
 
 export const migrations = [
   {
@@ -65,5 +66,10 @@ export const migrations = [
     up: migration_20261113_160000_publish_latest_breaking_news.up,
     down: migration_20261113_160000_publish_latest_breaking_news.down,
     name: '20261113_160000_publish_latest_breaking_news'
+  },
+  {
+    up: migration_20261114_170000_fix_presidential_context_desastre_nacional.up,
+    down: migration_20261114_170000_fix_presidential_context_desastre_nacional.down,
+    name: '20261114_170000_fix_presidential_context_desastre_nacional'
   },
 ];
